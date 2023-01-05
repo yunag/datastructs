@@ -5,10 +5,10 @@
 #include <string.h>
 
 struct stack {
-  void *buffer;
-  size_t size;
-  size_t elemsize;
-  size_t capacity;
+  void *buffer;    /* Buffer for storing elements */
+  size_t size;     /* Size of the Stack */
+  size_t capacity; /* Capacity of the Stack */
+  size_t elemsize; /* Size of a single element in the Stack */
 };
 
 static inline void *stack_at(stack *s, size_t idx) {
@@ -17,39 +17,31 @@ static inline void *stack_at(stack *s, size_t idx) {
 
 stack *stack_create(size_t size, size_t elemsize) {
   assert(size > 0 && elemsize > 0);
-
   stack *s = malloc(sizeof(*s));
   if (s == NULL) {
     fprintf(stderr, "Failed to allocate memory for stack.\n");
     return NULL;
   }
-  s->capacity = size;
-  s->elemsize = elemsize;
-  s->buffer = malloc(s->elemsize * s->capacity);
+  s->buffer = malloc(elemsize * size);
   if (s->buffer == NULL) {
     free(s);
     fprintf(stderr, "Failed to allocate memory for queue.\n");
     return NULL;
   }
+  s->capacity = size;
+  s->elemsize = elemsize;
   s->size = 0;
   return s;
 }
 
 void stack_free(stack *s) {
   assert(s != NULL);
-
   free(s->buffer);
   free(s);
 }
 
-bool stack_full(stack *s) {
-  assert(s != NULL);
-  return s->size == s->capacity;
-}
-
 static bool stack_resize(stack *s, size_t newsize) {
-  assert(s != NULL && newsize > s->capacity);
-
+  assert(s != NULL && newsize > s->size);
   void *tmp = realloc(s->buffer, s->elemsize * newsize);
   if (tmp == NULL) {
     fprintf(stderr, "Failed to resize buffer for queue");
@@ -60,9 +52,8 @@ static bool stack_resize(stack *s, size_t newsize) {
   return true;
 }
 
-void stack_push(stack *s, void *elem) {
+void stack_push(stack *s, const void *elem) {
   assert(s != NULL && elem != NULL);
-
   if (stack_full(s) && !stack_resize(s, s->capacity * 2)) {
     return;
   }
@@ -71,7 +62,6 @@ void stack_push(stack *s, void *elem) {
 
 void stack_pop(stack *s) {
   assert(s != NULL);
-
   if (stack_empty(s)) {
     return;
   }
@@ -80,21 +70,28 @@ void stack_pop(stack *s) {
 
 void *stack_top(stack *s) {
   assert(s != NULL);
-
   if (stack_empty(s)) {
     return NULL;
   }
   return stack_at(s, s->size - 1);
 }
 
-bool stack_empty(stack *s) {
+inline bool stack_full(stack *s) {
   assert(s != NULL);
+  return s->size == s->capacity;
+}
 
+inline bool stack_empty(stack *s) {
+  assert(s != NULL);
   return s->size == 0;
 }
 
-size_t stack_size(stack *s) {
+inline size_t stack_size(stack *s) {
   assert(s != NULL);
-
   return s->size;
+}
+
+inline size_t stack_esize(stack *s) {
+  assert(s != NULL);
+  return s->elemsize;
 }

@@ -10,14 +10,14 @@
 #define ASCII_LENGTH 256
 
 struct trie {
-  struct trie_node *root;
-  size_t depth;
+  struct trie_node *root; /* Root node */
+  size_t depth;           /* Maximum depth of the Trie */
 };
 
 struct trie_node {
-  struct trie_node **child;
-  uint32_t child_count;
-  bool word;
+  struct trie_node **child; /* Childs of the current node */
+  uint32_t child_count;     /* Number of childs */
+  bool word;                /* Is the current node an end of the word? */
 };
 
 static struct trie_node *create_trie_node(void) {
@@ -39,7 +39,6 @@ static struct trie_node *create_trie_node(void) {
 
 static void free_trie_node(struct trie_node *node) {
   assert(node != NULL);
-
   free(node->child);
   free(node);
 }
@@ -55,9 +54,8 @@ trie *trie_create(void) {
   return trie;
 }
 
-void trie_insert(trie *trie, char *word) {
+void trie_insert(trie *trie, const char *word) {
   assert(trie != NULL && word != NULL);
-
   struct trie_node *root = trie->root;
   size_t i = 0;
   for (; word[i] != '\0'; ++i) {
@@ -72,9 +70,8 @@ void trie_insert(trie *trie, char *word) {
   root->word = true;
 }
 
-bool trie_search(trie *trie, char *word) {
+bool trie_search(trie *trie, const char *word) {
   assert(trie != NULL && word != NULL);
-
   struct trie_node *root = trie->root;
   for (size_t i = 0; word[i] != '\0'; ++i) {
     size_t idx = word[i];
@@ -86,9 +83,8 @@ bool trie_search(trie *trie, char *word) {
   return root->word;
 }
 
-bool trie_starts_with(trie *trie, char *prefix) {
+bool trie_starts_with(trie *trie, const char *prefix) {
   assert(trie != NULL && prefix != NULL);
-
   struct trie_node *root = trie->root;
   for (size_t i = 0; prefix[i] != '\0'; ++i) {
     size_t idx = prefix[i];
@@ -100,7 +96,8 @@ bool trie_starts_with(trie *trie, char *prefix) {
   return true;
 }
 
-bool trie_remove_rec(struct trie_node *node, char *word, bool *deleted) {
+static bool trie_remove_rec(struct trie_node *node, const char *word,
+                            bool *deleted) {
   if (*word == '\0') {
     *deleted = node->word;
     node->word = false;
@@ -121,9 +118,8 @@ bool trie_remove_rec(struct trie_node *node, char *word, bool *deleted) {
   return node->child_count == 0 && !node->word;
 }
 
-bool trie_remove(trie *trie, char *word) {
+bool trie_remove(trie *trie, const char *word) {
   assert(trie != NULL && word != NULL);
-
   bool deleted = false;
   trie_remove_rec(trie->root, word, &deleted);
   return deleted;
@@ -153,7 +149,6 @@ void trie_print_rec(struct trie_node *node, char *buffer, size_t *bufsize) {
 
 void trie_print(trie *trie) {
   assert(trie != NULL);
-
   size_t bufsize = trie->depth + 1;
   char buffer[bufsize];
   trie_print_rec(trie->root, buffer, &bufsize);
@@ -161,7 +156,6 @@ void trie_print(trie *trie) {
 
 void trie_free(trie *trie) {
   assert(trie != NULL);
-
   trie_free_rec(trie->root);
   free(trie);
 }
