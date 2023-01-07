@@ -1,6 +1,7 @@
 #include "datastructs/stack.h"
+#include "datastructs/utils.h"
+
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -12,20 +13,20 @@ struct stack {
 };
 
 static inline void *stack_at(stack *s, size_t idx) {
-  return &((uint8_t *)s->buffer)[s->elemsize * idx];
+  return &((char *)s->buffer)[s->elemsize * idx];
 }
 
 stack *stack_create(size_t size, size_t elemsize) {
   assert(size > 0 && elemsize > 0);
   stack *s = malloc(sizeof(*s));
   if (s == NULL) {
-    fprintf(stderr, "Failed to allocate memory for stack.\n");
+    yu_log_error("Failed to allocate memory for stack");
     return NULL;
   }
   s->buffer = malloc(elemsize * size);
   if (s->buffer == NULL) {
     free(s);
-    fprintf(stderr, "Failed to allocate memory for queue.\n");
+    yu_log_error("Failed to allocate memory for stack buffer");
     return NULL;
   }
   s->capacity = size;
@@ -44,7 +45,7 @@ static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL && newsize > s->size);
   void *tmp = realloc(s->buffer, s->elemsize * newsize);
   if (tmp == NULL) {
-    fprintf(stderr, "Failed to resize buffer for queue");
+    yu_log_error("Failed to resize buffer for stack");
     return false;
   }
   s->buffer = tmp;
@@ -76,22 +77,22 @@ void *stack_top(stack *s) {
   return stack_at(s, s->size - 1);
 }
 
-inline bool stack_full(stack *s) {
+bool stack_full(stack *s) {
   assert(s != NULL);
   return s->size == s->capacity;
 }
 
-inline bool stack_empty(stack *s) {
+bool stack_empty(stack *s) {
   assert(s != NULL);
   return s->size == 0;
 }
 
-inline size_t stack_size(stack *s) {
+size_t stack_size(stack *s) {
   assert(s != NULL);
   return s->size;
 }
 
-inline size_t stack_esize(stack *s) {
+size_t stack_esize(stack *s) {
   assert(s != NULL);
   return s->elemsize;
 }

@@ -34,6 +34,14 @@ extern "C" {
     *(_PVAL2) = temp;                                                          \
   })
 
+#ifndef NDEBUG
+#include <stdio.h>
+#define yu_log_error(msg)                                                      \
+  fprintf(stderr, "(%s:%d):%s\n", __FILE__, __LINE__, msg)
+#else
+#define yu_log_error(msg)
+#endif // !DEBUG
+
 #define yu_byte_swap(a, b, size)                                               \
   do {                                                                         \
     size_t __size = (size);                                                    \

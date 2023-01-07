@@ -1,5 +1,7 @@
 build/
-.cache/
-.vscode/
-compile_commands.json
+Testing
+setup.bat
 *.o
+.cache/
+compile_commands.json
+.vscode/

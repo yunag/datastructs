@@ -1,8 +1,8 @@
 #include "datastructs/hashtable.h"
+#include "datastructs/utils.h"
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,7 +22,7 @@ struct hash_table {
 
 static size_t hash(hash_table *htable, const void *key) {
   assert(htable != NULL && key != NULL);
-  const uint8_t *bytes = key;
+  const char *bytes = key;
   size_t sum = 0;
   for (size_t i = 0; i < htable->ksize; ++i) {
     sum += bytes[i];
@@ -35,13 +35,13 @@ hash_table *htable_create(size_t table_size, size_t key_size,
   assert(table_size > 0 && key_size > 0 && value_size > 0);
   hash_table *htable = malloc(sizeof(*htable));
   if (htable == NULL) {
-    fprintf(stderr, "Failed to allocate memory for hash table.\n");
+    yu_log_error("Failed to allocate memory for hash table");
     return NULL;
   }
   htable->table = calloc(table_size, sizeof(struct helem *));
   if (htable->table == NULL) {
     free(htable);
-    fprintf(stderr, "Failed to allocate memory for table.\n");
+    yu_log_error("Failed to allocate memory for table");
     return NULL;
   }
   htable->size = 0;
@@ -84,13 +84,13 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
   }
   struct helem *tmp = malloc(sizeof(struct helem));
   if (tmp == NULL) {
-    fprintf(stderr, "Failed to allocate memory for element of hash table.\n");
+    yu_log_error("Failed to allocate memory for element of hash table");
     return;
   }
-  uint8_t *keyval = malloc(htable->ksize + htable->vsize);
+  char *keyval = malloc(htable->ksize + htable->vsize);
   if (keyval == NULL) {
     free(tmp);
-    fprintf(stderr, "Failed to allocate memory for key and value.\n");
+    yu_log_error("Failed to allocate memory for key and value");
     return;
   }
   size_t idx = hash(htable, key);
@@ -110,17 +110,17 @@ void *htable_lookup(hash_table *htable, const void *key) {
   return lookup(htable, key, hash(htable, key));
 }
 
-inline size_t htable_size(hash_table *hash_table) {
+size_t htable_size(hash_table *hash_table) {
   assert(hash_table != NULL);
   return hash_table->size;
 }
 
-inline size_t htable_ksize(hash_table *hash_table) {
+size_t htable_ksize(hash_table *hash_table) {
   assert(hash_table != NULL);
   return hash_table->ksize;
 }
 
-inline size_t htable_vsize(hash_table *hash_table) {
+size_t htable_vsize(hash_table *hash_table) {
   assert(hash_table != NULL);
   return hash_table->vsize;
 }

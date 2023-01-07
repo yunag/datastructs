@@ -3,7 +3,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -23,12 +22,12 @@ struct trie_node {
 static struct trie_node *create_trie_node(void) {
   struct trie_node *node = malloc(sizeof(*node));
   if (node == NULL) {
-    fprintf(stderr, "Failed to allocate memory for trie node\n");
+    yu_log_error("Failed to allocate memory for trie node");
     return NULL;
   }
   node->child = calloc(ASCII_LENGTH, sizeof(struct trie_node *));
   if (node->child == NULL) {
-    fprintf(stderr, "Failed to allocate memory for trie node\n");
+    yu_log_error("Failed to allocate memory for trie node");
     free(node);
     return NULL;
   }
@@ -46,7 +45,7 @@ static void free_trie_node(struct trie_node *node) {
 trie *trie_create(void) {
   trie *trie = malloc(sizeof(*trie));
   if (trie == NULL) {
-    fprintf(stderr, "Failed to allocate memory for Trie\n");
+    yu_log_error("Failed to allocate memory for Trie");
     return NULL;
   }
   trie->depth = 0;

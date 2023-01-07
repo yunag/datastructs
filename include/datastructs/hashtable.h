@@ -10,16 +10,16 @@ typedef struct hash_table hash_table;
   do {                                                                         \
     assert(sizeof(keyT) == htable_ksize((HT)) &&                                 \
            sizeof(valT) == htable_vsize((HT));                                  \
-    keyT keycopy = (key);                                                      \
-    valT valcopy = (val);                                                      \
-    htable_insert((HT), &keycopy, &valcopy);                                   \
+    keyT __key = (key);                                                      \
+    valT __val = (val);                                                      \
+    htable_insert((HT), &__key, &__val);                                       \
   } while (0)
 
 #define HASH_FIND(HT, keyT, key)                                               \
   ({                                                                           \
     assert(sizeof(keyT) == htable_ksize((HT)));                                \
-    keyT keycopy = (key);                                                      \
-    htable_lookup((HT), &keycopy);                                             \
+    keyT __key = (key);                                                        \
+    htable_lookup((HT), &__key);                                               \
   })
 
 hash_table *htable_create(size_t table_size, size_t key_size,
@@ -27,8 +27,8 @@ hash_table *htable_create(size_t table_size, size_t key_size,
 void htable_free(hash_table *hash_table);
 void htable_insert(hash_table *hash_table, const void *key, const void *val);
 void *htable_lookup(hash_table *hash_table, const void *key);
-inline size_t htable_size(hash_table *hash_table);
-inline size_t htable_ksize(hash_table *hash_table);
-inline size_t htable_vsize(hash_table *hash_table);
+size_t htable_size(hash_table *hash_table);
+size_t htable_ksize(hash_table *hash_table);
+size_t htable_vsize(hash_table *hash_table);
 
 #endif // !YU_HASH_TABLE_H

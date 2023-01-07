@@ -2,7 +2,6 @@
 #include "datastructs/utils.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,7 +24,7 @@ static inline bool has_rchild(priority_queue *pq, const size_t parent) {
 }
 static inline bool has_parent(size_t child) { return child >= 1; }
 static inline void *heap_at(priority_queue *pq, const size_t idx) {
-  return &((uint8_t *)pq->heap)[pq->elemsize * idx];
+  return &((char *)pq->heap)[pq->elemsize * idx];
 }
 static inline void *left_child(priority_queue *pq, const size_t parent) {
   return heap_at(pq, lchild_idx(parent));
@@ -41,7 +40,7 @@ static bool pq_resize(priority_queue *pq, const size_t newsize) {
   assert(newsize > pq->size);
   void *tmp = realloc(pq->heap, pq->elemsize * newsize);
   if (tmp == NULL) {
-    fprintf(stderr, "Failed to resize buffer for queue");
+    yu_log_error("Failed to resize buffer for queue");
     return false;
   }
   pq->heap = tmp;
@@ -53,13 +52,13 @@ priority_queue *pq_create(size_t size, size_t elemsize, cmp_fn cmp) {
   assert(size > 0 && elemsize > 0 && cmp != NULL);
   priority_queue *pq = malloc(sizeof(*pq));
   if (pq == NULL) {
-    fprintf(stderr, "Failed to allocate memory for priority queue.\n");
+    yu_log_error("Failed to allocate memory for priority queue");
     return NULL;
   }
   pq->heap = malloc(elemsize * size);
   if (pq->heap == NULL) {
     free(pq);
-    fprintf(stderr, "Failed to allocate memory for heap.\n");
+    yu_log_error("Failed to allocate memory for heap");
     return NULL;
   }
   pq->capacity = size;
@@ -111,19 +110,22 @@ void pq_pop(priority_queue *pq) {
   }
 }
 
-inline size_t pq_size(priority_queue *pq) {
-  assert(pq != NULL);
-  return pq->size;
-}
-inline bool pq_empty(priority_queue *pq) {
+bool pq_empty(priority_queue *pq) {
   assert(pq != NULL);
   return pq->size == 0;
 }
-inline const void *pq_top(priority_queue *pq) {
+
+const void *pq_top(priority_queue *pq) {
   assert(pq != NULL);
   return pq->heap;
 }
-inline size_t pq_esize(priority_queue *pq) {
+
+size_t pq_size(priority_queue *pq) {
+  assert(pq != NULL);
+  return pq->size;
+}
+
+size_t pq_esize(priority_queue *pq) {
   assert(pq != NULL);
   return pq->elemsize;
 }

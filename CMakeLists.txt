@@ -1,17 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
-project(datastructs VERSION 0.0.1 LANGUAGES C)
+cmake_minimum_required(VERSION 3.16)
+project(datastructs VERSION 0.0.1 LANGUAGES C CXX)
+option(build_tests "Build tests." ON)
 
-add_library(${PROJECT_NAME} STATIC
-  src/hashtable.c
-  src/trie.c
-)
+set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    include
-)
-
-target_compile_options(${PROJECT_NAME}
-  PRIVATE
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -ggdb>
-)
+add_subdirectory(src)
+if(build_tests)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
