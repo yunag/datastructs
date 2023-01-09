@@ -10,15 +10,15 @@ extern "C" {
 
 typedef struct queue queue;
 
-#define QUEUE_PUSH(Q, elemT, elem)                                             \
+#define QUEUE_PUSH(Q, T, elem)                                                 \
   do {                                                                         \
-    assert(sizeof(elemT) == queue_esize((Q)));                                 \
-    elemT __elem = (elem);                                                     \
-    queue_push((Q), &__elem);                                                  \
+    assert(sizeof(T) == queue_esize(Q));                                       \
+    T __elem = (elem);                                                         \
+    queue_push(Q, &__elem);                                                    \
   } while (0)
 
-#define QUEUE_FRONT(Q, elemT) *(elemT *)queue_front((Q))
-#define QUEUE_BACK(Q, elemT) *(elemT *)queue_back((Q))
+#define QUEUE_FRONT(Q, T) *(T *)queue_front(Q)
+#define QUEUE_BACK(Q, T) *(T *)queue_back(Q)
 
 queue *queue_create(size_t size, size_t elemsize);
 void queue_free(queue *queue);

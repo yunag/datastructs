@@ -9,11 +9,11 @@ struct stack {
   void *buffer;    /* Buffer for storing elements */
   size_t size;     /* Size of the Stack */
   size_t capacity; /* Capacity of the Stack */
-  size_t elemsize; /* Size of a single element in the Stack */
+  size_t esize;    /* Size of a single element in the Stack */
 };
 
 static inline void *stack_at(stack *s, size_t idx) {
-  return &((char *)s->buffer)[s->elemsize * idx];
+  return &((char *)s->buffer)[s->esize * idx];
 }
 
 stack *stack_create(size_t size, size_t elemsize) {
@@ -30,7 +30,7 @@ stack *stack_create(size_t size, size_t elemsize) {
     return NULL;
   }
   s->capacity = size;
-  s->elemsize = elemsize;
+  s->esize = elemsize;
   s->size = 0;
   return s;
 }
@@ -43,7 +43,7 @@ void stack_free(stack *s) {
 
 static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL && newsize > s->size);
-  void *tmp = realloc(s->buffer, s->elemsize * newsize);
+  void *tmp = realloc(s->buffer, s->esize * newsize);
   if (tmp == NULL) {
     yu_log_error("Failed to resize buffer for stack");
     return false;
@@ -58,7 +58,7 @@ void stack_push(stack *s, const void *elem) {
   if (stack_full(s) && !stack_resize(s, s->capacity * 2)) {
     return;
   }
-  memcpy(stack_at(s, s->size++), elem, s->elemsize);
+  memcpy(stack_at(s, s->size++), elem, s->esize);
 }
 
 void stack_pop(stack *s) {
@@ -94,5 +94,5 @@ size_t stack_size(stack *s) {
 
 size_t stack_esize(stack *s) {
   assert(s != NULL);
-  return s->elemsize;
+  return s->esize;
 }

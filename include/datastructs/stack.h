@@ -10,14 +10,14 @@ extern "C" {
 
 typedef struct stack stack;
 
-#define STACK_PUSH(S, elemT, elem)                                             \
+#define STACK_PUSH(S, T, elem)                                                 \
   do {                                                                         \
-    assert(sizeof(elemT) == stack_esize((S)));                                 \
-    elemT __elem = (elem);                                                     \
-    stack_push((S), &__elem);                                                  \
+    assert(sizeof(T) == stack_esize(S));                                       \
+    T __elem = (elem);                                                         \
+    stack_push(S, &__elem);                                                    \
   } while (0)
 
-#define STACK_TOP(S, elemT) *(elemT *)stack_top((S))
+#define STACK_TOP(S, T) *(T *)stack_top(S)
 
 stack *stack_create(size_t size, size_t elemsize);
 void stack_free(stack *stack);

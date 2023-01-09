@@ -11,14 +11,14 @@ extern "C" {
 typedef struct priority_queue priority_queue;
 typedef int (*cmp_fn)(const void *, const void *);
 
-#define PQ_PUSH(PQ, elemT, elem)                                               \
+#define PQ_PUSH(PQ, T, elem)                                                   \
   do {                                                                         \
-    assert(sizeof(elemT) == pq_esize((PQ)));                                   \
-    elemT __elem = (elem);                                                     \
-    pq_push((PQ), &__elem);                                                    \
+    assert(sizeof(T) == pq_esize(PQ));                                         \
+    T __elem = (elem);                                                         \
+    pq_push(PQ, &__elem);                                                      \
   } while (0)
 
-#define PQ_TOP(Q, elemT) *(elemT *)pq_top((Q))
+#define PQ_TOP(PQ, T) *(T *)pq_top(PQ)
 
 priority_queue *pq_create(size_t size, size_t elemsize, cmp_fn cmp);
 void pq_free(priority_queue *pq);

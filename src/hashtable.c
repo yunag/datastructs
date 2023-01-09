@@ -1,4 +1,4 @@
-#include "datastructs/hashtable.h"
+#include "datastructs/hash_table.h"
 #include "datastructs/utils.h"
 
 #include <assert.h>
@@ -9,7 +9,7 @@
 struct helem {
   void *key;          /* Pointer to key copy */
   void *val;          /* Pointer to value copy */
-  struct helem *prev; /* Pointer to previous struct */
+  struct helem *next; /* Pointer to next struct */
 };
 
 struct hash_table {
@@ -21,13 +21,12 @@ struct hash_table {
 };
 
 static size_t hash(hash_table *htable, const void *key) {
-  assert(htable != NULL && key != NULL);
   const char *bytes = key;
-  size_t sum = 0;
+  size_t hash = 5381;
   for (size_t i = 0; i < htable->ksize; ++i) {
-    sum += bytes[i];
+    hash = (hash << 5) + hash + bytes[i];
   }
-  return sum % htable->capacity;
+  return hash % htable->capacity;
 }
 
 hash_table *htable_create(size_t table_size, size_t key_size,
@@ -57,7 +56,7 @@ void htable_free(hash_table *htable) {
     struct helem *helem = htable->table[i];
     while (helem != NULL) {
       struct helem *to_free = helem;
-      helem = helem->prev;
+      helem = helem->next;
       /* We store all the memory for key and value in `key` */
       free(to_free->key);
       free(to_free);
@@ -67,47 +66,58 @@ void htable_free(hash_table *htable) {
   free(htable);
 }
 
-static void *lookup(hash_table *htable, const void *key, size_t idx) {
-  struct helem *tmp = htable->table[idx];
-  while (tmp != NULL && memcmp(tmp->key, key, htable->ksize)) {
-    tmp = tmp->prev;
+static struct helem **lookup(hash_table *htable, const void *key, size_t idx) {
+  struct helem **walk = &htable->table[idx];
+  while (*walk != NULL && memcmp((*walk)->key, key, htable->ksize)) {
+    walk = &(*walk)->next;
   }
-  return tmp != NULL ? tmp->val : tmp;
+  return walk;
 }
 
 void htable_insert(hash_table *htable, const void *key, const void *val) {
   assert(htable != NULL && key != NULL && val != NULL);
-  void *exist = lookup(htable, key, hash(htable, key));
-  if (exist != NULL) { /* The key already exists in the hash table */
-    memcpy(exist, val, htable->vsize);
+  size_t idx = hash(htable, key);
+  struct helem *entry = *lookup(htable, key, idx);
+  if (entry != NULL) { /* The key already exists in the hash table */
+    memcpy(entry->val, val, htable->vsize);
     return;
   }
-  struct helem *tmp = malloc(sizeof(struct helem));
-  if (tmp == NULL) {
+  entry = malloc(sizeof(struct helem));
+  if (entry == NULL) {
     yu_log_error("Failed to allocate memory for element of hash table");
     return;
   }
   char *keyval = malloc(htable->ksize + htable->vsize);
   if (keyval == NULL) {
-    free(tmp);
+    free(entry);
     yu_log_error("Failed to allocate memory for key and value");
     return;
   }
-  size_t idx = hash(htable, key);
-  tmp->key = &keyval[0];
-  tmp->val = &keyval[htable->ksize];
+  entry->key = &keyval[0];
+  entry->val = &keyval[htable->ksize];
 
-  memcpy(tmp->key, key, htable->ksize);
-  memcpy(tmp->val, val, htable->vsize);
+  memcpy(entry->key, key, htable->ksize);
+  memcpy(entry->val, val, htable->vsize);
 
-  tmp->prev = htable->table[idx];
-  htable->table[idx] = tmp;
+  entry->next = htable->table[idx];
+  htable->table[idx] = entry;
   htable->size++;
 }
 
 void *htable_lookup(hash_table *htable, const void *key) {
   assert(htable != NULL && key != NULL);
-  return lookup(htable, key, hash(htable, key));
+  struct helem *entry = *lookup(htable, key, hash(htable, key));
+  return entry != NULL ? entry->val : NULL;
+}
+
+void htable_remove(hash_table *htable, const void *key) {
+  assert(htable != NULL && key != NULL);
+  struct helem **entry = lookup(htable, key, hash(htable, key));
+  if (*entry != NULL) {
+    struct helem *tmp = *entry;
+    *entry = (*entry)->next;
+    free(tmp);
+  }
 }
 
 size_t htable_size(hash_table *hash_table) {

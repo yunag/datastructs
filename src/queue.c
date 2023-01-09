@@ -11,15 +11,15 @@ struct queue {
   size_t rear;     /* Rear index of the Queue */
   size_t size;     /* Size of the Queue */
   size_t capacity; /* Capacity of the Queue */
-  size_t elemsize; /* Size of a single element in the Queue */
+  size_t esize;    /* Size of a single element in the Queue */
 };
 
 static inline void *queue_at(queue *q, size_t idx) {
-  return &((char *)q->buffer)[q->elemsize * idx];
+  return &((char *)q->buffer)[q->esize * idx];
 }
 
-static inline void *buffer_at(void *buffer, size_t elemsize, size_t idx) {
-  return &((char *)buffer)[elemsize * idx];
+static inline void *buffer_at(void *buffer, size_t esize, size_t idx) {
+  return &((char *)buffer)[esize * idx];
 }
 
 queue *queue_create(size_t size, size_t elemsize) {
@@ -36,7 +36,7 @@ queue *queue_create(size_t size, size_t elemsize) {
     return NULL;
   }
   q->capacity = size;
-  q->elemsize = elemsize;
+  q->esize = elemsize;
   q->size = 0;
   q->front = 0;
   q->rear = q->capacity - 1;
@@ -53,23 +53,23 @@ static bool queue_resize(queue *q, size_t newsize) {
   assert(newsize > q->size);
   void *tmp;
   if (q->front <= q->rear) { /* Realloc case */
-    tmp = realloc(q->buffer, newsize * q->elemsize);
+    tmp = realloc(q->buffer, newsize * q->esize);
     if (tmp == NULL) {
       yu_log_error("Failed on buffer resize");
       return false;
     }
   } else {
-    tmp = malloc(newsize * q->elemsize);
+    tmp = malloc(newsize * q->esize);
     if (tmp == NULL) {
       yu_log_error("Failed on buffer resize");
       return false;
     }
     size_t nfront = q->size - q->front;
     /* copy from beginning up to rear */
-    memcpy(tmp, q->buffer, (q->rear + 1) * q->elemsize);
+    memcpy(tmp, q->buffer, (q->rear + 1) * q->esize);
     /* copy from front to the end */
-    memcpy(buffer_at(tmp, q->elemsize, newsize - nfront), queue_at(q, q->front),
-           nfront * q->elemsize);
+    memcpy(buffer_at(tmp, q->esize, newsize - nfront), queue_at(q, q->front),
+           nfront * q->esize);
     q->front = newsize - nfront;
     free(q->buffer);
   }
@@ -85,7 +85,7 @@ void queue_push(queue *q, const void *elem) {
   }
   q->size++;
   q->rear = (q->rear + 1) % q->capacity;
-  memcpy(queue_at(q, q->rear), elem, q->elemsize);
+  memcpy(queue_at(q, q->rear), elem, q->esize);
 }
 
 void queue_pop(queue *q) {
@@ -130,5 +130,5 @@ size_t queue_size(queue *q) {
 
 size_t queue_esize(queue *q) {
   assert(q != NULL);
-  return q->elemsize;
+  return q->esize;
 }
