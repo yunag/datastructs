@@ -8,11 +8,15 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Now simply link against gtest or gtest_main as needed. Eg
-add_executable(example queuetest.cpp)
-target_link_libraries(example 
-  PRIVATE
-    gtest_main
-    datastructs
-)
-add_test(NAME example_test COMMAND example)
+set(TEST_LIBS gtest_main datastructs)
+
+list(APPEND Targets queue priorityqueue stack)
+list(APPEND Sources queuetest.cpp pqtest.cpp stacktest.cpp)
+foreach(target source IN ZIP_LISTS Targets Sources)
+  add_executable(${target} ${source})
+  target_link_libraries(${target}
+    PRIVATE
+      ${TEST_LIBS}
+  )
+  add_test(${target}Test ${target})
+endforeach()
