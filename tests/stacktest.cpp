@@ -25,7 +25,7 @@ TEST(Stack, Initialization) {
       sizeof(int),  sizeof(float),    sizeof(double),
       sizeof(char), sizeof(uint16_t),
   };
-  size_t types_size = yu_arraysize(types);
+  size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
     stack *s = stack_create(Helper::rand(1, 20000), types[i]);

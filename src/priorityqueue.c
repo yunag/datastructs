@@ -40,7 +40,7 @@ static bool pq_resize(priority_queue *pq, const size_t newsize) {
   assert(newsize > pq->size);
   void *tmp = realloc(pq->heap, pq->esize * newsize);
   if (tmp == NULL) {
-    yu_log_error("Failed to resize buffer for queue");
+    YU_LOG_ERROR("Failed to resize buffer for queue");
     return false;
   }
   pq->heap = tmp;
@@ -52,13 +52,13 @@ priority_queue *pq_create(size_t size, size_t elemsize, cmp_fn cmp) {
   assert(size > 0 && elemsize > 0 && cmp != NULL);
   priority_queue *pq = malloc(sizeof(*pq));
   if (pq == NULL) {
-    yu_log_error("Failed to allocate memory for priority queue");
+    YU_LOG_ERROR("Failed to allocate memory for priority queue");
     return NULL;
   }
   pq->heap = malloc(elemsize * size);
   if (pq->heap == NULL) {
     free(pq);
-    yu_log_error("Failed to allocate memory for heap");
+    YU_LOG_ERROR("Failed to allocate memory for heap");
     return NULL;
   }
   pq->capacity = size;
@@ -82,7 +82,7 @@ void pq_push(priority_queue *pq, const void *elem) {
   memcpy(heap_at(pq, pq->size), elem, pq->esize);
   size_t idx = pq->size++;
   while (has_parent(idx) && pq->cmp(parent(pq, idx), heap_at(pq, idx)) > 0) {
-    yu_byte_swap(parent(pq, idx), heap_at(pq, idx), pq->esize);
+    YU_BYTE_SWAP(parent(pq, idx), heap_at(pq, idx), pq->esize);
     idx = parent_idx(idx);
   }
 }
@@ -105,7 +105,7 @@ void pq_pop(priority_queue *pq) {
     if (pq->cmp(heap_at(pq, child), heap_at(pq, idx)) > 0) {
       break;
     }
-    yu_byte_swap(heap_at(pq, child), heap_at(pq, idx), pq->esize);
+    YU_BYTE_SWAP(heap_at(pq, child), heap_at(pq, idx), pq->esize);
     idx = child;
   }
 }

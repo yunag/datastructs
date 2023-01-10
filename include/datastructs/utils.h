@@ -5,29 +5,29 @@
 extern "C" {
 #endif
 
-#define yu_arraysize(_ARR) (sizeof(_ARR) / sizeof(_ARR[0]))
+#define YU_ARRAYSIZE(_ARR) (sizeof(_ARR) / sizeof(_ARR[0]))
 
-#define yu_min(_VAL1, _VAL2)                                                   \
+#define YU_MIN(_VAL1, _VAL2)                                                   \
   ({                                                                           \
     __typeof__(_VAL1) _ARG1 = (_VAL1);                                         \
     __typeof__(_VAL2) _ARG2 = (_VAL2);                                         \
     _ARG1 < _ARG2 ? _ARG1 : _ARG2;                                             \
   })
 
-#define yu_max(_VAL1, _VAL2)                                                   \
+#define YU_MAX(_VAL1, _VAL2)                                                   \
   ({                                                                           \
     __typeof__(_VAL1) _ARG1 = (_VAL1);                                         \
     __typeof__(_VAL2) _ARG2 = (_VAL2);                                         \
     _ARG1 > _ARG2 ? _ARG1 : _ARG2;                                             \
   })
 
-#define yu_abs(_VAL)                                                           \
+#define YU_ABS(_VAL)                                                           \
   ({                                                                           \
     __typeof__(_VAL) _ARG = (_VAL);                                            \
     _ARG < 0 ? -1 * _ARG : _ARG;                                               \
   })
 
-#define yu_swap(_PVAL1, _PVAL2)                                                \
+#define YU_SWAP(_PVAL1, _PVAL2)                                                \
   ({                                                                           \
     __typeof__(*(_PVAL1)) temp = *(_PVAL1);                                    \
     *(_PVAL1) = *(_PVAL2);                                                     \
@@ -36,13 +36,13 @@ extern "C" {
 
 #ifndef NDEBUG
 #include <stdio.h>
-#define yu_log_error(msg)                                                      \
+#define YU_LOG_ERROR(msg)                                                      \
   fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, msg)
 #else
-#define yu_log_error(msg)
+#define YU_LOG_ERROR(msg)
 #endif // !DEBUG
 
-#define yu_byte_swap(a, b, size)                                               \
+#define YU_BYTE_SWAP(a, b, size)                                               \
   do {                                                                         \
     size_t __size = (size);                                                    \
     char *__a = (a), *__b = (b);                                               \

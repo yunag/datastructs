@@ -7,12 +7,12 @@
 
 #include <limits.h>
 
-class StackTest : public ::testing::Test {
+class QueueTest : public ::testing::Test {
 protected:
   void SetUp() override {}
   void TearDown() override { queue_free(q_); }
 
-  template <typename T> void SetStack(size_t size = 1) {
+  template <typename T> void SetQueue(size_t size = 1) {
     q_ = queue_create(size, sizeof(T));
     ASSERT_NE(q_, nullptr);
   }
@@ -25,7 +25,7 @@ TEST(Queue, Initialization) {
       sizeof(int),  sizeof(float),    sizeof(double),
       sizeof(char), sizeof(uint16_t),
   };
-  size_t types_size = yu_arraysize(types);
+  size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
     queue *q = queue_create(Helper::rand(1, 20000), types[i]);
@@ -38,8 +38,8 @@ TEST(Queue, Initialization) {
   }
 }
 
-TEST_F(StackTest, PushResize) {
-  SetStack<int>(2);
+TEST_F(QueueTest, PushResize) {
+  SetQueue<int>(2);
   const size_t num_cases = 200;
   for (size_t i = 0; i < num_cases; ++i) {
     int val = Helper::rand(INT_MIN, INT_MAX);
@@ -50,8 +50,8 @@ TEST_F(StackTest, PushResize) {
   }
 }
 
-TEST_F(StackTest, PushPop) {
-  SetStack<int>();
+TEST_F(QueueTest, PushPop) {
+  SetQueue<int>();
   const size_t num_cases = 10000;
   int nums[num_cases];
   for (size_t i = 0; i < num_cases; ++i) {
@@ -69,8 +69,8 @@ TEST_F(StackTest, PushPop) {
   EXPECT_EQ(queue_back(q_), nullptr);
 }
 
-TEST_F(StackTest, Case1) {
-  SetStack<double>();
+TEST_F(QueueTest, Case1) {
+  SetQueue<double>();
   QUEUE_PUSH(q_, double, 5);
   EXPECT_EQ(QUEUE_FRONT(q_, double), 5);
   EXPECT_EQ(QUEUE_BACK(q_, double), 5);
@@ -96,6 +96,28 @@ TEST_F(StackTest, Case1) {
   EXPECT_EQ(QUEUE_FRONT(q_, double), 120);
   EXPECT_EQ(QUEUE_BACK(q_, double), 79);
   EXPECT_EQ(queue_size(q_), 2);
+}
+
+TEST_F(QueueTest, Case2) {
+  SetQueue<double>(5);
+  QUEUE_PUSH(q_, double, 5);
+  QUEUE_PUSH(q_, double, 5);
+  QUEUE_PUSH(q_, double, 1);
+  queue_pop(q_);
+  queue_pop(q_);
+
+  QUEUE_PUSH(q_, double, 2);
+  QUEUE_PUSH(q_, double, 3);
+  QUEUE_PUSH(q_, double, 4);
+  QUEUE_PUSH(q_, double, 5);
+  QUEUE_PUSH(q_, double, 6);
+  EXPECT_EQ(queue_size(q_), 6);
+  for (size_t i = 0, qsize = queue_size(q_); i < qsize - 1; ++i) {
+    EXPECT_EQ(QUEUE_FRONT(q_, double), i + 1);
+    queue_pop(q_);
+  }
+  EXPECT_EQ(QUEUE_FRONT(q_, double), 6);
+  EXPECT_FALSE(queue_empty(q_));
 }
 
 int main(int argc, char *argv[]) {

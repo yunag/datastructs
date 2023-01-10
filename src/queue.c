@@ -26,13 +26,13 @@ queue *queue_create(size_t size, size_t elemsize) {
   assert(size > 0 && elemsize > 0);
   queue *q = malloc(sizeof(*q));
   if (q == NULL) {
-    yu_log_error("Failed to allocate memory for queue");
+    YU_LOG_ERROR("Failed to allocate memory for queue");
     return NULL;
   }
   q->buffer = malloc(elemsize * size);
   if (q->buffer == NULL) {
     free(q);
-    yu_log_error("Failed to allocate memory for queue");
+    YU_LOG_ERROR("Failed to allocate memory for queue");
     return NULL;
   }
   q->capacity = size;
@@ -51,29 +51,28 @@ void queue_free(queue *q) {
 
 static bool queue_resize(queue *q, size_t newsize) {
   assert(newsize > q->size);
-  void *tmp;
+  void *buffer;
   if (q->front <= q->rear) { /* Realloc case */
-    tmp = realloc(q->buffer, newsize * q->esize);
-    if (tmp == NULL) {
-      yu_log_error("Failed on buffer resize");
+    buffer = realloc(q->buffer, newsize * q->esize);
+    if (buffer == NULL) {
+      YU_LOG_ERROR("Failed on buffer resize");
       return false;
     }
   } else {
-    tmp = malloc(newsize * q->esize);
-    if (tmp == NULL) {
-      yu_log_error("Failed on buffer resize");
+    buffer = malloc(newsize * q->esize);
+    if (buffer == NULL) {
+      YU_LOG_ERROR("Failed on buffer resize");
       return false;
     }
     size_t nfront = q->size - q->front;
-    /* copy from beginning up to rear */
-    memcpy(tmp, q->buffer, (q->rear + 1) * q->esize);
-    /* copy from front to the end */
-    memcpy(buffer_at(tmp, q->esize, newsize - nfront), queue_at(q, q->front),
-           nfront * q->esize);
-    q->front = newsize - nfront;
+    memcpy(buffer, queue_at(q, q->front), nfront * q->esize);
+    memcpy(buffer_at(buffer, q->esize, nfront), q->buffer,
+           (q->rear + 1) * q->esize);
+    q->rear = q->size - 1;
+    q->front = 0;
     free(q->buffer);
   }
-  q->buffer = tmp;
+  q->buffer = buffer;
   q->capacity = newsize;
   return true;
 }

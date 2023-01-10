@@ -34,13 +34,13 @@ hash_table *htable_create(size_t table_size, size_t key_size,
   assert(table_size > 0 && key_size > 0 && value_size > 0);
   hash_table *htable = malloc(sizeof(*htable));
   if (htable == NULL) {
-    yu_log_error("Failed to allocate memory for hash table");
+    YU_LOG_ERROR("Failed to allocate memory for hash table");
     return NULL;
   }
   htable->table = calloc(table_size, sizeof(struct helem *));
   if (htable->table == NULL) {
     free(htable);
-    yu_log_error("Failed to allocate memory for table");
+    YU_LOG_ERROR("Failed to allocate memory for table");
     return NULL;
   }
   htable->size = 0;
@@ -84,13 +84,13 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
   }
   entry = malloc(sizeof(struct helem));
   if (entry == NULL) {
-    yu_log_error("Failed to allocate memory for element of hash table");
+    YU_LOG_ERROR("Failed to allocate memory for element of hash table");
     return;
   }
   char *keyval = malloc(htable->ksize + htable->vsize);
   if (keyval == NULL) {
     free(entry);
-    yu_log_error("Failed to allocate memory for key and value");
+    YU_LOG_ERROR("Failed to allocate memory for key and value");
     return;
   }
   entry->key = &keyval[0];
