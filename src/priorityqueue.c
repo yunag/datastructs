@@ -80,10 +80,10 @@ void pq_push(priority_queue *pq, const void *elem) {
     return;
   }
   memcpy(heap_at(pq, pq->size), elem, pq->esize);
-  size_t idx = pq->size++;
-  while (has_parent(idx) && pq->cmp(parent(pq, idx), heap_at(pq, idx)) > 0) {
-    YU_BYTE_SWAP(parent(pq, idx), heap_at(pq, idx), pq->esize);
-    idx = parent_idx(idx);
+  size_t p = pq->size++;
+  while (has_parent(p) && pq->cmp(parent(pq, p), heap_at(pq, p)) > 0) {
+    YU_BYTE_SWAP(parent(pq, p), heap_at(pq, p), pq->esize);
+    p = parent_idx(p);
   }
 }
 
@@ -94,19 +94,19 @@ void pq_pop(priority_queue *pq) {
   /* Move last element to the top */
   memcpy(pq->heap, heap_at(pq, --pq->size), pq->esize);
 
-  size_t idx = 0;
-  while (has_lchild(pq, idx)) {
-    size_t child = lchild_idx(idx);
-    if (has_rchild(pq, idx) &&
-        pq->cmp(left_child(pq, idx), right_child(pq, idx)) > 0) {
-      child = rchild_idx(idx);
+  size_t p = 0;
+  while (has_lchild(pq, p)) {
+    size_t child = lchild_idx(p);
+    if (has_rchild(pq, p) &&
+        pq->cmp(left_child(pq, p), right_child(pq, p)) > 0) {
+      child = rchild_idx(p);
     }
 
-    if (pq->cmp(heap_at(pq, child), heap_at(pq, idx)) > 0) {
+    if (pq->cmp(heap_at(pq, child), heap_at(pq, p)) > 0) {
       break;
     }
-    YU_BYTE_SWAP(heap_at(pq, child), heap_at(pq, idx), pq->esize);
-    idx = child;
+    YU_BYTE_SWAP(heap_at(pq, child), heap_at(pq, p), pq->esize);
+    p = child;
   }
 }
 

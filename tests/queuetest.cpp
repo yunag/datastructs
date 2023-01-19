@@ -6,6 +6,7 @@
 #include "helper.h"
 
 #include <limits.h>
+#include <queue>
 
 class QueueTest : public ::testing::Test {
 protected:
@@ -67,6 +68,33 @@ TEST_F(QueueTest, PushPop) {
   EXPECT_TRUE(queue_empty(q_));
   EXPECT_EQ(queue_front(q_), nullptr);
   EXPECT_EQ(queue_back(q_), nullptr);
+}
+
+TEST_F(QueueTest, STLQueue) {
+  SetQueue<double>(1);
+  std::queue<double> q;
+  const size_t num_commands = 100000;
+  for (size_t i = 0; i < num_commands; ++i) {
+    size_t command = Helper::rand(0, 3);
+    EXPECT_EQ(q.empty(), queue_empty(q_));
+    EXPECT_EQ(q.size(), queue_size(q_));
+    if (queue_empty(q_) || command == 0) {
+      double val = Helper::rand(INT_MIN, INT_MAX);
+      q.push(val);
+      queue_push(q_, &val);
+      EXPECT_EQ(q.front(), QUEUE_FRONT(q_, double));
+      EXPECT_EQ(q.back(), QUEUE_BACK(q_, double));
+    } else if (command == 1) {
+      EXPECT_EQ(q.front(), QUEUE_FRONT(q_, double));
+      EXPECT_EQ(q.back(), QUEUE_BACK(q_, double));
+      q.pop();
+      queue_pop(q_);
+    } else if (command == 2) {
+      EXPECT_EQ(q.front(), QUEUE_FRONT(q_, double));
+    } else if (command == 3) {
+      EXPECT_EQ(q.back(), QUEUE_BACK(q_, double));
+    }
+  }
 }
 
 TEST_F(QueueTest, Case1) {

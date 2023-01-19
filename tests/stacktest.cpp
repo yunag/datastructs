@@ -6,6 +6,7 @@
 #include "helper.h"
 
 #include <limits.h>
+#include <stack>
 
 class StackTest : public ::testing::Test {
 protected:
@@ -65,6 +66,29 @@ TEST_F(StackTest, PushPop) {
   }
   EXPECT_TRUE(stack_empty(s_));
   EXPECT_EQ(stack_top(s_), nullptr);
+}
+
+TEST_F(StackTest, STLStack) {
+  SetStack<double>(1);
+  std::stack<double> s;
+  const size_t num_commands = 100000;
+  for (size_t i = 0; i < num_commands; ++i) {
+    size_t command = Helper::rand(0, 2);
+    EXPECT_EQ(s.empty(), stack_empty(s_));
+    EXPECT_EQ(s.size(), stack_size(s_));
+    if (stack_empty(s_) || command == 0) {
+      double val = Helper::rand(INT_MIN, INT_MAX);
+      s.push(val);
+      stack_push(s_, &val);
+      EXPECT_EQ(s.top(), STACK_TOP(s_, double));
+    } else if (command == 1) {
+      EXPECT_EQ(s.top(), STACK_TOP(s_, double));
+      s.pop();
+      stack_pop(s_);
+    } else if (command == 2) {
+      EXPECT_EQ(s.top(), STACK_TOP(s_, double));
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {

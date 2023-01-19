@@ -4,23 +4,11 @@
 #include "types.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct hash_table hash_table;
-
-#define HASH_INSERT(HT, keyT, valT, key, val)                                  \
-  do {                                                                         \
-    assert(sizeof(keyT) == htable_ksize(HT) &&                                 \
-           sizeof(valT) == htable_vsize(HT);                                  \
-    keyT __key = (key);                                                      \
-    valT __val = (val);                                                      \
-    htable_insert(HT, &__key, &__val);                                         \
-  } while (0)
-
-#define HASH_FIND(HT, keyT, key)                                               \
-  ({                                                                           \
-    assert(sizeof(keyT) == htable_ksize(HT));                                  \
-    keyT __key = (key);                                                        \
-    htable_lookup(HT, &__key);                                                 \
-  })
 
 hash_table *htable_create(size_t table_size, size_t key_size,
                           size_t value_size);
@@ -31,5 +19,25 @@ void htable_remove(hash_table *htable, const void *key);
 size_t htable_size(hash_table *hash_table);
 size_t htable_ksize(hash_table *hash_table);
 size_t htable_vsize(hash_table *hash_table);
+
+#define HASH_INSERT(HT, keyT, valT, key, val)                                  \
+  do {                                                                         \
+    assert(sizeof(keyT) == htable_ksize(HT) &&                                 \
+           sizeof(valT) == htable_vsize(HT));                                  \
+    keyT __key = (key);                                                        \
+    valT __val = (val);                                                        \
+    htable_insert(HT, &__key, &__val);                                         \
+  } while (0)
+
+#define HASH_FIND(HT, keyT, valT, key)                                         \
+  ({                                                                           \
+    assert(sizeof(keyT) == htable_ksize(HT));                                  \
+    keyT __key = (key);                                                        \
+    (valT *)htable_lookup(HT, &__key);                                         \
+  })
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !YU_HASH_TABLE_H

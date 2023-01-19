@@ -6,6 +6,7 @@
 #include "helper.h"
 
 #include <limits.h>
+#include <queue>
 #include <stdlib.h>
 
 template <typename T> int cmp_great(const void *pa, const void *pb) {
@@ -106,6 +107,52 @@ TEST_F(PriorityQueueTest, Lesser) {
     EXPECT_EQ(pq_size(pq_), num_cases - i - 1);
   }
   EXPECT_TRUE(pq_empty(pq_));
+}
+
+TEST_F(PriorityQueueTest, STLPQueueLesser) {
+  SetPQueue<int64_t>(1, cmp_less<double>);
+  std::priority_queue<double> pq;
+  const size_t num_commands = 100000;
+  for (size_t i = 0; i < num_commands; ++i) {
+    size_t command = Helper::rand(0, 2);
+    EXPECT_EQ(pq.empty(), pq_empty(pq_));
+    EXPECT_EQ(pq.size(), pq_size(pq_));
+    if (pq_empty(pq_) || command == 0) {
+      double val = Helper::rand(INT_MIN, INT_MAX);
+      pq.push(val);
+      pq_push(pq_, &val);
+      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+    } else if (command == 1) {
+      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      pq.pop();
+      pq_pop(pq_);
+    } else if (command == 2) {
+      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+    }
+  }
+}
+
+TEST_F(PriorityQueueTest, STLPQueueGreater) {
+  SetPQueue<double>(1);
+  std::priority_queue<double, std::vector<double>, std::greater<double>> pq;
+  const size_t num_commands = 100000;
+  for (size_t i = 0; i < num_commands; ++i) {
+    size_t command = Helper::rand(0, 2);
+    EXPECT_EQ(pq.empty(), pq_empty(pq_));
+    EXPECT_EQ(pq.size(), pq_size(pq_));
+    if (pq_empty(pq_) || command == 0) {
+      double val = Helper::rand(INT_MIN, INT_MAX);
+      pq.push(val);
+      pq_push(pq_, &val);
+      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+    } else if (command == 1) {
+      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      pq.pop();
+      pq_pop(pq_);
+    } else if (command == 2) {
+      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+    }
+  }
 }
 
 TEST_F(PriorityQueueTest, Case1) {

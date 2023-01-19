@@ -16,6 +16,18 @@ static inline void *stack_at(stack *s, size_t idx) {
   return &((char *)s->buffer)[s->esize * idx];
 }
 
+static bool stack_resize(stack *s, size_t newsize) {
+  assert(s != NULL && newsize > s->size);
+  void *tmp = realloc(s->buffer, s->esize * newsize);
+  if (tmp == NULL) {
+    YU_LOG_ERROR("Failed to resize buffer for stack");
+    return false;
+  }
+  s->buffer = tmp;
+  s->capacity = newsize;
+  return true;
+}
+
 stack *stack_create(size_t size, size_t elemsize) {
   assert(size > 0 && elemsize > 0);
   stack *s = malloc(sizeof(*s));
@@ -39,18 +51,6 @@ void stack_free(stack *s) {
   assert(s != NULL);
   free(s->buffer);
   free(s);
-}
-
-static bool stack_resize(stack *s, size_t newsize) {
-  assert(s != NULL && newsize > s->size);
-  void *tmp = realloc(s->buffer, s->esize * newsize);
-  if (tmp == NULL) {
-    YU_LOG_ERROR("Failed to resize buffer for stack");
-    return false;
-  }
-  s->buffer = tmp;
-  s->capacity = newsize;
-  return true;
 }
 
 void stack_push(stack *s, const void *elem) {
