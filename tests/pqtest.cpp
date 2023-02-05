@@ -81,9 +81,9 @@ TEST_F(PriorityQueueTest, Greater) {
   qsort(nums, num_cases, sizeof(*nums), cmp_great<int>);
 
   for (size_t i = 0; i < num_cases; ++i) {
-    EXPECT_EQ(nums[i], PQ_TOP(pq_, int));
+    ASSERT_EQ(nums[i], PQ_TOP(pq_, int));
     pq_pop(pq_);
-    EXPECT_EQ(pq_size(pq_), num_cases - i - 1);
+    ASSERT_EQ(pq_size(pq_), num_cases - i - 1);
   }
   EXPECT_TRUE(pq_empty(pq_));
   EXPECT_EQ(pq_top(pq_), nullptr);
@@ -102,9 +102,9 @@ TEST_F(PriorityQueueTest, Lesser) {
   qsort(nums, num_cases, sizeof(*nums), cmp_less<double>);
 
   for (size_t i = 0; i < num_cases; ++i) {
-    EXPECT_EQ(nums[i], PQ_TOP(pq_, double));
+    ASSERT_EQ(nums[i], PQ_TOP(pq_, double));
     pq_pop(pq_);
-    EXPECT_EQ(pq_size(pq_), num_cases - i - 1);
+    ASSERT_EQ(pq_size(pq_), num_cases - i - 1);
   }
   EXPECT_TRUE(pq_empty(pq_));
 }
@@ -115,19 +115,19 @@ TEST_F(PriorityQueueTest, STLPQueueLesser) {
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
     size_t command = Helper::rand(0, 2);
-    EXPECT_EQ(pq.empty(), pq_empty(pq_));
-    EXPECT_EQ(pq.size(), pq_size(pq_));
+    ASSERT_EQ(pq.empty(), pq_empty(pq_));
+    ASSERT_EQ(pq.size(), pq_size(pq_));
     if (pq_empty(pq_) || command == 0) {
       double val = Helper::rand(INT_MIN, INT_MAX);
       pq.push(val);
       pq_push(pq_, &val);
-      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
     } else if (command == 1) {
-      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
       pq.pop();
       pq_pop(pq_);
     } else if (command == 2) {
-      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
     }
   }
 }
@@ -138,19 +138,19 @@ TEST_F(PriorityQueueTest, STLPQueueGreater) {
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
     size_t command = Helper::rand(0, 2);
-    EXPECT_EQ(pq.empty(), pq_empty(pq_));
-    EXPECT_EQ(pq.size(), pq_size(pq_));
+    ASSERT_EQ(pq.empty(), pq_empty(pq_));
+    ASSERT_EQ(pq.size(), pq_size(pq_));
     if (pq_empty(pq_) || command == 0) {
       double val = Helper::rand(INT_MIN, INT_MAX);
       pq.push(val);
       pq_push(pq_, &val);
-      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
     } else if (command == 1) {
-      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
       pq.pop();
       pq_pop(pq_);
     } else if (command == 2) {
-      EXPECT_EQ(pq.top(), PQ_TOP(pq_, double));
+      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
     }
   }
 }

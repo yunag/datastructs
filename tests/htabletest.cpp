@@ -6,7 +6,6 @@
 #include "helper.h"
 
 #include <limits.h>
-#include <list>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -108,7 +107,7 @@ TEST_F(HashTableTest, STLTable) {
   std::vector<int> keys;
 
   for (size_t i = 0; i < num_commands; ++i) {
-    command = (Action)Helper::rand(Insert, Lookup);
+    command = static_cast<Action>(Helper::rand(Insert, Lookup));
     EXPECT_EQ(stl.size(), htable_size(ht_));
     if (command == Insert || htable_size(ht_) == 0) {
       int key = Helper::rand(-10000, 10000);

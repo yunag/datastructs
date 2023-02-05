@@ -169,14 +169,11 @@ void *htable_lookup(hash_table *htable, const void *key) {
 
 void htable_remove(hash_table *htable, const void *key) {
   assert(htable != NULL && key != NULL);
-  if (htable->size == 0) {
-    return;
-  }
   struct helem **entry = lookup(htable, key, hash(htable, key));
   if (entry == NULL) {
     return;
   }
-  struct helem *elem = *entry;
+  struct helem *free_elem = *entry;
   struct hnode **cur_node = (*entry)->node;
   struct hnode *free_node = *(cur_node);
 
@@ -189,8 +186,8 @@ void htable_remove(hash_table *htable, const void *key) {
   *entry = (*entry)->next;
 
   hnode_free(free_node);
-  free(elem->key);
-  free(elem);
+  free(free_elem->key);
+  free(free_elem);
   htable->size--;
 }
 

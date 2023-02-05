@@ -14,25 +14,26 @@ struct priority_queue {
 };
 
 static inline size_t parent_idx(size_t child) { return (child - 1) / 2; }
-static inline size_t lchild_idx(size_t parent) { return 2 * parent + 1; }
-static inline size_t rchild_idx(size_t parent) { return 2 * parent + 2; }
-static inline bool has_lchild(priority_queue *pq, const size_t parent) {
-  return lchild_idx(parent) < pq->size;
+static inline size_t leftc_idx(size_t parent) { return 2 * parent + 1; }
+static inline size_t rightc_idx(size_t parent) { return 2 * parent + 2; }
+
+static inline bool has_leftc(const priority_queue *pq, size_t parent) {
+  return leftc_idx(parent) < pq->size;
 }
-static inline bool has_rchild(priority_queue *pq, const size_t parent) {
-  return rchild_idx(parent) < pq->size;
+static inline bool has_rightc(const priority_queue *pq, size_t parent) {
+  return rightc_idx(parent) < pq->size;
 }
 static inline bool has_parent(size_t child) { return child >= 1; }
-static inline void *heap_at(priority_queue *pq, const size_t idx) {
+static inline void *heap_at(const priority_queue *pq, size_t idx) {
   return &((char *)pq->heap)[pq->esize * idx];
 }
-static inline void *left_child(priority_queue *pq, const size_t parent) {
-  return heap_at(pq, lchild_idx(parent));
+static inline void *leftc(const priority_queue *pq, size_t parent) {
+  return heap_at(pq, leftc_idx(parent));
 }
-static inline void *right_child(priority_queue *pq, const size_t parent) {
-  return heap_at(pq, rchild_idx(parent));
+static inline void *rightc(const priority_queue *pq, size_t parent) {
+  return heap_at(pq, rightc_idx(parent));
 }
-static inline void *parent(priority_queue *pq, const size_t child) {
+static inline void *parent(const priority_queue *pq, size_t child) {
   return heap_at(pq, parent_idx(child));
 }
 
@@ -81,7 +82,7 @@ void pq_push(priority_queue *pq, const void *elem) {
   }
   memcpy(heap_at(pq, pq->size), elem, pq->esize);
   size_t p = pq->size++;
-  while (has_parent(p) && pq->cmp(parent(pq, p), heap_at(pq, p)) > 0) {
+  while (has_parent(p) && pq->cmp(heap_at(pq, p), parent(pq, p)) < 0) {
     YU_BYTE_SWAP(parent(pq, p), heap_at(pq, p), pq->esize);
     p = parent_idx(p);
   }
@@ -95,14 +96,13 @@ void pq_pop(priority_queue *pq) {
   memcpy(pq->heap, heap_at(pq, --pq->size), pq->esize);
 
   size_t p = 0;
-  while (has_lchild(pq, p)) {
-    size_t child = lchild_idx(p);
-    if (has_rchild(pq, p) &&
-        pq->cmp(left_child(pq, p), right_child(pq, p)) > 0) {
-      child = rchild_idx(p);
+  while (has_leftc(pq, p)) {
+    size_t child = leftc_idx(p);
+    if (has_rightc(pq, p) && pq->cmp(rightc(pq, p), leftc(pq, p)) < 0) {
+      child = rightc_idx(p);
     }
 
-    if (pq->cmp(heap_at(pq, child), heap_at(pq, p)) > 0) {
+    if (pq->cmp(heap_at(pq, p), heap_at(pq, child)) < 0) {
       break;
     }
     YU_BYTE_SWAP(heap_at(pq, child), heap_at(pq, p), pq->esize);

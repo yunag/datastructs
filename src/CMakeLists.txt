@@ -4,6 +4,7 @@ add_library(${PROJECT_NAME} STATIC
   priorityqueue.c
   queue.c
   stack.c
+  bst.c
 )
 
 target_include_directories(${PROJECT_NAME}

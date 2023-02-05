@@ -5,33 +5,33 @@
 extern "C" {
 #endif
 
-#define YU_ARRAYSIZE(_ARR) (sizeof(_ARR) / sizeof(_ARR[0]))
+#define YU_ARRAYSIZE(base) (sizeof(base) / sizeof(base[0]))
 
-#define YU_MIN(_VAL1, _VAL2)                                                   \
+#define YU_MIN(a, b)                                                           \
   ({                                                                           \
-    __typeof__(_VAL1) _ARG1 = (_VAL1);                                         \
-    __typeof__(_VAL2) _ARG2 = (_VAL2);                                         \
-    _ARG1 < _ARG2 ? _ARG1 : _ARG2;                                             \
+    __typeof__(a) __a = (a);                                                   \
+    __typeof__(b) __b = (b);                                                   \
+    __a < __b ? __a : __b;                                                     \
   })
 
-#define YU_MAX(_VAL1, _VAL2)                                                   \
+#define YU_MAX(a, b)                                                           \
   ({                                                                           \
-    __typeof__(_VAL1) _ARG1 = (_VAL1);                                         \
-    __typeof__(_VAL2) _ARG2 = (_VAL2);                                         \
-    _ARG1 > _ARG2 ? _ARG1 : _ARG2;                                             \
+    __typeof__(a) __a = (a);                                                   \
+    __typeof__(b) __b = (b);                                                   \
+    __a > __b ? __a : __b;                                                     \
   })
 
-#define YU_ABS(_VAL)                                                           \
+#define YU_ABS(a)                                                              \
   ({                                                                           \
-    __typeof__(_VAL) _ARG = (_VAL);                                            \
-    _ARG < 0 ? -1 * _ARG : _ARG;                                               \
+    __typeof__(a) __a = (a);                                                   \
+    __a < 0 ? -1 * __a : __a;                                                  \
   })
 
-#define YU_SWAP(_PVAL1, _PVAL2)                                                \
+#define YU_SWAP(a, b)                                                          \
   ({                                                                           \
-    __typeof__(*(_PVAL1)) temp = *(_PVAL1);                                    \
-    *(_PVAL1) = *(_PVAL2);                                                     \
-    *(_PVAL2) = temp;                                                          \
+    __typeof__(*(a)) __temp = *(a);                                            \
+    *(a) = *(b);                                                               \
+    *(b) = __temp;                                                             \
   })
 
 #ifndef NDEBUG
