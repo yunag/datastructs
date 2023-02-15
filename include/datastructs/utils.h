@@ -4,7 +4,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #define YU_ARRAYSIZE(base) (sizeof(base) / sizeof(base[0]))
 
 #define YU_MIN(a, b)                                                           \

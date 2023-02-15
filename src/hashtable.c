@@ -37,6 +37,11 @@ static size_t hash(hash_table *htable, const void *key) {
   return hash % htable->capacity;
 }
 
+static void helem_free(struct helem *helem) {
+  free(helem->key);
+  free(helem);
+}
+
 static struct hnode *hnode_create(struct hnode *next, struct helem *val) {
   struct hnode *node = malloc(sizeof(*node));
   if (node == NULL) {
@@ -102,7 +107,7 @@ void htable_free(hash_table *htable) {
   while (head != NULL) {
     struct hnode *tmp = head;
     head = head->next;
-    free(tmp->val->key);
+    helem_free(tmp->val);
     hnode_free(tmp);
   }
   free(htable->table);
@@ -128,7 +133,7 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
     memcpy(entry->val, val, htable->vsize);
     return;
   }
-  entry = malloc(sizeof(struct helem));
+  entry = malloc(sizeof(*entry));
   if (entry == NULL) {
     YU_LOG_ERROR("Failed to allocate memory hash entry");
     return;
@@ -170,12 +175,12 @@ void *htable_lookup(hash_table *htable, const void *key) {
 void htable_remove(hash_table *htable, const void *key) {
   assert(htable != NULL && key != NULL);
   struct helem **entry = lookup(htable, key, hash(htable, key));
-  if (entry == NULL) {
+  if (*entry == NULL) {
     return;
   }
-  struct helem *free_elem = *entry;
   struct hnode **cur_node = (*entry)->node;
-  struct hnode *free_node = *(cur_node);
+  struct helem *free_elem = *entry;
+  struct hnode *free_node = *cur_node;
 
   *cur_node = (*cur_node)->next;
   if (*cur_node != NULL) {
@@ -186,8 +191,7 @@ void htable_remove(hash_table *htable, const void *key) {
   *entry = (*entry)->next;
 
   hnode_free(free_node);
-  free(free_elem->key);
-  free(free_elem);
+  helem_free(free_elem);
   htable->size--;
 }
 

@@ -92,6 +92,19 @@ TEST_F(HashTableTest, InsertRemoveBackwards) {
   }
 }
 
+TEST_F(HashTableTest, RemoveNotExistent) {
+  SetHashTable<int, int>();
+  int key = 5, val = 7;
+
+  htable_remove(ht_, &key);
+  htable_insert(ht_, &key, &val);
+  key = 6;
+  htable_remove(ht_, &key);
+  key = 5;
+  htable_remove(ht_, &key);
+  htable_remove(ht_, &key);
+}
+
 TEST_F(HashTableTest, STLTable) {
   SetHashTable<int, int>();
 
