@@ -39,25 +39,27 @@ static size_t hash(hash_table *htable, const void *key) {
 
 static void helem_free(struct helem *helem) {
   free(helem->key);
+  free(helem->val);
   free(helem);
 }
 
 static struct hnode *hnode_create(struct hnode *next, struct helem *val) {
   struct hnode *node = malloc(sizeof(*node));
   if (node == NULL) {
-    YU_LOG_ERROR("Failed to create hash node");
+    YU_LOG_ERROR("Failed to create hash node\n");
     return NULL;
   }
   node->next = next;
   node->val = val;
   return node;
 }
+
 static void hnode_free(struct hnode *node) { free(node); }
 
 static bool rehash(hash_table *htable, size_t newsize) {
   struct helem **ntable = calloc(newsize, sizeof(struct helem *));
   if (ntable == NULL) {
-    YU_LOG_ERROR("Failed to resize hash table");
+    YU_LOG_ERROR("Failed to resize hash table\n");
     return false;
   }
   free(htable->table);
@@ -83,13 +85,13 @@ hash_table *htable_create(size_t table_size, size_t key_size,
   assert(table_size > 0 && key_size > 0 && value_size > 0);
   hash_table *htable = malloc(sizeof(*htable));
   if (htable == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for hash table");
+    YU_LOG_ERROR("Failed to allocate memory for hash table\n");
     return NULL;
   }
   htable->table = calloc(table_size, sizeof(struct helem *));
   if (htable->table == NULL) {
     free(htable);
-    YU_LOG_ERROR("Failed to allocate memory for table");
+    YU_LOG_ERROR("Failed to allocate memory for table\n");
     return NULL;
   }
   htable->head.next = NULL;
@@ -127,6 +129,7 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
   if (htable->capacity == htable->size && !rehash(htable, htable->size * 2)) {
     return;
   }
+
   size_t idx = hash(htable, key);
   struct helem *entry = *lookup(htable, key, idx);
   if (entry != NULL) { /* The key already exists in the hash table */
@@ -134,29 +137,21 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
     return;
   }
   entry = malloc(sizeof(*entry));
-  if (entry == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory hash entry");
-    return;
-  }
-  char *keyval = malloc(htable->ksize + htable->vsize);
-  if (keyval == NULL) {
-    free(entry);
-    YU_LOG_ERROR("Failed to allocate memory for key and value");
-    return;
-  }
+  entry->key = malloc(htable->ksize);
+  entry->val = malloc(htable->vsize);
   struct hnode *hnode = hnode_create(NULL, entry);
-  if (hnode == NULL) {
+
+  if (!entry || !entry->key || !entry->val || !hnode) {
+    YU_LOG_ERROR("Failed to allocate memory for hash entry\n");
     free(entry);
-    free(keyval);
-    YU_LOG_ERROR("Failed to allocate memory for hash node");
+    free(hnode);
+    free(entry->key);
+    free(entry->val);
     return;
   }
   *(htable->tail) = hnode;
   entry->node = htable->tail;
   htable->tail = &(*htable->tail)->next;
-
-  entry->key = &keyval[0];
-  entry->val = &keyval[htable->ksize];
 
   memcpy(entry->key, key, htable->ksize);
   memcpy(entry->val, val, htable->vsize);
