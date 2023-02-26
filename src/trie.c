@@ -22,12 +22,12 @@ struct trie_node {
 static struct trie_node *create_trie_node(void) {
   struct trie_node *node = malloc(sizeof(*node));
   if (node == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for trie node");
+    YU_LOG_ERROR("Failed to allocate memory for trie node\n");
     return NULL;
   }
   node->child = calloc(ASCII_LENGTH, sizeof(struct trie_node *));
   if (node->child == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for trie node");
+    YU_LOG_ERROR("Failed to allocate memory for trie node\n");
     free(node);
     return NULL;
   }
@@ -45,7 +45,7 @@ static void free_trie_node(struct trie_node *node) {
 trie *trie_create(void) {
   trie *trie = malloc(sizeof(*trie));
   if (trie == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for Trie");
+    YU_LOG_ERROR("Failed to allocate memory for Trie\n");
     return NULL;
   }
   trie->depth = 0;

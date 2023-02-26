@@ -33,10 +33,13 @@ extern "C" {
     *(b) = __temp;                                                             \
   })
 
+#define YU_STR(x) YU_STR2(x)
+#define YU_STR2(x) #x
+
 #ifndef NDEBUG
 #include <stdio.h>
-#define YU_LOG_ERROR(msg)                                                      \
-  fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, msg)
+#define YU_LOG_ERROR(...)                                                      \
+  fprintf(stderr, __FILE__ ":" YU_STR(__LINE__) ": " __VA_ARGS__)
 #else
 #define YU_LOG_ERROR(msg)
 #endif // !DEBUG

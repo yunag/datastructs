@@ -23,7 +23,7 @@ static struct bnode *bnode_create(struct bnode *left, struct bnode *right,
                                   int key) {
   struct bnode *bnode = malloc(sizeof(*bnode));
   if (bnode == NULL) {
-    YU_LOG_ERROR("Failed on binary node creation");
+    YU_LOG_ERROR("Failed on binary node creation\n");
     return NULL;
   }
   bnode->left = left;
@@ -182,7 +182,7 @@ static void bst_free_tree(struct bnode *node) {
 bst *bst_create(void) {
   bst *_bst = malloc(sizeof(*_bst));
   if (_bst == NULL) {
-    YU_LOG_ERROR("Failed on binary search tree creation");
+    YU_LOG_ERROR("Failed on binary search tree creation\n");
     return NULL;
   }
   _bst->root = NULL;

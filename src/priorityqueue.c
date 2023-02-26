@@ -41,7 +41,7 @@ static bool pq_resize(priority_queue *pq, const size_t newsize) {
   assert(newsize > pq->size);
   void *tmp = realloc(pq->heap, pq->esize * newsize);
   if (tmp == NULL) {
-    YU_LOG_ERROR("Failed to resize buffer for queue");
+    YU_LOG_ERROR("Failed to resize buffer for queue\n");
     return false;
   }
   pq->heap = tmp;
@@ -53,13 +53,13 @@ priority_queue *pq_create(size_t size, size_t elemsize, cmp_fn cmp) {
   assert(size > 0 && elemsize > 0 && cmp != NULL);
   priority_queue *pq = malloc(sizeof(*pq));
   if (pq == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for priority queue");
+    YU_LOG_ERROR("Failed to allocate memory for priority queue\n");
     return NULL;
   }
   pq->heap = malloc(elemsize * size);
   if (pq->heap == NULL) {
     free(pq);
-    YU_LOG_ERROR("Failed to allocate memory for heap");
+    YU_LOG_ERROR("Failed to allocate memory for heap\n");
     return NULL;
   }
   pq->capacity = size;

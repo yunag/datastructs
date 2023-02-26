@@ -26,13 +26,13 @@ queue *queue_create(size_t size, size_t elemsize) {
   assert(size > 0 && elemsize > 0);
   queue *q = malloc(sizeof(*q));
   if (q == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for queue");
+    YU_LOG_ERROR("Failed to allocate memory for queue\n");
     return NULL;
   }
   q->buffer = malloc(elemsize * size);
   if (q->buffer == NULL) {
     free(q);
-    YU_LOG_ERROR("Failed to allocate memory for queue");
+    YU_LOG_ERROR("Failed to allocate memory for queue\n");
     return NULL;
   }
   q->capacity = size;
@@ -55,13 +55,13 @@ static bool queue_resize(queue *q, size_t newsize) {
   if (q->front <= q->rear) { /* Realloc case */
     buffer = realloc(q->buffer, newsize * q->esize);
     if (buffer == NULL) {
-      YU_LOG_ERROR("Failed on buffer resize");
+      YU_LOG_ERROR("Failed on buffer resize\n");
       return false;
     }
   } else {
     buffer = malloc(newsize * q->esize);
     if (buffer == NULL) {
-      YU_LOG_ERROR("Failed on buffer resize");
+      YU_LOG_ERROR("Failed on buffer resize\n");
       return false;
     }
     size_t nfront = q->size - q->front;

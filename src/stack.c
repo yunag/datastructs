@@ -20,7 +20,7 @@ static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL && newsize > s->size);
   void *tmp = realloc(s->buffer, s->esize * newsize);
   if (tmp == NULL) {
-    YU_LOG_ERROR("Failed to resize buffer for stack");
+    YU_LOG_ERROR("Failed to resize buffer for stack\n");
     return false;
   }
   s->buffer = tmp;
@@ -32,13 +32,13 @@ stack *stack_create(size_t size, size_t elemsize) {
   assert(size > 0 && elemsize > 0);
   stack *s = malloc(sizeof(*s));
   if (s == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for stack");
+    YU_LOG_ERROR("Failed to allocate memory for stack\n");
     return NULL;
   }
   s->buffer = malloc(elemsize * size);
   if (s->buffer == NULL) {
     free(s);
-    YU_LOG_ERROR("Failed to allocate memory for stack buffer");
+    YU_LOG_ERROR("Failed to allocate memory for stack buffer\n");
     return NULL;
   }
   s->capacity = size;
