@@ -21,15 +21,19 @@ bool queue_full(queue *queue);
 size_t queue_size(queue *queue);
 size_t queue_esize(queue *queue);
 
-#define QUEUE_PUSH(Q, T, elem)                                                 \
+#define QUEUE_PUSH(Q, elem)                                                    \
   do {                                                                         \
-    assert(sizeof(T) == queue_esize(Q));                                       \
-    T __elem = (elem);                                                         \
+    __typeof__(elem) __elem = (elem);                                          \
     queue_push(Q, &__elem);                                                    \
   } while (0)
 
 #define QUEUE_FRONT(Q, T) (*(T *)queue_front(Q))
 #define QUEUE_BACK(Q, T) (*(T *)queue_back(Q))
+#define QUEUE_POP(Q, ret)                                                      \
+  do {                                                                         \
+    ret = QUEUE_FRONT(Q, __typeof__(ret));                                     \
+    queue_pop(Q);                                                              \
+  } while (0)
 
 #ifdef __cplusplus
 }

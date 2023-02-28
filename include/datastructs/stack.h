@@ -22,12 +22,16 @@ size_t stack_esize(stack *stack);
 
 #define STACK_PUSH(S, T, elem)                                                 \
   do {                                                                         \
-    assert(sizeof(T) == stack_esize(S));                                       \
-    T __elem = (elem);                                                         \
+    __typeof__(elem) __elem = (elem);                                          \
     stack_push(S, &__elem);                                                    \
   } while (0)
 
 #define STACK_TOP(S, T) (*(T *)stack_top(S))
+#define STACK_POP(S, ret)                                                      \
+  do {                                                                         \
+    ret = STACK_TOP(S, __typeof__(ret));                                       \
+    stack_pop(S);                                                              \
+  } while (0)
 
 #ifdef __cplusplus
 }

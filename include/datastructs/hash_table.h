@@ -20,21 +20,18 @@ size_t htable_size(hash_table *hash_table);
 size_t htable_ksize(hash_table *hash_table);
 size_t htable_vsize(hash_table *hash_table);
 
-#define HASH_INSERT(HT, keyT, valT, key, val)                                  \
+#define HASH_INSERT(HT, key, val)                                              \
   do {                                                                         \
-    assert(sizeof(keyT) == htable_ksize(HT) &&                                 \
-           sizeof(valT) == htable_vsize(HT));                                  \
-    keyT __key = (key);                                                        \
-    valT __val = (val);                                                        \
+    __typeof__(key) __key = (key);                                             \
+    __typeof__(val) __val = (val);                                             \
     htable_insert(HT, &__key, &__val);                                         \
   } while (0)
 
-#define HASH_FIND(HT, keyT, valT, key)                                         \
-  ({                                                                           \
-    assert(sizeof(keyT) == htable_ksize(HT));                                  \
-    keyT __key = (key);                                                        \
-    (valT *)htable_lookup(HT, &__key);                                         \
-  })
+#define HASH_FIND(HT, key, ret)                                                \
+  do {                                                                         \
+    __typeof__ __key = (key);                                                  \
+    ret = htable_lookup(HT, &__key);                                           \
+  } while (0)
 
 #ifdef __cplusplus
 }

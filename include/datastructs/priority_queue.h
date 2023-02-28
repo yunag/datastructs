@@ -20,15 +20,17 @@ const void *pq_top(priority_queue *pq);
 size_t pq_size(priority_queue *pq);
 size_t pq_esize(priority_queue *pq);
 
-#define PQ_PUSH(PQ, T, elem)                                                   \
+#define PQ_PUSH(PQ, elem)                                                      \
   do {                                                                         \
-    assert(sizeof(T) == pq_esize(PQ));                                         \
-    T __elem = (elem);                                                         \
+    __typeof__(elem) __elem = (elem);                                          \
     pq_push(PQ, &__elem);                                                      \
   } while (0)
-
 #define PQ_TOP(PQ, T) (*(T *)pq_top(PQ))
-
+#define PQ_POP(PQ, ret)                                                        \
+  do {                                                                         \
+    ret = PQ_TOP(PQ, __typeof__(ret));                                         \
+    pq_pop(PQ);                                                                \
+  } while (0)
 #ifdef __cplusplus
 }
 #endif
