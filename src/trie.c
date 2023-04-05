@@ -45,7 +45,7 @@ static void free_trie_node(struct trie_node *node) {
 trie *trie_create(void) {
   trie *trie = malloc(sizeof(*trie));
   if (trie == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for Trie\n");
+    YU_LOG_ERROR("Failed to allocate memory for trie\n");
     return NULL;
   }
   trie->depth = 0;
@@ -54,7 +54,8 @@ trie *trie_create(void) {
 }
 
 void trie_insert(trie *trie, const char *word) {
-  assert(trie != NULL && word != NULL);
+  assert(trie != NULL);
+  assert(word != NULL);
   struct trie_node *root = trie->root;
   size_t i = 0;
   for (; word[i] != '\0'; ++i) {
@@ -70,7 +71,9 @@ void trie_insert(trie *trie, const char *word) {
 }
 
 bool trie_search(trie *trie, const char *word) {
-  assert(trie != NULL && word != NULL);
+  assert(trie != NULL);
+  assert(word != NULL);
+
   struct trie_node *root = trie->root;
   for (size_t i = 0; word[i] != '\0'; ++i) {
     size_t idx = word[i];
@@ -83,7 +86,9 @@ bool trie_search(trie *trie, const char *word) {
 }
 
 bool trie_starts_with(trie *trie, const char *prefix) {
-  assert(trie != NULL && prefix != NULL);
+  assert(trie != NULL);
+  assert(prefix != NULL);
+
   struct trie_node *root = trie->root;
   for (size_t i = 0; prefix[i] != '\0'; ++i) {
     size_t idx = prefix[i];
@@ -118,7 +123,9 @@ static bool trie_remove_rec(struct trie_node *node, const char *word,
 }
 
 bool trie_remove(trie *trie, const char *word) {
-  assert(trie != NULL && word != NULL);
+  assert(trie != NULL);
+  assert(word != NULL);
+
   bool deleted = false;
   trie_remove_rec(trie->root, word, &deleted);
   return deleted;

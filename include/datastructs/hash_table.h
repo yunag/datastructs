@@ -12,13 +12,13 @@ typedef struct hash_table hash_table;
 
 hash_table *htable_create(size_t table_size, size_t key_size,
                           size_t value_size);
-void htable_free(hash_table *hash_table);
-void htable_insert(hash_table *hash_table, const void *key, const void *val);
-void *htable_lookup(hash_table *hash_table, const void *key);
+void htable_free(hash_table *htable);
+void htable_insert(hash_table *htable, const void *key, const void *val);
+void *htable_lookup(hash_table *htable, const void *key);
 void htable_remove(hash_table *htable, const void *key);
-size_t htable_size(hash_table *hash_table);
-size_t htable_ksize(hash_table *hash_table);
-size_t htable_vsize(hash_table *hash_table);
+size_t htable_size(hash_table *htable);
+size_t htable_ksize(hash_table *htable);
+size_t htable_vsize(hash_table *htable);
 
 #define HASH_INSERT(HT, key, val)                                              \
   do {                                                                         \

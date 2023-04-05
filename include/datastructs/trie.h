@@ -1,7 +1,6 @@
 #ifndef YU_TRIE_H
 #define YU_TRIE_H
 
-#include "types.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus

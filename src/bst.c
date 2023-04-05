@@ -23,7 +23,7 @@ static struct bnode *bnode_create(struct bnode *left, struct bnode *right,
                                   int key) {
   struct bnode *bnode = malloc(sizeof(*bnode));
   if (bnode == NULL) {
-    YU_LOG_ERROR("Failed on binary node creation\n");
+    YU_LOG_ERROR("Failed to allocate memory for node\n");
     return NULL;
   }
   bnode->left = left;
@@ -77,11 +77,6 @@ static void inorder_print(struct bnode *node) {
   }
 }
 
-static inline bool left_unbalanced(int balance) { return balance > threshold; }
-static inline bool right_unbalanced(int balance) {
-  return balance < -threshold;
-}
-
 static struct bnode *min_node(struct bnode *node) {
   while (node->left != NULL) {
     node = node->left;
@@ -91,7 +86,7 @@ static struct bnode *min_node(struct bnode *node) {
 
 static struct bnode *balance(struct bnode *node) {
   int balance = deviation(node);
-  if (left_unbalanced(balance)) {
+  if (balance > threshold) {
     /* The left node has a left subtree that is havier than the right subtree */
     if (deviation(node->left) >= 0) {
       return right_rotate(node);
@@ -99,7 +94,7 @@ static struct bnode *balance(struct bnode *node) {
       node->left = left_rotate(node->left);
       return right_rotate(node);
     }
-  } else if (right_unbalanced(balance)) {
+  } else if (balance < -threshold) {
     /* The right node has a right subtree that is heavier than the left subtree
      */
     if (deviation(node->right) <= 0) {
@@ -182,7 +177,7 @@ static void bst_free_tree(struct bnode *node) {
 bst *bst_create(void) {
   bst *_bst = malloc(sizeof(*_bst));
   if (_bst == NULL) {
-    YU_LOG_ERROR("Failed on binary search tree creation\n");
+    YU_LOG_ERROR("Failed to allocate memory for binary search tree\n");
     return NULL;
   }
   _bst->root = NULL;
