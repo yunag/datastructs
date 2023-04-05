@@ -70,23 +70,43 @@ TEST_F(StackTest, PushPop) {
 
 TEST_F(StackTest, STLStack) {
   SetStack<double>(1);
+  enum class Action {
+    Push,
+    Pop,
+    Top,
+  } command;
+
   std::stack<double> s;
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
-    size_t command = Helper::rand(0, 2);
+    command = static_cast<Action>(Helper::rand(
+        static_cast<double>(Action::Push), static_cast<double>(Action::Top)));
     EXPECT_EQ(s.empty(), stack_empty(s_));
     EXPECT_EQ(s.size(), stack_size(s_));
-    if (stack_empty(s_) || command == 0) {
+
+    if (s.empty()) {
+      command = Action::Push;
+    }
+    switch (command) {
+    case Action::Push: {
       double val = Helper::rand(INT_MIN, INT_MAX);
       s.push(val);
       stack_push(s_, &val);
       EXPECT_EQ(s.top(), STACK_TOP(s_, double));
-    } else if (command == 1) {
+      break;
+    }
+
+    case Action::Pop: {
       EXPECT_EQ(s.top(), STACK_TOP(s_, double));
       s.pop();
       stack_pop(s_);
-    } else if (command == 2) {
+      break;
+    }
+
+    case Action::Top: {
       EXPECT_EQ(s.top(), STACK_TOP(s_, double));
+      break;
+    }
     }
   }
 }

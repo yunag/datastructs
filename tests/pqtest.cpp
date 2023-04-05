@@ -158,12 +158,12 @@ TEST_F(PriorityQueueTest, STLPQueueGreater) {
 TEST_F(PriorityQueueTest, Case1) {
   SetPQueue<double>();
 
-  PQ_PUSH(pq_, double, 5);
-  EXPECT_EQ(PQ_TOP(pq_, double), 5);
+  PQ_PUSH(pq_, 5.0);
+  EXPECT_EQ(PQ_TOP(pq_, double), 5.0);
   EXPECT_FALSE(pq_empty(pq_));
 
-  PQ_PUSH(pq_, double, 7);
-  EXPECT_EQ(PQ_TOP(pq_, double), 5);
+  PQ_PUSH(pq_, 7.0);
+  EXPECT_EQ(PQ_TOP(pq_, double), 5.0);
 
   pq_pop(pq_);
   EXPECT_EQ(PQ_TOP(pq_, double), 7);
@@ -171,11 +171,11 @@ TEST_F(PriorityQueueTest, Case1) {
   pq_pop(pq_);
   EXPECT_TRUE(pq_empty(pq_));
 
-  PQ_PUSH(pq_, double, 120);
+  PQ_PUSH(pq_, 120.0);
   EXPECT_EQ(PQ_TOP(pq_, double), 120);
   EXPECT_EQ(pq_size(pq_), 1);
 
-  PQ_PUSH(pq_, double, 79);
+  PQ_PUSH(pq_, 79.0);
   EXPECT_EQ(PQ_TOP(pq_, double), 79);
   EXPECT_EQ(pq_size(pq_), 2);
 }

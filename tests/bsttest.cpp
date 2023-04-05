@@ -56,7 +56,7 @@ TEST_F(BSTTest, STLSet) {
   setBST();
 
   std::set<int> stl;
-  enum Action {
+  enum class Action {
     Insert,
     Remove,
     Find,
@@ -67,11 +67,17 @@ TEST_F(BSTTest, STLSet) {
   std::vector<int> keys;
 
   for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand(Insert, Find));
+    command =
+        static_cast<Action>(Helper::rand(static_cast<double>(Action::Insert),
+                                         static_cast<double>(Action::Find)));
     ASSERT_EQ(stl.size(), bst_size(bst_));
     ASSERT_TRUE(bst_valid_bst(bst_));
     ASSERT_TRUE(bst_valid_avl(bst_));
-    if (command == Insert || bst_size(bst_) == 0) {
+    if (stl.empty()) {
+      command = Action::Insert;
+    }
+    switch (command) {
+    case Action::Insert: {
       int key = Helper::rand(-10000, 10000);
       if (stl.find(key) != stl.end()) {
         ASSERT_TRUE(bst_find(bst_, key));
@@ -81,7 +87,10 @@ TEST_F(BSTTest, STLSet) {
       stl.insert(key);
       bst_insert(bst_, key);
       ASSERT_TRUE(bst_find(bst_, key));
-    } else if (command == Remove) {
+      break;
+    }
+
+    case Action::Remove: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
       ASSERT_TRUE(stl.find(key) != stl.end());
@@ -91,10 +100,15 @@ TEST_F(BSTTest, STLSet) {
       keys.erase(keys.begin() + idx);
       ASSERT_FALSE(bst_find(bst_, key));
       ASSERT_TRUE(stl.find(key) == stl.end());
-    } else if (command == Find) {
+      break;
+    }
+
+    case Action::Find: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
       ASSERT_EQ(stl.find(key) != stl.end(), bst_find(bst_, key));
+      break;
+    }
     }
   }
 }

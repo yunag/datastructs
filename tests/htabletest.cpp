@@ -109,7 +109,7 @@ TEST_F(HashTableTest, STLTable) {
   SetHashTable<int, int>();
 
   std::unordered_map<int, int> stl;
-  enum Action {
+  enum class Action {
     Insert,
     Remove,
     Lookup,
@@ -120,9 +120,16 @@ TEST_F(HashTableTest, STLTable) {
   std::vector<int> keys;
 
   for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand(Insert, Lookup));
+    command =
+        static_cast<Action>(Helper::rand(static_cast<double>(Action::Insert),
+                                         static_cast<double>(Action::Lookup)));
     EXPECT_EQ(stl.size(), htable_size(ht_));
-    if (command == Insert || htable_size(ht_) == 0) {
+
+    if (stl.empty()) {
+      command = Action::Insert;
+    }
+    switch (command) {
+    case Action::Insert: {
       int key = Helper::rand(-10000, 10000);
       if (stl.find(key) != stl.end()) {
         ASSERT_TRUE(htable_lookup(ht_, &key) != NULL);
@@ -136,7 +143,10 @@ TEST_F(HashTableTest, STLTable) {
 
       ASSERT_TRUE(htable_lookup(ht_, &key) != NULL);
       EXPECT_EQ(stl.at(key), *(int *)htable_lookup(ht_, &key));
-    } else if (command == Remove) {
+      break;
+    }
+
+    case Action::Remove: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
 
@@ -150,12 +160,16 @@ TEST_F(HashTableTest, STLTable) {
 
       EXPECT_TRUE(stl.find(key) == stl.end());
       EXPECT_TRUE(htable_lookup(ht_, &key) == NULL);
-    } else if (command == Lookup) {
+      break;
+    }
+    case Action::Lookup: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
 
       ASSERT_EQ(stl.find(key) != stl.end(), htable_lookup(ht_, &key) != NULL);
       EXPECT_EQ(stl.at(key), *(int *)htable_lookup(ht_, &key));
+      break;
+    }
     }
   }
 }
