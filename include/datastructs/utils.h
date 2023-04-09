@@ -55,6 +55,8 @@ extern "C" {
     } while (--__size > 0);                                                    \
   } while (0)
 
+#define YU_UNUSED(param) ((void)(param))
+
 #ifdef __cplusplus
 }
 #endif
