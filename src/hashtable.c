@@ -131,8 +131,8 @@ void htable_free(hash_table *htable) {
 }
 
 static struct hash_entry **lookup(hash_table *htable, const void *key,
-                                  uint64_t bct) {
-  struct hash_entry **walk = &htable->buckets[bct];
+                                  uint64_t bucket) {
+  struct hash_entry **walk = &htable->buckets[bucket];
   while (*walk != NULL && memcmp((*walk)->key, key, htable->ksize)) {
     walk = &(*walk)->next;
   }
