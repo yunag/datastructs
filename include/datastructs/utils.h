@@ -38,8 +38,10 @@ extern "C" {
 
 #ifndef NDEBUG
 #include <stdio.h>
-#define YU_LOG_ERROR(...)                                                      \
-  fprintf(stderr, __FILE__ ":" YU_STR(__LINE__) ": " __VA_ARGS__)
+#define YU_LOG_ERROR2(fmt, ...)                                                \
+  fprintf(stderr, __FILE__ ":" YU_STR(__LINE__) ": " fmt "%s", __VA_ARGS__)
+
+#define YU_LOG_ERROR(...) YU_LOG_ERROR2(__VA_ARGS__, "\n")
 #else
 #define YU_LOG_ERROR(msg)
 #endif // !DEBUG
@@ -56,6 +58,7 @@ extern "C" {
   } while (0)
 
 #define YU_UNUSED(param) ((void)(param))
+static inline void free_placeholder(void *const *value) { YU_UNUSED(value); }
 
 #ifdef __cplusplus
 }

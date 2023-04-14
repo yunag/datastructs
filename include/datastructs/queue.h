@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct queue queue;
 
-queue *queue_create(size_t size, size_t elemsize);
+queue *queue_create(size_t capacity, size_t elemsize, free_fn free_elem);
 void queue_free(queue *queue);
 void queue_push(queue *queue, const void *elem);
 void queue_pop(queue *queue);

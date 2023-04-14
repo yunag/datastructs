@@ -10,9 +10,8 @@ extern "C" {
 
 typedef struct hash_table hash_table;
 typedef uint64_t (*hash_fn)(const void *, size_t);
-typedef void (*free_fn)(void *const *);
 
-hash_table *htable_create(size_t table_size, size_t key_size, size_t value_size,
+hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
                           hash_fn hash, free_fn free_value);
 void htable_free(hash_table *htable);
 void htable_insert(hash_table *htable, const void *key, const void *val);

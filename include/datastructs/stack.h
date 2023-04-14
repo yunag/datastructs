@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct stack stack;
 
-stack *stack_create(size_t size, size_t elemsize);
+stack *stack_create(size_t capacity, size_t elemsize, free_fn free_elem);
 void stack_free(stack *stack);
 void stack_push(stack *stack, const void *elem);
 void stack_pop(stack *stack);
