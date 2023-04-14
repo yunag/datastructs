@@ -33,7 +33,7 @@ struct hash_table {
   size_t capacity;             /* Capacity of the table */
 };
 
-static uint64_t hash(const void *key, size_t size) {
+static uint64_t hash_bern(const void *key, size_t size) {
   const unsigned char *bytes = key;
   uint64_t hash = 5381;
   for (size_t i = 0; i < size; ++i) {
@@ -42,7 +42,17 @@ static uint64_t hash(const void *key, size_t size) {
   return hash;
 }
 
-static inline void free_placeholder(void *const *value) { YU_UNUSED(value); }
+#define FNV_PRIME 0x100000001b3
+#define FNV_OFFSET 0xcbf29ce484222325UL
+static uint64_t hash_fnv1a(const void *key, size_t size) {
+  const unsigned char *bytes = key;
+  uint64_t hashv = FNV_OFFSET;
+  for (size_t i = 0; i < size; ++i) {
+    hashv ^= bytes[i];
+    hashv *= FNV_PRIME;
+  }
+  return hashv;
+}
 
 static void hash_entry_free(struct hash_entry *hentry) {
   free(hentry->key);
@@ -53,7 +63,7 @@ static void hash_entry_free(struct hash_entry *hentry) {
 static struct hash_node *hnode_create(struct hash_entry *val) {
   struct hash_node *node = malloc(sizeof(*node));
   if (node == NULL) {
-    YU_LOG_ERROR("Failed to create hash node\n");
+    YU_LOG_ERROR("Failed to create hash node");
     return NULL;
   }
   node->next = NULL;
@@ -66,7 +76,7 @@ static void hnode_free(struct hash_node *node) { free(node); }
 static bool rehash(hash_table *htable, size_t newsize) {
   struct hash_entry **nbuckets = calloc(newsize, sizeof(struct hash_entry *));
   if (nbuckets == NULL) {
-    YU_LOG_ERROR("Failed to resize the hash table to %zu\n", newsize);
+    YU_LOG_ERROR("Failed to resize the hash table to %zu", newsize);
     return false;
   }
   free(htable->buckets);
@@ -87,29 +97,28 @@ static bool rehash(hash_table *htable, size_t newsize) {
   return true;
 }
 
-hash_table *htable_create(size_t table_size, size_t key_size, size_t value_size,
+hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
                           hash_fn user_hash, free_fn vfree) {
-  assert(table_size > 0);
+  assert(capacity > 0);
   assert(key_size > 0);
-  assert(value_size > 0);
 
   hash_table *htable = malloc(sizeof(*htable));
   if (htable == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for hash table\n");
+    YU_LOG_ERROR("Failed to allocate memory for hash table");
     return NULL;
   }
-  htable->buckets = calloc(table_size, sizeof(*htable->buckets));
+  htable->buckets = calloc(capacity, sizeof(*htable->buckets));
   if (htable->buckets == NULL) {
     free(htable);
-    YU_LOG_ERROR("Failed to allocate memory for table\n");
+    YU_LOG_ERROR("Failed to allocate memory for table");
     return NULL;
   }
-  htable->hash = user_hash ? user_hash : hash;
+  htable->hash = user_hash ? user_hash : hash_fnv1a;
   htable->vfree = vfree ? vfree : free_placeholder;
   htable->head.next = NULL;
   htable->tail = &htable->head.next;
   htable->size = 0;
-  htable->capacity = table_size;
+  htable->capacity = capacity;
   htable->ksize = key_size;
   htable->vsize = value_size;
   return htable;
@@ -160,7 +169,7 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
   if (!entry || !entry->key || !entry->val || !hnode) {
     hash_entry_free(entry);
     hnode_free(hnode);
-    YU_LOG_ERROR("Failed to allocate memory for hash entry\n");
+    YU_LOG_ERROR("Failed to allocate memory for hash entry");
     return;
   }
   *(htable->tail) = hnode;
@@ -168,7 +177,9 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
   htable->tail = &(*htable->tail)->next;
 
   memcpy(entry->key, key, htable->ksize);
-  memcpy(entry->val, val, htable->vsize);
+  if (val) {
+    memcpy(entry->val, val, htable->vsize);
+  }
 
   entry->next = htable->buckets[bct];
   htable->buckets[bct] = entry;

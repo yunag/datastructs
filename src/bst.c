@@ -23,7 +23,7 @@ static struct bnode *bnode_create(struct bnode *left, struct bnode *right,
                                   int key) {
   struct bnode *bnode = malloc(sizeof(*bnode));
   if (bnode == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for node\n");
+    YU_LOG_ERROR("Failed to allocate memory for node");
     return NULL;
   }
   bnode->left = left;
@@ -177,7 +177,7 @@ static void bst_free_tree(struct bnode *node) {
 bst *bst_create(void) {
   bst *_bst = malloc(sizeof(*_bst));
   if (_bst == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for binary search tree\n");
+    YU_LOG_ERROR("Failed to allocate memory for binary search tree");
     return NULL;
   }
   _bst->root = NULL;

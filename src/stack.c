@@ -1,27 +1,28 @@
 #include "datastructs/stack.h"
+#include "datastructs/types.h"
 #include "datastructs/utils.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define STACK_AT(index) ((void *)&((char *)s->buffer)[s->esize * (index)])
+#define STACK_EMPTY(s) ((s)->size == 0)
+
 struct stack {
   void *buffer;    /* Buffer for storing elements */
+  free_fn free;    /* Function to free a value */
   size_t size;     /* Size of the Stack */
   size_t capacity; /* Capacity of the Stack */
   size_t esize;    /* Size of a single element in the Stack */
 };
-
-static inline void *stack_at(stack *s, size_t idx) {
-  return &((char *)s->buffer)[s->esize * idx];
-}
 
 static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL);
   assert(newsize > s->size);
   void *tmp = realloc(s->buffer, s->esize * newsize);
   if (tmp == NULL) {
-    YU_LOG_ERROR("Failed to resize the stack to %zu\n", newsize);
+    YU_LOG_ERROR("Failed to resize the stack to %zu", newsize);
     return false;
   }
   s->buffer = tmp;
@@ -29,22 +30,23 @@ static bool stack_resize(stack *s, size_t newsize) {
   return true;
 }
 
-stack *stack_create(size_t size, size_t elemsize) {
-  assert(size > 0);
+stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
+  assert(capacity > 0);
   assert(elemsize > 0);
 
   stack *s = malloc(sizeof(*s));
   if (s == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for stack\n");
+    YU_LOG_ERROR("Failed to allocate memory for stack");
     return NULL;
   }
-  s->buffer = malloc(elemsize * size);
+  s->buffer = malloc(elemsize * capacity);
   if (s->buffer == NULL) {
     free(s);
-    YU_LOG_ERROR("Failed to allocate memory for stack\n");
+    YU_LOG_ERROR("Failed to allocate memory for stack");
     return NULL;
   }
-  s->capacity = size;
+  s->free = vfree ? vfree : free_placeholder;
+  s->capacity = capacity;
   s->esize = elemsize;
   s->size = 0;
   return s;
@@ -52,6 +54,11 @@ stack *stack_create(size_t size, size_t elemsize) {
 
 void stack_free(stack *s) {
   assert(s != NULL);
+  if (s->free != free_placeholder) {
+    while (!STACK_EMPTY(s)) {
+      s->free(STACK_AT(--s->size));
+    }
+  }
   free(s->buffer);
   free(s);
 }
@@ -63,23 +70,23 @@ void stack_push(stack *s, const void *elem) {
   if (stack_full(s) && !stack_resize(s, s->capacity * 2)) {
     return;
   }
-  memcpy(stack_at(s, s->size++), elem, s->esize);
+  memcpy(STACK_AT(s->size++), elem, s->esize);
 }
 
 void stack_pop(stack *s) {
   assert(s != NULL);
-  if (stack_empty(s)) {
+  if (STACK_EMPTY(s)) {
     return;
   }
-  s->size--;
+  s->free(STACK_AT(--s->size));
 }
 
 void *stack_top(stack *s) {
   assert(s != NULL);
-  if (stack_empty(s)) {
+  if (STACK_EMPTY(s)) {
     return NULL;
   }
-  return stack_at(s, s->size - 1);
+  return STACK_AT(s->size - 1);
 }
 
 bool stack_full(stack *s) {
@@ -89,7 +96,7 @@ bool stack_full(stack *s) {
 
 bool stack_empty(stack *s) {
   assert(s != NULL);
-  return s->size == 0;
+  return STACK_EMPTY(s);
 }
 
 size_t stack_size(stack *s) {

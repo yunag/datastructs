@@ -5,8 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define QUEUE_AT(index) ((void *)&((char *)q->buffer)[q->esize * (index)])
+#define QUEUE_EMPTY(q) ((q)->size == 0)
+
 struct queue {
-  void *buffer;    /* Buffer for storing elements */
+  void *buffer; /* Buffer for storing elements */
+  free_fn free;
   size_t front;    /* Front index of the Queue */
   size_t rear;     /* Rear index of the Queue */
   size_t size;     /* Size of the Queue */
@@ -14,30 +18,23 @@ struct queue {
   size_t esize;    /* Size of a single element in the Queue */
 };
 
-static inline void *queue_at(queue *q, size_t idx) {
-  return &((char *)q->buffer)[q->esize * idx];
-}
-
-static inline void *buffer_at(void *buffer, size_t esize, size_t idx) {
-  return &((char *)buffer)[esize * idx];
-}
-
-queue *queue_create(size_t size, size_t elemsize) {
-  assert(size > 0);
+queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
+  assert(capacity > 0);
   assert(elemsize > 0);
 
   queue *q = malloc(sizeof(*q));
   if (q == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for queue\n");
+    YU_LOG_ERROR("Failed to allocate memory for queue");
     return NULL;
   }
-  q->buffer = malloc(elemsize * size);
+  q->buffer = malloc(elemsize * capacity);
   if (q->buffer == NULL) {
     free(q);
-    YU_LOG_ERROR("Failed to allocate memory for queue\n");
+    YU_LOG_ERROR("Failed to allocate memory for queue");
     return NULL;
   }
-  q->capacity = size;
+  q->free = vfree ? vfree : free_placeholder;
+  q->capacity = capacity;
   q->esize = elemsize;
   q->size = 0;
   q->front = 0;
@@ -47,29 +44,35 @@ queue *queue_create(size_t size, size_t elemsize) {
 
 void queue_free(queue *q) {
   assert(q != NULL);
+  if (q->free != free_placeholder) {
+    while (!QUEUE_EMPTY(q)) {
+      q->free(QUEUE_AT(q->front));
+      q->size--;
+      q->front = (q->front + 1) % q->capacity;
+    }
+  }
   free(q->buffer);
   free(q);
 }
 
 static bool queue_resize(queue *q, size_t newsize) {
   assert(newsize > q->size);
-  void *buffer;
+  char *buffer;
   if (q->front <= q->rear) { /* Realloc case */
     buffer = realloc(q->buffer, newsize * q->esize);
     if (buffer == NULL) {
-      YU_LOG_ERROR("Failed to resize the queue to %zu\n", newsize);
+      YU_LOG_ERROR("Failed to resize the queue to %zu", newsize);
       return false;
     }
   } else {
     buffer = malloc(newsize * q->esize);
     if (buffer == NULL) {
-      YU_LOG_ERROR("Failed to resize the queue to %zu\n", newsize);
+      YU_LOG_ERROR("Failed to resize the queue to %zu", newsize);
       return false;
     }
     size_t nfront = q->size - q->front;
-    memcpy(buffer, queue_at(q, q->front), nfront * q->esize);
-    memcpy(buffer_at(buffer, q->esize, nfront), q->buffer,
-           (q->rear + 1) * q->esize);
+    memcpy(buffer, QUEUE_AT(q->front), nfront * q->esize);
+    memcpy(&buffer[nfront * q->esize], q->buffer, (q->rear + 1) * q->esize);
     q->rear = q->size - 1;
     q->front = 0;
     free(q->buffer);
@@ -87,37 +90,38 @@ void queue_push(queue *q, const void *elem) {
   }
   q->size++;
   q->rear = (q->rear + 1) % q->capacity;
-  memcpy(queue_at(q, q->rear), elem, q->esize);
+  memcpy(QUEUE_AT(q->rear), elem, q->esize);
 }
 
 void queue_pop(queue *q) {
   assert(q != NULL);
-  if (queue_empty(q)) {
+  if (QUEUE_EMPTY(q)) {
     return;
   }
+  q->free(QUEUE_AT(q->front));
   q->size--;
   q->front = (q->front + 1) % q->capacity;
 }
 
 void *queue_front(queue *q) {
   assert(q != NULL);
-  if (queue_empty(q)) {
+  if (QUEUE_EMPTY(q)) {
     return NULL;
   }
-  return queue_at(q, q->front);
+  return QUEUE_AT(q->front);
 }
 
 void *queue_back(queue *q) {
   assert(q != NULL);
-  if (queue_empty(q)) {
+  if (QUEUE_EMPTY(q)) {
     return NULL;
   }
-  return queue_at(q, q->rear);
+  return QUEUE_AT(q->rear);
 }
 
 bool queue_empty(queue *q) {
   assert(q != NULL);
-  return q->size == 0;
+  return QUEUE_EMPTY(q);
 }
 
 bool queue_full(queue *q) {

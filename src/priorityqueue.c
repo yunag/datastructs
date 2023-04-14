@@ -7,13 +7,13 @@
 
 typedef uint64_t pqnode;
 
-#define PARENT(child) ((child - 1) >> 1)
-#define LCHILD(parent) ((parent << 1) + 1)
-#define RCHILD(parent) ((parent << 1) + 2)
-#define HEAP_AT(node) (&((char *)pq->heap)[pq->esize * node])
-#define HAS_PARENT(child) (child > 0)
+#define PARENT(child) (((child)-1) >> 1)
+#define LCHILD(parent) (((parent) << 1) + 1)
+#define RCHILD(parent) (((parent) << 1) + 2)
+#define HEAP_AT(node) ((void *)&((char *)pq->heap)[pq->esize * (node)])
+#define HAS_PARENT(child) ((child) > 0)
 
-#define PQ_EMPTY(pq) (pq->size == 0)
+#define PQ_EMPTY(pq) ((pq)->size == 0)
 
 struct priority_queue {
   void *heap;      /* Node storage buffer */
@@ -27,7 +27,7 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
   assert(newsize > pq->size);
   void *tmp = realloc(pq->heap, pq->esize * newsize);
   if (tmp == NULL) {
-    YU_LOG_ERROR("Failed to resize the priority queue to %zu\n", newsize);
+    YU_LOG_ERROR("Failed to resize the priority queue to %zu", newsize);
     return false;
   }
   pq->heap = tmp;
@@ -43,13 +43,13 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
                                                                                \
     pq = malloc(sizeof(*pq));                                                  \
     if (pq == NULL) {                                                          \
-      YU_LOG_ERROR("Failed to allocate memory for priority queue\n");          \
+      YU_LOG_ERROR("Failed to allocate memory for priority queue");            \
       return NULL;                                                             \
     }                                                                          \
     pq->heap = malloc(ncapacity * nelemsize);                                  \
     if (pq->heap == NULL) {                                                    \
       free(pq);                                                                \
-      YU_LOG_ERROR("Failed to allocate memory for heap\n");                    \
+      YU_LOG_ERROR("Failed to allocate memory for heap");                      \
       return NULL;                                                             \
     }                                                                          \
     pq->capacity = ncapacity;                                                  \
@@ -155,7 +155,7 @@ void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
   assert(base != NULL);
   assert(cmp != NULL);
 
-#define BUF_AT(index) (&((char *)base)[size * index])
+#define BUF_AT(index) ((void *)&((char *)base)[size * index])
   for (int64_t i = (count >> 1) - 1; i >= 0; --i) {
     pqnode cur = i;
     pqnode lch, rch;
