@@ -10,21 +10,16 @@
   ((htable)->hash((key), (htable)->ksize) % (htable)->capacity)
 
 struct hash_entry {
-  void *key;               /* Pointer to key copy */
-  void *val;               /* Pointer to value copy */
+  void *key; /* Pointer to key copy */
+  void *val; /* Pointer to value copy */
+  struct hash_entry *lnext;
+  struct hash_entry *lprev;
   struct hash_entry *next; /* Pointer to next struct */
-  struct hash_node **node;
-};
-
-struct hash_node {
-  struct hash_node *next;
-  struct hash_entry *entry;
 };
 
 struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
-  struct hash_node head;       /* Head of `global` linked list */
-  struct hash_node **tail;     /* Tail of `global` linked list */
+  struct hash_entry head;      /* Head of `global` linked list */
   hash_fn hash;                /* Hash function */
   free_fn vfree;               /* Function to free a value */
   size_t ksize;                /* Size of a key */
@@ -54,24 +49,14 @@ static uint64_t hash_fnv1a(const void *key, size_t size) {
   return hashv;
 }
 
+static struct hash_entry *hash_entry_create(hash_table *htable, const void *key,
+                                            const void *val) {}
+
 static void hash_entry_free(struct hash_entry *hentry) {
   free(hentry->key);
   free(hentry->val);
   free(hentry);
 }
-
-static struct hash_node *hnode_create(struct hash_entry *val) {
-  struct hash_node *node = malloc(sizeof(*node));
-  if (node == NULL) {
-    YU_LOG_ERROR("Failed to create hash node");
-    return NULL;
-  }
-  node->next = NULL;
-  node->entry = val;
-  return node;
-}
-
-static void hnode_free(struct hash_node *node) { free(node); }
 
 static bool rehash(hash_table *htable, size_t newsize) {
   struct hash_entry **nbuckets = calloc(newsize, sizeof(struct hash_entry *));
@@ -83,22 +68,21 @@ static bool rehash(hash_table *htable, size_t newsize) {
   htable->buckets = nbuckets;
   htable->capacity = newsize;
 
-  struct hash_node *head = htable->head.next;
-  while (head != NULL) {
-    struct hash_entry *entry = head->entry;
-    uint64_t bct = GET_BUCKET(htable, entry->key);
+  struct hash_entry *walk = htable->head.lnext;
+  while (walk != &htable->head) {
+    uint64_t bct = GET_BUCKET(htable, walk->key);
 
-    entry->next = htable->buckets[bct];
-    htable->buckets[bct] = entry;
+    walk->next = htable->buckets[bct];
+    htable->buckets[bct] = walk;
 
-    head = head->next;
+    walk = walk->lnext;
   }
 
   return true;
 }
 
 hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
-                          hash_fn user_hash, free_fn vfree) {
+                          hash_fn user_hash, free_fn val_free) {
   assert(capacity > 0);
   assert(key_size > 0);
 
@@ -114,9 +98,8 @@ hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
     return NULL;
   }
   htable->hash = user_hash ? user_hash : hash_fnv1a;
-  htable->vfree = vfree ? vfree : free_placeholder;
-  htable->head.next = NULL;
-  htable->tail = &htable->head.next;
+  htable->vfree = val_free ? val_free : free_placeholder;
+  htable->head.lnext = htable->head.lprev = &htable->head;
   htable->size = 0;
   htable->capacity = capacity;
   htable->ksize = key_size;
@@ -126,14 +109,13 @@ hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
 
 void htable_free(hash_table *htable) {
   assert(htable != NULL);
-  struct hash_node *head = htable->head.next;
-  while (head != NULL) {
-    struct hash_node *tmp = head;
-    head = head->next;
+  struct hash_entry *walk = htable->head.lnext;
+  while (walk != &htable->head) {
+    struct hash_entry *tmp = walk;
+    walk = walk->lnext;
 
-    htable->vfree(tmp->entry->val);
-    hash_entry_free(tmp->entry);
-    hnode_free(tmp);
+    htable->vfree(tmp->val);
+    hash_entry_free(tmp);
   }
   free(htable->buckets);
   free(htable);
@@ -164,17 +146,17 @@ void htable_insert(hash_table *htable, const void *key, const void *val) {
   entry = malloc(sizeof(*entry));
   entry->key = malloc(htable->ksize);
   entry->val = malloc(htable->vsize);
-  struct hash_node *hnode = hnode_create(entry);
 
-  if (!entry || !entry->key || !entry->val || !hnode) {
+  if (!entry || !entry->key || !entry->val) {
     hash_entry_free(entry);
-    hnode_free(hnode);
     YU_LOG_ERROR("Failed to allocate memory for hash entry");
     return;
   }
-  *(htable->tail) = hnode;
-  entry->node = htable->tail;
-  htable->tail = &(*htable->tail)->next;
+  struct hash_entry *tail = htable->head.lprev;
+  entry->lprev = tail;
+  entry->lnext = tail->lnext;
+  tail->lnext->lprev = entry;
+  tail->lnext = entry;
 
   memcpy(entry->key, key, htable->ksize);
   if (val) {
@@ -198,25 +180,17 @@ void htable_remove(hash_table *htable, const void *key) {
   assert(htable != NULL);
   assert(key != NULL);
 
-  struct hash_entry **entry = lookup(htable, key, GET_BUCKET(htable, key));
-  if (*entry == NULL) {
+  struct hash_entry **fentry = lookup(htable, key, GET_BUCKET(htable, key));
+  if (*fentry == NULL) {
     return;
   }
-  struct hash_node **cur_node = (*entry)->node;
-  struct hash_entry *free_elem = *entry;
-  struct hash_node *free_node = *cur_node;
+  struct hash_entry *entry = *fentry;
+  entry->lprev->lnext = entry->lnext;
+  entry->lnext->lprev = entry->lprev;
+  *fentry = (*fentry)->next;
 
-  *cur_node = (*cur_node)->next;
-  if (*cur_node != NULL) {
-    (*cur_node)->entry->node = cur_node;
-  } else {
-    htable->tail = cur_node;
-  }
-  *entry = (*entry)->next;
-
-  htable->vfree(free_elem->val);
-  hash_entry_free(free_elem);
-  hnode_free(free_node);
+  htable->vfree(entry->val);
+  hash_entry_free(entry);
   htable->size--;
 }
 

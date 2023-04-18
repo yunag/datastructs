@@ -187,7 +187,7 @@ TEST_F(HashTableTest, CustomFree) {
   for (size_t i = 0; i < num_cases; ++i) {
     int val = Helper::rand(INT_MIN, INT_MAX);
     nums[i] = val;
-    queue *q = queue_create(Helper::rand(10, 20), sizeof(double));
+    queue *q = queue_create(Helper::rand(10, 20), sizeof(double), NULL);
     htable_insert(ht_, &val, &q);
     EXPECT_EQ(htable_size(ht_), i + 1);
   }

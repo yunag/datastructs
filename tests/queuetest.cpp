@@ -14,7 +14,7 @@ protected:
   void TearDown() override { queue_free(q_); }
 
   template <typename T> void SetQueue(size_t size = 1) {
-    q_ = queue_create(size, sizeof(T));
+    q_ = queue_create(size, sizeof(T), NULL);
     ASSERT_NE(q_, nullptr);
   }
 
@@ -29,7 +29,7 @@ TEST(Queue, Initialization) {
   size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
-    queue *q = queue_create(Helper::rand(1, 20000), types[i]);
+    queue *q = queue_create(Helper::rand(1, 20000), types[i], NULL);
     ASSERT_NE(q, nullptr);
     EXPECT_TRUE(queue_empty(q));
     EXPECT_EQ(queue_esize(q), types[i]);

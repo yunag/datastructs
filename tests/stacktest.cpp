@@ -14,7 +14,7 @@ protected:
   void TearDown() override { stack_free(s_); }
 
   template <typename T> void SetStack(size_t size = 1) {
-    s_ = stack_create(size, sizeof(T));
+    s_ = stack_create(size, sizeof(T), NULL);
     ASSERT_NE(s_, nullptr);
   }
 
@@ -29,7 +29,7 @@ TEST(Stack, Initialization) {
   size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
-    stack *s = stack_create(Helper::rand(1, 20000), types[i]);
+    stack *s = stack_create(Helper::rand(1, 20000), types[i], NULL);
     ASSERT_NE(s, nullptr);
     EXPECT_TRUE(stack_empty(s));
     EXPECT_EQ(stack_esize(s), types[i]);
