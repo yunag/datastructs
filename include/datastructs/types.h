@@ -4,6 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef void (*free_fn)(void *const *);
+typedef void (*free_fn)(const void *);
 
 #endif // !YU_TYPES_H

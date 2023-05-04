@@ -27,11 +27,11 @@ extern "C" {
   })
 
 #define YU_SWAP(a, b)                                                          \
-  ({                                                                           \
+  do {                                                                         \
     __typeof__(*(a)) __temp = *(a);                                            \
     *(a) = *(b);                                                               \
     *(b) = __temp;                                                             \
-  })
+  } while (0)
 
 #define YU_STR(x) YU_STR2(x)
 #define YU_STR2(x) #x
@@ -58,7 +58,7 @@ extern "C" {
   } while (0)
 
 #define YU_UNUSED(param) ((void)(param))
-static inline void free_placeholder(void *const *value) { YU_UNUSED(value); }
+static inline void free_placeholder(const void *ptr) { YU_UNUSED(ptr); }
 
 #ifdef __cplusplus
 }

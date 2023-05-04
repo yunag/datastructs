@@ -1,5 +1,5 @@
 #include <datastructs/bst.h>
-#include <datastructs/utils.h>
+#include <datastructs/macros.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -22,7 +22,7 @@ struct bst {
 static struct bnode *bnode_create(struct bnode *left, struct bnode *right,
                                   int key) {
   struct bnode *bnode = malloc(sizeof(*bnode));
-  if (bnode == NULL) {
+  if (!bnode) {
     YU_LOG_ERROR("Failed to allocate memory for node");
     return NULL;
   }
@@ -36,11 +36,11 @@ static struct bnode *bnode_create(struct bnode *left, struct bnode *right,
 static inline void bnode_free(struct bnode *node) { free(node); }
 
 static inline int bheight(struct bnode *node) {
-  return node == NULL ? 0 : node->height;
+  return !node ? 0 : node->height;
 }
 
 static inline int deviation(struct bnode *node) {
-  return node == NULL ? 0 : bheight(node->left) - bheight(node->right);
+  return !node ? 0 : bheight(node->left) - bheight(node->right);
 }
 
 static inline int height(struct bnode *node) {
@@ -70,7 +70,7 @@ static struct bnode *right_rotate(struct bnode *node) {
 }
 
 static void inorder_print(struct bnode *node) {
-  if (node != NULL) {
+  if (node) {
     inorder_print(node->left);
     fprintf(stdout, "%d ", node->key);
     inorder_print(node->right);
@@ -78,7 +78,7 @@ static void inorder_print(struct bnode *node) {
 }
 
 static struct bnode *min_node(struct bnode *node) {
-  while (node->left != NULL) {
+  while (node->left) {
     node = node->left;
   }
   return node;
@@ -108,7 +108,7 @@ static struct bnode *balance(struct bnode *node) {
 }
 
 static struct bnode *insert_bnode(bst *_bst, struct bnode *node, int key) {
-  if (node == NULL) {
+  if (!node) {
     _bst->size++;
     return bnode_create(NULL, NULL, key);
   }
@@ -125,7 +125,7 @@ static struct bnode *insert_bnode(bst *_bst, struct bnode *node, int key) {
 }
 
 static struct bnode *remove_node(bst *_bst, struct bnode *node, int key) {
-  if (node == NULL) {
+  if (!node) {
     return NULL;
   }
 
@@ -135,8 +135,8 @@ static struct bnode *remove_node(bst *_bst, struct bnode *node, int key) {
     node->right = remove_node(_bst, node->right, key);
   } else { /* Key found */
     struct bnode *ret;
-    if (node->left == NULL || node->right == NULL) {
-      ret = node->left != NULL ? node->left : node->right;
+    if (!node->left || !node->right) {
+      ret = node->left ? node->left : node->right;
       _bst->size--;
       bnode_free(node);
       return ret;
@@ -156,7 +156,7 @@ static inline bool balanced(struct bnode *node) {
 }
 
 static bool valid_avl(struct bnode *node) {
-  if (node == NULL) {
+  if (!node) {
     return true;
   }
   if (!balanced(node)) {
@@ -166,7 +166,7 @@ static bool valid_avl(struct bnode *node) {
 }
 
 static void bst_free_tree(struct bnode *node) {
-  if (node == NULL) {
+  if (!node) {
     return;
   }
   bst_free_tree(node->left);
@@ -176,7 +176,7 @@ static void bst_free_tree(struct bnode *node) {
 
 bst *bst_create(void) {
   bst *_bst = malloc(sizeof(*_bst));
-  if (_bst == NULL) {
+  if (!_bst) {
     YU_LOG_ERROR("Failed to allocate memory for binary search tree");
     return NULL;
   }
@@ -204,7 +204,7 @@ void bst_insert(bst *_bst, int key) {
 bool bst_find(bst *_bst, int key) {
   assert(_bst != NULL);
   struct bnode *walk = _bst->root;
-  while (walk != NULL) {
+  while (walk) {
     if (key < walk->key) {
       walk = walk->left;
     } else if (key > walk->key) {
@@ -219,7 +219,7 @@ bool bst_find(bst *_bst, int key) {
 void bst_inorder_print(bst *_bst) {
   assert(_bst != NULL);
   inorder_print(_bst->root);
-  if (_bst->root != NULL) {
+  if (_bst->root) {
     printf("\b\n");
   } else {
     printf("\n");
@@ -232,7 +232,7 @@ bool bst_valid_avl(bst *_bst) {
 }
 
 static bool valid_bst(struct bnode *node, int64_t left, int64_t right) {
-  if (node == NULL) {
+  if (!node) {
     return true;
   }
   if (node->key >= right || node->key <= left) {

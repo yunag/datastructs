@@ -1,5 +1,5 @@
 #include "datastructs/trie.h"
-#include "datastructs/utils.h"
+#include "datastructs/macros.h"
 
 #include <assert.h>
 #include <stdint.h>

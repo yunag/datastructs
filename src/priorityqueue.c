@@ -1,5 +1,5 @@
+#include "datastructs/macros.h"
 #include "datastructs/priority_queue.h"
-#include "datastructs/utils.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@ struct priority_queue {
 static bool pq_resize(priority_queue *pq, size_t newsize) {
   assert(newsize > pq->size);
   void *tmp = realloc(pq->heap, pq->esize * newsize);
-  if (tmp == NULL) {
+  if (!tmp) {
     YU_LOG_ERROR("Failed to resize the priority queue to %zu", newsize);
     return false;
   }
@@ -42,12 +42,12 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
     assert(ncmp != NULL);                                                      \
                                                                                \
     pq = malloc(sizeof(*pq));                                                  \
-    if (pq == NULL) {                                                          \
+    if (!pq) {                                                                 \
       YU_LOG_ERROR("Failed to allocate memory for priority queue");            \
       return NULL;                                                             \
     }                                                                          \
     pq->heap = malloc(ncapacity * nelemsize);                                  \
-    if (pq->heap == NULL) {                                                    \
+    if (!pq->heap) {                                                           \
       free(pq);                                                                \
       YU_LOG_ERROR("Failed to allocate memory for heap");                      \
       return NULL;                                                             \

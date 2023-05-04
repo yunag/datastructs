@@ -1,6 +1,6 @@
 #include "datastructs/stack.h"
+#include "datastructs/macros.h"
 #include "datastructs/types.h"
-#include "datastructs/utils.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -21,7 +21,7 @@ static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL);
   assert(newsize > s->size);
   void *tmp = realloc(s->buffer, s->esize * newsize);
-  if (tmp == NULL) {
+  if (!tmp) {
     YU_LOG_ERROR("Failed to resize the stack to %zu", newsize);
     return false;
   }
@@ -35,12 +35,12 @@ stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
   assert(elemsize > 0);
 
   stack *s = malloc(sizeof(*s));
-  if (s == NULL) {
+  if (!s) {
     YU_LOG_ERROR("Failed to allocate memory for stack");
     return NULL;
   }
   s->buffer = malloc(elemsize * capacity);
-  if (s->buffer == NULL) {
+  if (!s->buffer) {
     free(s);
     YU_LOG_ERROR("Failed to allocate memory for stack");
     return NULL;

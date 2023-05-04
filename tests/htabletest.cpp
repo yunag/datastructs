@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
 #include "datastructs/hash_table.h"
+#include "datastructs/macros.h"
 #include "datastructs/queue.h"
-#include "datastructs/utils.h"
 
 #include "helper.h"
 
@@ -16,9 +16,11 @@ protected:
   void TearDown() override { htable_free(ht_); }
 
   template <typename T1, typename T2>
-  void SetHashTable(size_t size = 1, free_fn vfree = NULL,
-                    hash_fn hash = NULL) {
-    ht_ = htable_create(size, sizeof(T1), sizeof(T2), hash, vfree);
+  void SetHashTable(size_t size = 1, hash_fn hash = NULL,
+                    cmp_key_fn cmp_key = NULL, free_fn kfree = NULL,
+                    free_fn vfree = NULL) {
+    ht_ = htable_create(size, sizeof(T1), sizeof(T2), hash, cmp_key, kfree,
+                        vfree);
     ASSERT_NE(ht_, nullptr);
   }
 
@@ -33,8 +35,8 @@ TEST(HashTable, Initialization) {
   size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
-    hash_table *ht =
-        htable_create(Helper::rand(1, 2000), types[i], types[i], NULL, NULL);
+    hash_table *ht = htable_create(Helper::rand(1, 2000), types[i], types[i],
+                                   NULL, NULL, NULL, NULL);
     ASSERT_NE(ht, nullptr);
     EXPECT_EQ(htable_ksize(ht), types[i]);
     EXPECT_EQ(htable_vsize(ht), types[i]);
@@ -179,8 +181,9 @@ TEST_F(HashTableTest, STLTable) {
 }
 
 TEST_F(HashTableTest, CustomFree) {
-  SetHashTable<int, queue *>(
-      5, [](void *const *a) -> void { queue_free(*(queue **)a); });
+  SetHashTable<int, queue *>(5, NULL, NULL, NULL, [](const void *a) -> void {
+    queue_free(*(queue **)a);
+  });
 
   const int num_cases = 1000;
   int nums[num_cases];

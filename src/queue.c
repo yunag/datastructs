@@ -1,5 +1,5 @@
 #include "datastructs/queue.h"
-#include "datastructs/utils.h"
+#include "datastructs/macros.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -23,12 +23,12 @@ queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
   assert(elemsize > 0);
 
   queue *q = malloc(sizeof(*q));
-  if (q == NULL) {
+  if (!q) {
     YU_LOG_ERROR("Failed to allocate memory for queue");
     return NULL;
   }
   q->buffer = malloc(elemsize * capacity);
-  if (q->buffer == NULL) {
+  if (!q->buffer) {
     free(q);
     YU_LOG_ERROR("Failed to allocate memory for queue");
     return NULL;
@@ -60,13 +60,13 @@ static bool queue_resize(queue *q, size_t newsize) {
   char *buffer;
   if (q->front <= q->rear) { /* Realloc case */
     buffer = realloc(q->buffer, newsize * q->esize);
-    if (buffer == NULL) {
+    if (!buffer) {
       YU_LOG_ERROR("Failed to resize the queue to %zu", newsize);
       return false;
     }
   } else {
     buffer = malloc(newsize * q->esize);
-    if (buffer == NULL) {
+    if (!buffer) {
       YU_LOG_ERROR("Failed to resize the queue to %zu", newsize);
       return false;
     }

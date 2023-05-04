@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
+#include "datastructs/macros.h"
 #include "datastructs/queue.h"
-#include "datastructs/utils.h"
 
 #include "helper.h"
 

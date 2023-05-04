@@ -10,12 +10,19 @@ extern "C" {
 
 typedef struct hash_table hash_table;
 typedef uint64_t (*hash_fn)(const void *, size_t);
+typedef int (*cmp_key_fn)(const void *, const void *, size_t);
 
-hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
-                          hash_fn hash, free_fn free_value);
+uint64_t hash_fnv1a(const void *key, size_t size);
+uint64_t hash_fnv1a_str(const char *str);
+
+hash_table *htable_create(size_t initial_capacity, size_t key_size,
+                          size_t value_size, hash_fn hash, cmp_key_fn cmp_key,
+                          free_fn free_key, free_fn free_value);
 void htable_free(hash_table *htable);
-void htable_insert(hash_table *htable, const void *key, const void *val);
+bool htable_insert(hash_table *htable, const void *key, const void *val);
+bool htable_try_insert(hash_table *htable, const void *key, const void *val);
 void *htable_lookup(hash_table *htable, const void *key);
+bool htable_contains(hash_table *htable, const void *key);
 void htable_remove(hash_table *htable, const void *key);
 size_t htable_size(hash_table *htable);
 size_t htable_ksize(hash_table *htable);

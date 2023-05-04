@@ -14,5 +14,5 @@ target_include_directories(${PROJECT_NAME}
 
 target_compile_options(${PROJECT_NAME}
   PRIVATE
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -ggdb>
+    ${COMPILE_OPTS}
 )
