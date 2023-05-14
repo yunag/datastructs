@@ -11,7 +11,7 @@
 class StackTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { stack_free(s_); }
+  void TearDown() override { stack_destroy(s_); }
 
   template <typename T> void SetStack(size_t size = 1) {
     s_ = stack_create(size, sizeof(T), NULL);
@@ -34,7 +34,7 @@ TEST(Stack, Initialization) {
     EXPECT_TRUE(stack_empty(s));
     EXPECT_EQ(stack_esize(s), types[i]);
     EXPECT_EQ(stack_top(s), nullptr);
-    stack_free(s);
+    stack_destroy(s);
   }
 }
 

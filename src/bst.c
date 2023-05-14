@@ -185,10 +185,11 @@ bst *bst_create(void) {
   return _bst;
 }
 
-void bst_free(bst *_bst) {
-  assert(_bst != NULL);
-  bst_free_tree(_bst->root);
-  free(_bst);
+void bst_destroy(bst *_bst) {
+  if (_bst) {
+    bst_free_tree(_bst->root);
+    free(_bst);
+  }
 }
 
 void bst_remove(bst *_bst, int key) {

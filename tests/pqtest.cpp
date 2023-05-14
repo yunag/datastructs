@@ -28,7 +28,7 @@ template <typename T> int cmp_less(const void *pa, const void *pb) {
 class PriorityQueueTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { pq_free(pq_); }
+  void TearDown() override { pq_destroy(pq_); }
 
   template <typename T>
   void SetPQueue(size_t size = 1, cmp_fn cmp = cmp_great<T>) {
@@ -53,7 +53,7 @@ TEST(PriorityQueue, Initialization) {
     EXPECT_TRUE(pq_empty(pq));
     EXPECT_EQ(pq_esize(pq), types[i]);
     EXPECT_EQ(pq_top(pq), nullptr);
-    pq_free(pq);
+    pq_destroy(pq);
   }
 }
 

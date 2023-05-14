@@ -14,11 +14,12 @@ typedef int (*cmp_key_fn)(const void *, const void *, size_t);
 
 uint64_t hash_fnv1a(const void *key, size_t size);
 uint64_t hash_fnv1a_str(const char *str);
+uint64_t hash_bern(const void *key, size_t size);
 
 hash_table *htable_create(size_t initial_capacity, size_t key_size,
                           size_t value_size, hash_fn hash, cmp_key_fn cmp_key,
                           free_fn free_key, free_fn free_value);
-void htable_free(hash_table *htable);
+void htable_destroy(hash_table *htable);
 bool htable_insert(hash_table *htable, const void *key, const void *val);
 bool htable_try_insert(hash_table *htable, const void *key, const void *val);
 void *htable_lookup(hash_table *htable, const void *key);

@@ -52,8 +52,10 @@ stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
   return s;
 }
 
-void stack_free(stack *s) {
-  assert(s != NULL);
+void stack_destroy(stack *s) {
+  if (!s) {
+    return;
+  }
   if (s->free != free_placeholder) {
     while (!STACK_EMPTY(s)) {
       s->free(STACK_AT(--s->size));

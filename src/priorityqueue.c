@@ -81,10 +81,11 @@ priority_queue *pq_create_from_arr(const void *base, size_t count,
   return pq;
 }
 
-void pq_free(priority_queue *pq) {
-  assert(pq != NULL);
-  free(pq->heap);
-  free(pq);
+void pq_destroy(priority_queue *pq) {
+  if (pq) {
+    free(pq->heap);
+    free(pq);
+  }
 }
 
 void pq_push(priority_queue *pq, const void *elem) {

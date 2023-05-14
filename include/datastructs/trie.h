@@ -10,7 +10,7 @@ extern "C" {
 typedef struct trie trie;
 
 trie *trie_create(void);
-void trie_free(trie *trie);
+void trie_destroy(trie *trie);
 void trie_insert(trie *trie, const char *word);
 bool trie_search(trie *trie, const char *word);
 bool trie_remove(trie *trie, const char *word);

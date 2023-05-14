@@ -42,8 +42,10 @@ queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
   return q;
 }
 
-void queue_free(queue *q) {
-  assert(q != NULL);
+void queue_destroy(queue *q) {
+  if (!q) {
+    return;
+  }
   if (q->free != free_placeholder) {
     while (!QUEUE_EMPTY(q)) {
       q->free(QUEUE_AT(q->front));

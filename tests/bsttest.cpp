@@ -11,7 +11,7 @@
 class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { bst_free(bst_); }
+  void TearDown() override { bst_destroy(bst_); }
 
   void setBST() {
     bst_ = bst_create();

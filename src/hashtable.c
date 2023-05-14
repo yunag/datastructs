@@ -31,7 +31,7 @@ struct hash_table {
   size_t capacity;             /* Capacity of the table */
 };
 
-static uint64_t hash_bern(const void *key, size_t size) {
+uint64_t hash_bern(const void *key, size_t size) {
   const unsigned char *bytes = key;
   uint64_t hash = 5381;
   for (size_t i = 0; i < size; ++i) {
@@ -81,6 +81,7 @@ static struct hash_entry *hentry_create(hash_table *htable, const void *key,
   if (!entry->key || !entry->val) {
     free(entry->key);
     free(entry->val);
+    free(entry);
     return NULL;
   }
   memcpy(entry->key, key, htable->ksize);
@@ -140,8 +141,10 @@ hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
   return htable;
 }
 
-void htable_free(hash_table *htable) {
-  assert(htable != NULL);
+void htable_destroy(hash_table *htable) {
+  if (!htable) {
+    return;
+  }
   struct hash_entry *walk = htable->head.lnext;
   while (walk != &htable->head) {
     struct hash_entry *tmp = walk;

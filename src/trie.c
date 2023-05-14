@@ -160,8 +160,9 @@ void trie_print(trie *trie) {
   trie_print_rec(trie->root, buffer, &bufsize);
 }
 
-void trie_free(trie *trie) {
-  assert(trie != NULL);
-  trie_free_rec(trie->root);
-  free(trie);
+void trie_destroy(trie *trie) {
+  if (trie) {
+    trie_free_rec(trie->root);
+    free(trie);
+  }
 }

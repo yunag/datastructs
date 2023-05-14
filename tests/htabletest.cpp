@@ -13,7 +13,7 @@
 class HashTableTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { htable_free(ht_); }
+  void TearDown() override { htable_destroy(ht_); }
 
   template <typename T1, typename T2>
   void SetHashTable(size_t size = 1, hash_fn hash = NULL,
@@ -41,7 +41,7 @@ TEST(HashTable, Initialization) {
     EXPECT_EQ(htable_ksize(ht), types[i]);
     EXPECT_EQ(htable_vsize(ht), types[i]);
     EXPECT_EQ(htable_size(ht), 0);
-    htable_free(ht);
+    htable_destroy(ht);
   }
 }
 
@@ -182,7 +182,7 @@ TEST_F(HashTableTest, STLTable) {
 
 TEST_F(HashTableTest, CustomFree) {
   SetHashTable<int, queue *>(5, NULL, NULL, NULL, [](const void *a) -> void {
-    queue_free(*(queue **)a);
+    queue_destroy(*(queue **)a);
   });
 
   const int num_cases = 1000;

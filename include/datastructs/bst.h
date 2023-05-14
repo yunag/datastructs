@@ -11,7 +11,7 @@ extern "C" {
 typedef struct bst bst;
 
 bst *bst_create(void);
-void bst_free(bst *binary_search_tree);
+void bst_destroy(bst *binary_search_tree);
 void bst_insert(bst *binary_search_tree, int key);
 bool bst_find(bst *binary_search_tree, int key);
 void bst_remove(bst *binary_search_tree, int key);

@@ -11,7 +11,7 @@
 class QueueTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { queue_free(q_); }
+  void TearDown() override { queue_destroy(q_); }
 
   template <typename T> void SetQueue(size_t size = 1) {
     q_ = queue_create(size, sizeof(T), NULL);
@@ -35,7 +35,7 @@ TEST(Queue, Initialization) {
     EXPECT_EQ(queue_esize(q), types[i]);
     EXPECT_EQ(queue_front(q), nullptr);
     EXPECT_EQ(queue_back(q), nullptr);
-    queue_free(q);
+    queue_destroy(q);
   }
 }
 
