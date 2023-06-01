@@ -33,7 +33,7 @@ static struct bnode *bnode_create(struct bnode *left, struct bnode *right,
   return bnode;
 }
 
-static inline void bnode_free(struct bnode *node) { free(node); }
+static inline void bnode_destroy(struct bnode *node) { free(node); }
 
 static inline int bheight(struct bnode *node) {
   return !node ? 0 : node->height;
@@ -138,7 +138,7 @@ static struct bnode *remove_node(bst *_bst, struct bnode *node, int key) {
     if (!node->left || !node->right) {
       ret = node->left ? node->left : node->right;
       _bst->size--;
-      bnode_free(node);
+      bnode_destroy(node);
       return ret;
     }
     ret = min_node(node->right);
@@ -165,13 +165,13 @@ static bool valid_avl(struct bnode *node) {
   return valid_avl(node->left) && valid_avl(node->right);
 }
 
-static void bst_free_tree(struct bnode *node) {
+static void bst_free_rec(struct bnode *node) {
   if (!node) {
     return;
   }
-  bst_free_tree(node->left);
-  bst_free_tree(node->right);
-  bnode_free(node);
+  bst_free_rec(node->left);
+  bst_free_rec(node->right);
+  bnode_destroy(node);
 }
 
 bst *bst_create(void) {
@@ -187,7 +187,7 @@ bst *bst_create(void) {
 
 void bst_destroy(bst *_bst) {
   if (_bst) {
-    bst_free_tree(_bst->root);
+    bst_free_rec(_bst->root);
     free(_bst);
   }
 }

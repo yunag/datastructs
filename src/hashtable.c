@@ -62,7 +62,7 @@ uint64_t hash_fnv1a_str(const char *str) {
   return hashv;
 }
 
-static void hentry_free(hash_table *htable, struct hash_entry *hentry) {
+static void hentry_destroy(hash_table *htable, struct hash_entry *hentry) {
   htable->kfree(hentry->key);
   htable->vfree(hentry->val);
   free(hentry->key);
@@ -149,7 +149,7 @@ void htable_destroy(hash_table *htable) {
   while (walk != &htable->head) {
     struct hash_entry *tmp = walk;
     walk = walk->lnext;
-    hentry_free(htable, tmp);
+    hentry_destroy(htable, tmp);
   }
   free(htable->buckets);
   free(htable);
@@ -239,7 +239,7 @@ void htable_remove(hash_table *htable, const void *key) {
   entry->lnext->lprev = entry->lprev;
   *fentry = (*fentry)->next;
 
-  hentry_free(htable, entry);
+  hentry_destroy(htable, entry);
   htable->size--;
 }
 

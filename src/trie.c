@@ -19,7 +19,7 @@ struct trie_node {
   bool word;                /* Is the current node an end of the word? */
 };
 
-static struct trie_node *create_trie_node(void) {
+static struct trie_node *trie_node_create(void) {
   struct trie_node *node = malloc(sizeof(*node));
   if (node == NULL) {
     YU_LOG_ERROR("Failed to allocate memory for trie node");
@@ -36,7 +36,7 @@ static struct trie_node *create_trie_node(void) {
   return node;
 }
 
-static void free_trie_node(struct trie_node *node) {
+static void trie_node_destroy(struct trie_node *node) {
   assert(node != NULL);
   free(node->child);
   free(node);
@@ -49,7 +49,7 @@ trie *trie_create(void) {
     return NULL;
   }
   trie->depth = 0;
-  trie->root = create_trie_node();
+  trie->root = trie_node_create();
   return trie;
 }
 
@@ -62,7 +62,7 @@ void trie_insert(trie *trie, const char *word) {
     size_t idx = word[i];
     if (root->child[idx] == NULL) {
       root->child_count++;
-      root->child[idx] = create_trie_node();
+      root->child[idx] = trie_node_create();
     }
     root = root->child[idx];
   }
@@ -114,7 +114,7 @@ static bool trie_remove_rec(struct trie_node *node, const char *word,
   }
 
   if (trie_remove_rec(*child, &word[1], deleted)) {
-    free_trie_node(*child);
+    trie_node_destroy(*child);
     *child = NULL;
     --(node->child_count);
   }
@@ -137,7 +137,7 @@ static void trie_free_rec(struct trie_node *node) {
       trie_free_rec(node->child[i]);
     }
   }
-  free_trie_node(node);
+  trie_node_destroy(node);
 }
 
 void trie_print_rec(struct trie_node *node, char *buffer, size_t *bufsize) {
