@@ -58,7 +58,6 @@ extern "C" {
   } while (0)
 
 #define YU_UNUSED(param) ((void)(param))
-static inline void free_placeholder(const void *ptr) { YU_UNUSED(ptr); }
 
 #ifdef __cplusplus
 }

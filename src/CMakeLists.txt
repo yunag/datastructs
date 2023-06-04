@@ -5,6 +5,7 @@ add_library(${PROJECT_NAME} STATIC
   queue.c
   stack.c
   bst.c
+  functions.c
 )
 
 target_include_directories(${PROJECT_NAME}

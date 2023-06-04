@@ -1,59 +1,39 @@
 #include "gtest/gtest.h"
 
+#include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
 #include "datastructs/macros.h"
-#include "datastructs/queue.h"
 
 #include "helper.h"
 
 #include <limits.h>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 class HashTableTest : public ::testing::Test {
 protected:
   void SetUp() override {}
   void TearDown() override { htable_destroy(ht_); }
 
-  template <typename T1, typename T2>
-  void SetHashTable(size_t size = 1, hash_fn hash = NULL,
-                    cmp_key_fn cmp_key = NULL, free_fn kfree = NULL,
-                    free_fn vfree = NULL) {
-    ht_ = htable_create(size, sizeof(T1), sizeof(T2), hash, cmp_key, kfree,
-                        vfree);
+  void SetHashTable(hash_fn hash, cmp_key_fn cmp_key, size_t size = 1,
+                    free_fn kfree = NULL, free_fn vfree = NULL) {
+    ht_ = htable_create(size, hash, cmp_key, kfree, vfree);
     ASSERT_NE(ht_, nullptr);
   }
 
   hash_table *ht_;
 };
 
-TEST(HashTable, Initialization) {
-  size_t types[] = {
-      sizeof(int),  sizeof(float),    sizeof(double),
-      sizeof(char), sizeof(uint16_t),
-  };
-  size_t types_size = YU_ARRAYSIZE(types);
-
-  for (size_t i = 0; i < types_size; ++i) {
-    hash_table *ht = htable_create(Helper::rand(1, 2000), types[i], types[i],
-                                   NULL, NULL, NULL, NULL);
-    ASSERT_NE(ht, nullptr);
-    EXPECT_EQ(htable_ksize(ht), types[i]);
-    EXPECT_EQ(htable_vsize(ht), types[i]);
-    EXPECT_EQ(htable_size(ht), 0);
-    htable_destroy(ht);
-  }
-}
-
 TEST_F(HashTableTest, InsertRemove) {
-  SetHashTable<int, bool>();
+  SetHashTable(yu_hash_i32, yu_cmp_i32);
   const int num_cases = 1000;
   int nums[num_cases];
   bool t = true;
   for (size_t i = 0; i < num_cases; ++i) {
     int val = Helper::rand(INT_MIN, INT_MAX);
     nums[i] = val;
-    htable_insert(ht_, &val, &t);
+    htable_insert(ht_, yu_dup_i32(val), yu_dup_u8(t));
     EXPECT_EQ(htable_size(ht_), i + 1);
     EXPECT_TRUE(*(bool *)htable_lookup(ht_, &nums[i]));
   }
@@ -66,14 +46,14 @@ TEST_F(HashTableTest, InsertRemove) {
 }
 
 TEST_F(HashTableTest, InsertRemoveBackwards) {
-  SetHashTable<int, bool>();
+  SetHashTable(yu_hash_i32, yu_cmp_i32);
   const int num_cases = 1000;
   int nums[num_cases];
   bool t = true;
   for (size_t i = 0; i < num_cases; ++i) {
     int val = Helper::rand(INT_MIN, INT_MAX);
     nums[i] = val;
-    htable_insert(ht_, &val, &t);
+    htable_insert(ht_, yu_dup_i32(val), yu_dup_u8(t));
     EXPECT_EQ(htable_size(ht_), i + 1);
     EXPECT_TRUE(*(bool *)htable_lookup(ht_, &nums[i]));
   }
@@ -86,7 +66,7 @@ TEST_F(HashTableTest, InsertRemoveBackwards) {
   for (size_t i = 0; i < num_cases; ++i) {
     int val = Helper::rand(INT_MIN, INT_MAX);
     nums[i] = val;
-    htable_insert(ht_, &val, &t);
+    htable_insert(ht_, yu_dup_i32(val), yu_dup_u8(t));
     EXPECT_EQ(htable_size(ht_), i + 1);
     EXPECT_TRUE(*(bool *)htable_lookup(ht_, &nums[i]));
   }
@@ -99,11 +79,11 @@ TEST_F(HashTableTest, InsertRemoveBackwards) {
 }
 
 TEST_F(HashTableTest, RemoveNotExistent) {
-  SetHashTable<int, int>();
+  SetHashTable(yu_hash_i32, yu_cmp_i32);
   int key = 5, val = 7;
 
   htable_remove(ht_, &key);
-  htable_insert(ht_, &key, &val);
+  htable_insert(ht_, yu_dup_i32(key), yu_dup_i32(val));
   key = 6;
   htable_remove(ht_, &key);
   key = 5;
@@ -112,7 +92,7 @@ TEST_F(HashTableTest, RemoveNotExistent) {
 }
 
 TEST_F(HashTableTest, STLTable) {
-  SetHashTable<int, int>();
+  SetHashTable(yu_hash_i32, yu_cmp_i32);
 
   std::unordered_map<int, int> stl;
   enum class Action {
@@ -144,7 +124,7 @@ TEST_F(HashTableTest, STLTable) {
         keys.push_back(key);
       }
       int val = Helper::rand(INT_MIN, INT_MAX);
-      htable_insert(ht_, &key, &val);
+      htable_insert(ht_, yu_dup_i32(key), yu_dup_i32(val));
       stl[key] = val;
 
       ASSERT_TRUE(htable_lookup(ht_, &key) != NULL);
@@ -180,25 +160,52 @@ TEST_F(HashTableTest, STLTable) {
   }
 }
 
-TEST_F(HashTableTest, CustomFree) {
-  SetHashTable<int, queue *>(5, NULL, NULL, NULL, [](const void *a) -> void {
-    queue_destroy(*(queue **)a);
-  });
+TEST_F(HashTableTest, Case1) {
+  SetHashTable(yu_hash_i32, yu_cmp_i32);
+  std::unordered_map<int, int> unord_map;
 
-  const int num_cases = 1000;
-  int nums[num_cases];
-  for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
-    nums[i] = val;
-    queue *q = queue_create(Helper::rand(10, 20), sizeof(double), NULL);
-    htable_insert(ht_, &val, &q);
-    EXPECT_EQ(htable_size(ht_), i + 1);
+  std::vector<std::pair<int, int>> kvalues = {
+      {8, 9}, {8, 10}, {9, 25}, {9, 30}};
+  for (const auto &kv : kvalues) {
+    htable_insert(ht_, yu_dup_i32(kv.first), yu_dup_i32(kv.second));
+    unord_map[kv.first] = kv.second;
   }
-  for (size_t i = 0; i < num_cases / 2; ++i) {
-    htable_remove(ht_, &nums[i]);
-    EXPECT_EQ(htable_lookup(ht_, &nums[i]), nullptr);
-    EXPECT_EQ(htable_size(ht_), num_cases - i - 1);
+  HT_FOR_EACH(ht_, int *, int *, key, val) { ASSERT_EQ(*val, unord_map[*key]); }
+}
+
+TEST_F(HashTableTest, Strings) {
+  SetHashTable(yu_hash_str, yu_cmp_str);
+
+  std::vector<std::pair<const char *, int>> kvalues = {
+      {"Jacob", 9},   {"Banana", 10}, {"Banana", 25},
+      {"Haruhi", 30}, {"Apple", 31},
+  };
+  for (const auto &kv : kvalues) {
+    htable_insert(ht_, yu_dup_str(kv.first), yu_dup_i32(kv.second));
   }
+  ASSERT_TRUE(htable_lookup(ht_, "Banana") != NULL);
+  ASSERT_TRUE(htable_lookup(ht_, "Apple") != NULL);
+  ASSERT_TRUE(htable_lookup(ht_, "Haruhi") != NULL);
+  ASSERT_TRUE(htable_lookup(ht_, "Jacob") != NULL);
+  ASSERT_TRUE(htable_lookup(ht_, "Orange") == NULL);
+
+  EXPECT_EQ(*HT_FIND(ht_, "Banana", int *), 25);
+  EXPECT_EQ(*HT_FIND(ht_, "Apple", int *), 31);
+  EXPECT_EQ(*HT_FIND(ht_, "Haruhi", int *), 30);
+  EXPECT_EQ(*HT_FIND(ht_, "Jacob", int *), 9);
+
+  EXPECT_TRUE(htable_remove(ht_, "Jacob"));
+  EXPECT_TRUE(htable_lookup(ht_, "Jacob") == NULL);
+  EXPECT_TRUE(htable_lookup(ht_, "Banana") != NULL);
+
+  EXPECT_FALSE(htable_remove(ht_, "Moscow"));
+  EXPECT_TRUE(htable_remove(ht_, "Banana"));
+  EXPECT_TRUE(htable_lookup(ht_, "Banana") == NULL);
+
+  EXPECT_EQ(htable_size(ht_), 2);
+
+  EXPECT_EQ(*HT_FIND(ht_, "Apple", int *), 31);
+  EXPECT_EQ(*HT_FIND(ht_, "Haruhi", int *), 30);
 }
 
 int main(int argc, char *argv[]) {

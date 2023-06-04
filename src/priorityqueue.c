@@ -5,18 +5,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef uint64_t pqnode;
-
-#define PARENT(child) (((child)-1) >> 1)
-#define LCHILD(parent) (((parent) << 1) + 1)
-#define RCHILD(parent) (((parent) << 1) + 2)
-#define HEAP_AT(node) ((void *)&((char *)pq->heap)[pq->esize * (node)])
+#define HEAP_AT(node) (((char *)pq->heap + pq->esize * (node)))
+#define PARENT(child) ((child - 1) >> 1)
+#define LCHILD(parent) (pq->heap + (((parent)-pq->heap) << 1) + pq->esize)
+#define RCHILD(parent) (pq->heap + (((parent)-pq->heap + pq->esize) << 1))
 #define HAS_PARENT(child) ((child) > 0)
 
-#define PQ_EMPTY(pq) ((pq)->size == 0)
+#define PQ_EMPTY(pq) (!(pq)->size)
 
 struct priority_queue {
-  void *heap;      /* Node storage buffer */
+  char *heap; /* Node storage buffer */
+  char *last;
+
   cmp_fn cmp;      /* Function for comparing two nodes */
   size_t size;     /* Size of the Priority Queue */
   size_t capacity; /* Capacity of the Priority Queue */
@@ -25,12 +25,13 @@ struct priority_queue {
 
 static bool pq_resize(priority_queue *pq, size_t newsize) {
   assert(newsize > pq->size);
-  void *tmp = realloc(pq->heap, pq->esize * newsize);
+  char *tmp = realloc(pq->heap, pq->esize * newsize);
   if (!tmp) {
     YU_LOG_ERROR("Failed to resize the priority queue to %zu", newsize);
     return false;
   }
   pq->heap = tmp;
+  pq->last = tmp + pq->esize * pq->size;
   pq->capacity = newsize;
   return true;
 }
@@ -56,6 +57,7 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
     pq->esize = nelemsize;                                                     \
     pq->cmp = ncmp;                                                            \
     pq->size = nsize;                                                          \
+    pq->last = pq->heap + pq->size * pq->esize;                                \
   } while (0)
 
 priority_queue *pq_create(size_t capacity, size_t elemsize, cmp_fn cmp) {
@@ -95,14 +97,16 @@ void pq_push(priority_queue *pq, const void *elem) {
   if (pq->size == pq->capacity && !pq_resize(pq, pq->capacity * 2)) {
     return;
   }
-  memcpy(HEAP_AT(pq->size), elem, pq->esize);
-  pqnode cur = pq->size++;
-  pqnode par;
+  memcpy(pq->last, elem, pq->esize);
+  size_t cur = pq->size;
+  size_t par;
   while (HAS_PARENT(cur) &&
-         pq->cmp(HEAP_AT(cur), HEAP_AT((par = PARENT(cur)))) < 0) {
+         pq->cmp(HEAP_AT(cur), HEAP_AT(par = PARENT(cur))) < 0) {
     YU_BYTE_SWAP(HEAP_AT(par), HEAP_AT(cur), pq->esize);
     cur = par;
   }
+  pq->size++;
+  pq->last += pq->esize;
 }
 
 void pq_pop(priority_queue *pq) {
@@ -111,22 +115,22 @@ void pq_pop(priority_queue *pq) {
     return;
   }
   /* Move last element to the top */
-  memcpy(pq->heap, HEAP_AT(--pq->size), pq->esize);
+  memcpy(pq->heap, pq->last -= pq->esize, pq->esize);
 
-  pqnode cur = 0;
-  pqnode lch, rch;
-  while ((lch = LCHILD(cur)) < pq->size) {
-    if ((rch = RCHILD(cur)) < pq->size &&
-        pq->cmp(HEAP_AT(rch), HEAP_AT(lch)) < 0) {
+  char *cur = pq->heap;
+  char *lch, *rch;
+  while ((lch = LCHILD(cur)) < pq->last) {
+    if ((rch = RCHILD(cur)) < pq->last && pq->cmp(rch, lch) < 0) {
       lch = rch;
     }
 
-    if (pq->cmp(HEAP_AT(cur), HEAP_AT(lch)) < 0) {
+    if (pq->cmp(cur, lch) < 0) {
       break;
     }
-    YU_BYTE_SWAP(HEAP_AT(lch), HEAP_AT(cur), pq->esize);
+    YU_BYTE_SWAP(lch, cur, pq->esize);
     cur = lch;
   }
+  pq->size--;
 }
 
 bool pq_empty(priority_queue *pq) {
@@ -152,25 +156,28 @@ size_t pq_esize(priority_queue *pq) {
   return pq->esize;
 }
 
+#define LCBUFF(parent) (base_ptr + (((parent)-base_ptr) << 1) + size)
+#define RCBUFF(parent) (base_ptr + (((parent)-base_ptr + size) << 1))
 void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
   assert(base != NULL);
   assert(cmp != NULL);
 
-#define BUF_AT(index) ((void *)&((char *)base)[size * index])
-  for (int64_t i = (count >> 1) - 1; i >= 0; --i) {
-    pqnode cur = i;
-    pqnode lch, rch;
-    while ((lch = LCHILD(cur)) < count) {
-      if ((rch = RCHILD(cur)) < count && cmp(BUF_AT(rch), BUF_AT(lch)) < 0) {
+  char *base_ptr = base;
+  char *end = base_ptr + size * count;
+  for (char *node = base_ptr + (count >> 1) - size; node >= base_ptr;
+       node -= size) {
+    char *cur = node;
+    char *lch, *rch;
+    while ((lch = LCBUFF(cur)) < end) {
+      if ((rch = RCBUFF(cur)) < end && cmp(rch, lch) < 0) {
         lch = rch;
       }
 
-      if (cmp(BUF_AT(cur), BUF_AT(lch)) < 0) {
+      if (cmp(cur, lch) < 0) {
         break;
       }
-      YU_BYTE_SWAP(BUF_AT(lch), BUF_AT(cur), size);
+      YU_BYTE_SWAP(lch, cur, size);
       cur = lch;
     }
   }
-#undef BUF_AT
 }

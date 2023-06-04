@@ -9,38 +9,45 @@ extern "C" {
 #endif
 
 typedef struct hash_table hash_table;
-typedef uint64_t (*hash_fn)(const void *, size_t);
-typedef int (*cmp_key_fn)(const void *, const void *, size_t);
+typedef struct ht_iterator ht_iterator;
 
-uint64_t hash_fnv1a(const void *key, size_t size);
-uint64_t hash_fnv1a_str(const char *str);
-uint64_t hash_bern(const void *key, size_t size);
+typedef uint64_t (*hash_fn)(const void *);
+typedef bool (*cmp_key_fn)(const void *, const void *);
 
-hash_table *htable_create(size_t initial_capacity, size_t key_size,
-                          size_t value_size, hash_fn hash, cmp_key_fn cmp_key,
-                          free_fn free_key, free_fn free_value);
+struct key_value {
+  void *key;
+  void *val;
+};
+
+hash_table *htable_create(size_t initial_capacity, hash_fn hash,
+                          cmp_key_fn cmp_key, free_fn free_key,
+                          free_fn free_value);
 void htable_destroy(hash_table *htable);
-bool htable_insert(hash_table *htable, const void *key, const void *val);
-bool htable_try_insert(hash_table *htable, const void *key, const void *val);
+bool htable_insert(hash_table *htable, void *key, void *val);
 void *htable_lookup(hash_table *htable, const void *key);
 bool htable_contains(hash_table *htable, const void *key);
-void htable_remove(hash_table *htable, const void *key);
+bool htable_remove(hash_table *htable, const void *key);
 size_t htable_size(hash_table *htable);
-size_t htable_ksize(hash_table *htable);
-size_t htable_vsize(hash_table *htable);
 
-#define HASH_INSERT(HT, key, val)                                              \
-  do {                                                                         \
-    __typeof__(key) __key = (key);                                             \
-    __typeof__(val) __val = (val);                                             \
-    htable_insert(HT, &__key, &__val);                                         \
-  } while (0)
+ht_iterator *ht_begin(hash_table *htable);
+ht_iterator *ht_end(hash_table *htable);
+ht_iterator *ht_next(ht_iterator *iterator);
+struct key_value ht_get(ht_iterator *iterator);
 
-#define HASH_FIND(HT, key, ret)                                                \
-  do {                                                                         \
-    __typeof__ __key = (key);                                                  \
-    ret = htable_lookup(HT, &__key);                                           \
-  } while (0)
+#define HT_FOR_EACH(htable, KeyT, ValT, keyname, valname)                      \
+  for (ht_iterator *_it = ht_begin((htable)); _it != ht_end((htable));         \
+       _it = ht_next(_it))                                                     \
+    for (bool _should_loop = true; _should_loop;)                              \
+      for (KeyT keyname = (KeyT)ht_get(_it).key; _should_loop;)                \
+        for (ValT valname = (ValT)ht_get(_it).val; _should_loop;               \
+             _should_loop = false)
+
+#define HT_FOR_EACH_IT(htable, iterator_name)                                  \
+  for (ht_iterator *iterator_name = ht_begin((htable));                        \
+       iterator_name != ht_end((htable));                                      \
+       iterator_name = ht_next(iterator_name))
+
+#define HT_FIND(htable, key, ValT) ((ValT)htable_lookup(htable, (key)))
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,4 @@
+#include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
 #include "datastructs/macros.h"
 #include "datastructs/types.h"
@@ -7,14 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GET_BUCKET(htable, key)                                                \
-  ((htable)->hash((key), (htable)->ksize) % (htable)->capacity)
+#define GET_BUCKET(htable, key) ((htable)->hash((key)) % (htable)->capacity)
 
 struct hash_entry {
-  void *key; /* Pointer to key copy */
-  void *val; /* Pointer to value copy */
-  struct hash_entry *lnext;
-  struct hash_entry *lprev;
+  void *key; /* Pointer to key */
+  void *val; /* Pointer to value */
+  struct hash_entry *gnext;
+  struct hash_entry *gprev;
+
   struct hash_entry *next; /* Pointer to next struct */
 };
 
@@ -25,8 +26,6 @@ struct hash_table {
   cmp_key_fn cmp_key;          /* Compare two keys */
   free_fn kfree;               /* Function to free a key */
   free_fn vfree;               /* Function to free a value */
-  size_t ksize;                /* Size of a key */
-  size_t vsize;                /* Size of a value */
   size_t size;                 /* Number of elements*/
   size_t capacity;             /* Capacity of the table */
 };
@@ -40,57 +39,26 @@ uint64_t hash_bern(const void *key, size_t size) {
   return hash;
 }
 
-#define FNV_PRIME 0x100000001b3
-#define FNV_OFFSET 0xcbf29ce484222325UL
-uint64_t hash_fnv1a(const void *key, size_t size) {
-  const unsigned char *bytes = key;
-  uint64_t hashv = FNV_OFFSET;
-  for (size_t i = 0; i < size; ++i) {
-    hashv ^= bytes[i];
-    hashv *= FNV_PRIME;
-  }
-  return hashv;
-}
-
-uint64_t hash_fnv1a_str(const char *str) {
-  const unsigned char *bytes = (const unsigned char *)str;
-  uint64_t hashv = FNV_OFFSET;
-  while (*bytes) {
-    hashv ^= *bytes++;
-    hashv *= FNV_PRIME;
-  }
-  return hashv;
-}
-
 static void hentry_destroy(hash_table *htable, struct hash_entry *hentry) {
   htable->kfree(hentry->key);
   htable->vfree(hentry->val);
-  free(hentry->key);
-  free(hentry->val);
   free(hentry);
 }
 
-static struct hash_entry *hentry_create(hash_table *htable, const void *key,
-                                        const void *val) {
+static struct hash_entry *hentry_create(hash_table *htable, void *key,
+                                        void *val) {
   struct hash_entry *entry = malloc(sizeof(*entry));
   if (!entry) {
+    YU_LOG_ERROR("Failed to allocate memory for hash entry");
     return NULL;
   }
-  entry->key = malloc(htable->ksize);
-  entry->val = malloc(htable->vsize);
-  if (!entry->key || !entry->val) {
-    free(entry->key);
-    free(entry->val);
-    free(entry);
-    return NULL;
-  }
-  memcpy(entry->key, key, htable->ksize);
-  memcpy(entry->val, val, htable->vsize);
+  entry->key = key;
+  entry->val = val;
   return entry;
 }
 
 static bool rehash(hash_table *htable, size_t newsize) {
-  struct hash_entry **nbuckets = calloc(newsize, sizeof(struct hash_entry *));
+  struct hash_entry **nbuckets = calloc(newsize, sizeof(*nbuckets));
   if (!nbuckets) {
     YU_LOG_ERROR("Failed to resize the hash table to %zu", newsize);
     return false;
@@ -99,24 +67,24 @@ static bool rehash(hash_table *htable, size_t newsize) {
   htable->buckets = nbuckets;
   htable->capacity = newsize;
 
-  struct hash_entry *walk = htable->head.lnext;
+  struct hash_entry *walk = htable->head.gnext;
   while (walk != &htable->head) {
     uint64_t bct = GET_BUCKET(htable, walk->key);
 
     walk->next = htable->buckets[bct];
     htable->buckets[bct] = walk;
 
-    walk = walk->lnext;
+    walk = walk->gnext;
   }
 
   return true;
 }
 
-hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
-                          hash_fn user_hash, cmp_key_fn cmp_key,
-                          free_fn key_free, free_fn value_free) {
+hash_table *htable_create(size_t capacity, hash_fn hash, cmp_key_fn cmp_key,
+                          free_fn free_key, free_fn free_value) {
   assert(capacity > 0);
-  assert(key_size > 0);
+  assert(hash != NULL);
+  assert(cmp_key != NULL);
 
   hash_table *htable = malloc(sizeof(*htable));
   if (!htable) {
@@ -129,15 +97,13 @@ hash_table *htable_create(size_t capacity, size_t key_size, size_t value_size,
     YU_LOG_ERROR("Failed to allocate memory for table");
     return NULL;
   }
-  htable->cmp_key = cmp_key ? cmp_key : memcmp;
-  htable->hash = user_hash ? user_hash : hash_fnv1a;
-  htable->vfree = value_free ? value_free : free_placeholder;
-  htable->kfree = key_free ? key_free : free_placeholder;
-  htable->head.lnext = htable->head.lprev = &htable->head;
+  htable->cmp_key = cmp_key;
+  htable->hash = hash;
+  htable->kfree = free_key ? free_key : free_placeholder;
+  htable->vfree = free_value ? free_value : free_placeholder;
+  htable->head.gnext = htable->head.gprev = &htable->head;
   htable->size = 0;
   htable->capacity = capacity;
-  htable->ksize = key_size;
-  htable->vsize = value_size;
   return htable;
 }
 
@@ -145,10 +111,10 @@ void htable_destroy(hash_table *htable) {
   if (!htable) {
     return;
   }
-  struct hash_entry *walk = htable->head.lnext;
+  struct hash_entry *walk = htable->head.gnext;
   while (walk != &htable->head) {
     struct hash_entry *tmp = walk;
-    walk = walk->lnext;
+    walk = walk->gnext;
     hentry_destroy(htable, tmp);
   }
   free(htable->buckets);
@@ -158,56 +124,43 @@ void htable_destroy(hash_table *htable) {
 static struct hash_entry **lookup(hash_table *htable, const void *key,
                                   uint64_t bucket) {
   struct hash_entry **walk = &htable->buckets[bucket];
-  while (*walk && htable->cmp_key((*walk)->key, key, htable->ksize)) {
+  while (*walk && !htable->cmp_key((*walk)->key, key)) {
     walk = &(*walk)->next;
   }
   return walk;
 }
 
-#define HANDLE_EQUAL_KEYS                                                      \
-  do {                                                                         \
-    htable->vfree(entry->val);                                                 \
-    memcpy(entry->val, val, htable->vsize);                                    \
-  } while (0)
+bool htable_insert(hash_table *htable, void *key, void *val) {
+  assert(htable != NULL);
+  assert(key != NULL);
 
-#define HTABLE_INSERT_BODY(handle_equal_keys, ret_on_equal_keys)               \
-  do {                                                                         \
-    assert(htable != NULL);                                                    \
-    assert(key != NULL);                                                       \
-                                                                               \
-    if (htable->capacity == htable->size &&                                    \
-        !rehash(htable, htable->size * 2)) {                                   \
-      return false;                                                            \
-    }                                                                          \
-    uint64_t bct = GET_BUCKET(htable, key);                                    \
-    struct hash_entry *entry = *lookup(htable, key, bct);                      \
-    if (entry) { /* The key already exists in the hash table */                \
-      handle_equal_keys;                                                       \
-      return ret_on_equal_keys;                                                \
-    }                                                                          \
-    entry = hentry_create(htable, key, val);                                   \
-    if (!entry) {                                                              \
-      YU_LOG_ERROR("Failed to allocate memory for hash entry");                \
-      return false;                                                            \
-    }                                                                          \
-    struct hash_entry *tail = htable->head.lprev;                              \
-    entry->lprev = tail;                                                       \
-    entry->lnext = tail->lnext;                                                \
-    tail->lnext->lprev = entry;                                                \
-    tail->lnext = entry;                                                       \
-                                                                               \
-    entry->next = htable->buckets[bct];                                        \
-    htable->buckets[bct] = entry;                                              \
-    htable->size++;                                                            \
-    return true;                                                               \
-  } while (0)
+  if (htable->capacity == htable->size && !rehash(htable, htable->size * 2)) {
+    return false;
+  }
+  uint64_t bct = GET_BUCKET(htable, key);
+  struct hash_entry *entry = *lookup(htable, key, bct);
+  if (entry) { /* The key already exists in the hash table */
+    htable->vfree(entry->val);
+    htable->kfree(key);
+    entry->val = val;
+    return true;
+  }
+  entry = hentry_create(htable, key, val);
+  if (!entry) {
+    htable->kfree(key);
+    htable->vfree(val);
+    return false;
+  }
+  struct hash_entry *tail = htable->head.gprev;
+  entry->gprev = tail;
+  entry->gnext = tail->gnext;
+  tail->gnext->gprev = entry;
+  tail->gnext = entry;
 
-bool htable_insert(hash_table *htable, const void *key, const void *val) {
-  HTABLE_INSERT_BODY(HANDLE_EQUAL_KEYS, true);
-}
-
-bool htable_try_insert(hash_table *htable, const void *key, const void *val) {
-  HTABLE_INSERT_BODY(, false);
+  entry->next = htable->buckets[bct];
+  htable->buckets[bct] = entry;
+  htable->size++;
+  return true;
 }
 
 void *htable_lookup(hash_table *htable, const void *key) {
@@ -226,21 +179,22 @@ bool htable_contains(hash_table *htable, const void *key) {
   return entry;
 }
 
-void htable_remove(hash_table *htable, const void *key) {
+bool htable_remove(hash_table *htable, const void *key) {
   assert(htable != NULL);
   assert(key != NULL);
 
   struct hash_entry **fentry = lookup(htable, key, GET_BUCKET(htable, key));
   if (!*fentry) {
-    return;
+    return false;
   }
   struct hash_entry *entry = *fentry;
-  entry->lprev->lnext = entry->lnext;
-  entry->lnext->lprev = entry->lprev;
+  entry->gprev->gnext = entry->gnext;
+  entry->gnext->gprev = entry->gprev;
   *fentry = (*fentry)->next;
 
   hentry_destroy(htable, entry);
   htable->size--;
+  return true;
 }
 
 size_t htable_size(hash_table *htable) {
@@ -248,12 +202,27 @@ size_t htable_size(hash_table *htable) {
   return htable->size;
 }
 
-size_t htable_ksize(hash_table *htable) {
+ht_iterator *ht_begin(hash_table *htable) {
   assert(htable != NULL);
-  return htable->ksize;
+  return (ht_iterator *)htable->head.gnext;
 }
 
-size_t htable_vsize(hash_table *htable) {
+ht_iterator *ht_end(hash_table *htable) {
   assert(htable != NULL);
-  return htable->vsize;
+  return (ht_iterator *)&htable->head;
+}
+
+ht_iterator *ht_next(ht_iterator *iterator) {
+  assert(iterator != NULL);
+  struct hash_entry *hentry = (struct hash_entry *)iterator;
+  return (ht_iterator *)hentry->gnext;
+}
+
+struct key_value ht_get(ht_iterator *iterator) {
+  assert(iterator != NULL);
+  struct hash_entry *hentry = (struct hash_entry *)iterator;
+  return (struct key_value){
+      .key = hentry->key,
+      .val = hentry->val,
+  };
 }
