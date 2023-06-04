@@ -6,8 +6,9 @@
 #include "helper.h"
 
 #include <limits.h>
-#include <queue>
 #include <stdlib.h>
+
+#include <queue>
 
 template <typename T> int cmp_great(const void *pa, const void *pb) {
   T a = *(T *)pa;
@@ -186,6 +187,21 @@ TEST_F(PriorityQueueTest, Case1) {
   PQ_PUSH(pq_, 79.0);
   EXPECT_EQ(PQ_TOP(pq_, double), 79);
   EXPECT_EQ(pq_size(pq_), 2);
+}
+
+TEST(PriorityQueue, Case2) {
+  int nums[] = {1, 4, 3, 2, 8, 7, 9, 6, 5, 0};
+  int nums_size = YU_ARRAYSIZE(nums);
+  priority_queue *pq =
+      pq_create_from_arr(nums, nums_size, sizeof(*nums), cmp_great<int>);
+  EXPECT_FALSE(pq_empty(pq));
+  EXPECT_EQ(pq_size(pq), nums_size);
+
+  for (int i = 0; i < nums_size; ++i) {
+    EXPECT_EQ(i, PQ_TOP(pq, int));
+    pq_pop(pq);
+  }
+  pq_destroy(pq);
 }
 
 int main(int argc, char *argv[]) {

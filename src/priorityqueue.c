@@ -168,7 +168,7 @@ void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
 
   char *base_ptr = base;
   char *end = base_ptr + size * count;
-  for (char *node = base_ptr + (count >> 1) - size; node >= base_ptr;
+  for (char *node = base_ptr + ((count >> 1) - 1) * size; node >= base_ptr;
        node -= size) {
     char *cur = node;
     char *lch, *rch;
