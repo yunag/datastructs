@@ -12,7 +12,6 @@ set(TEST_LIBS gtest_main datastructs)
 set(TEST_COMPILE_OPTS 
   -fno-omit-frame-pointer
   -fno-common
-  -pedantic-errors
   -Wall
   -Wextra 
   -Werror
