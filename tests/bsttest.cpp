@@ -67,9 +67,8 @@ TEST_F(BSTTest, STLSet) {
   std::vector<int> keys;
 
   for (size_t i = 0; i < num_commands; ++i) {
-    command =
-        static_cast<Action>(Helper::rand(static_cast<double>(Action::Insert),
-                                         static_cast<double>(Action::Find)));
+    command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Insert),
+                                               static_cast<int>(Action::Find)));
     ASSERT_EQ(stl.size(), bst_size(bst_));
     ASSERT_TRUE(bst_valid_bst(bst_));
     ASSERT_TRUE(bst_valid_avl(bst_));

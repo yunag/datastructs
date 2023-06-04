@@ -79,8 +79,8 @@ TEST_F(StackTest, STLStack) {
   std::stack<double> s;
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand(
-        static_cast<double>(Action::Push), static_cast<double>(Action::Top)));
+    command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Push),
+                                               static_cast<int>(Action::Top)));
     EXPECT_EQ(s.empty(), stack_empty(s_));
     EXPECT_EQ(s.size(), stack_size(s_));
 

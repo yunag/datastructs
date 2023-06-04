@@ -109,50 +109,58 @@ TEST_F(PriorityQueueTest, Lesser) {
   EXPECT_TRUE(pq_empty(pq_));
 }
 
-TEST_F(PriorityQueueTest, STLPQueueLesser) {
-  SetPQueue<int64_t>(1, cmp_less<double>);
-  std::priority_queue<double> pq;
+template <typename PriorityQueueType>
+void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
+  enum class Action {
+    Push,
+    Pop,
+    Top,
+  } command;
+
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
-    size_t command = Helper::rand(0, 2);
+    command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Push),
+                                               static_cast<int>(Action::Top)));
     ASSERT_EQ(pq.empty(), pq_empty(pq_));
     ASSERT_EQ(pq.size(), pq_size(pq_));
-    if (pq_empty(pq_) || command == 0) {
+    if (pq_empty(pq_)) {
+      command = Action::Push;
+    }
+    switch (command) {
+
+    case Action::Push: {
       double val = Helper::rand(INT_MIN, INT_MAX);
       pq.push(val);
       pq_push(pq_, &val);
       ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
-    } else if (command == 1) {
+      break;
+    }
+
+    case Action::Pop: {
       ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
       pq.pop();
       pq_pop(pq_);
-    } else if (command == 2) {
+      break;
+    }
+
+    case Action::Top: {
       ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
+      break;
+    }
     }
   }
+}
+
+TEST_F(PriorityQueueTest, STLPQueueLesser) {
+  SetPQueue<int64_t>(1, cmp_less<double>);
+  std::priority_queue<double> pq;
+  stl_priority_queue(pq_, pq);
 }
 
 TEST_F(PriorityQueueTest, STLPQueueGreater) {
   SetPQueue<double>(1);
   std::priority_queue<double, std::vector<double>, std::greater<double>> pq;
-  const size_t num_commands = 100000;
-  for (size_t i = 0; i < num_commands; ++i) {
-    size_t command = Helper::rand(0, 2);
-    ASSERT_EQ(pq.empty(), pq_empty(pq_));
-    ASSERT_EQ(pq.size(), pq_size(pq_));
-    if (pq_empty(pq_) || command == 0) {
-      double val = Helper::rand(INT_MIN, INT_MAX);
-      pq.push(val);
-      pq_push(pq_, &val);
-      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
-    } else if (command == 1) {
-      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
-      pq.pop();
-      pq_pop(pq_);
-    } else if (command == 2) {
-      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
-    }
-  }
+  stl_priority_queue(pq_, pq);
 }
 
 TEST_F(PriorityQueueTest, Case1) {

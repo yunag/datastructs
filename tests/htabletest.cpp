@@ -106,9 +106,8 @@ TEST_F(HashTableTest, STLTable) {
   std::vector<int> keys;
 
   for (size_t i = 0; i < num_commands; ++i) {
-    command =
-        static_cast<Action>(Helper::rand(static_cast<double>(Action::Insert),
-                                         static_cast<double>(Action::Lookup)));
+    command = static_cast<Action>(Helper::rand(
+        static_cast<int>(Action::Insert), static_cast<int>(Action::Lookup)));
     EXPECT_EQ(stl.size(), htable_size(ht_));
 
     if (stl.empty()) {
