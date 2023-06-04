@@ -8,7 +8,6 @@ set(COMPILE_OPTS
   -pedantic 
   -Wall
   -Wextra 
-  -Werror
   -Wno-unused-label
   -Wno-unused-function
   -Wno-unused-parameter

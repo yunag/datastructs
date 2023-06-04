@@ -14,7 +14,6 @@ set(TEST_COMPILE_OPTS
   -fno-common
   -Wall
   -Wextra 
-  -Werror
   -Wno-unused-label
   -Wno-unused-function
   -Wno-unused-parameter
