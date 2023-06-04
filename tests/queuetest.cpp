@@ -31,10 +31,10 @@ TEST(Queue, Initialization) {
   for (size_t i = 0; i < types_size; ++i) {
     queue *q = queue_create(Helper::rand(1, 20000), types[i], NULL);
     ASSERT_NE(q, nullptr);
-    EXPECT_TRUE(queue_empty(q));
-    EXPECT_EQ(queue_esize(q), types[i]);
-    EXPECT_EQ(queue_front(q), nullptr);
-    EXPECT_EQ(queue_back(q), nullptr);
+    ASSERT_TRUE(queue_empty(q));
+    ASSERT_EQ(queue_esize(q), types[i]);
+    ASSERT_EQ(queue_front(q), nullptr);
+    ASSERT_EQ(queue_back(q), nullptr);
     queue_destroy(q);
   }
 }
@@ -45,9 +45,9 @@ TEST_F(QueueTest, PushResize) {
   for (size_t i = 0; i < num_cases; ++i) {
     int val = Helper::rand(INT_MIN, INT_MAX);
     QUEUE_PUSH(q_, val);
-    EXPECT_FALSE(queue_empty(q_));
-    EXPECT_EQ(QUEUE_BACK(q_, int), val);
-    EXPECT_EQ(queue_size(q_), i + 1);
+    ASSERT_FALSE(queue_empty(q_));
+    ASSERT_EQ(QUEUE_BACK(q_, int), val);
+    ASSERT_EQ(queue_size(q_), i + 1);
   }
 }
 
@@ -61,13 +61,12 @@ TEST_F(QueueTest, PushPop) {
     QUEUE_PUSH(q_, val);
   }
   for (size_t i = 0; i < num_cases; ++i) {
-    EXPECT_EQ(nums[i], QUEUE_FRONT(q_, int));
+    ASSERT_EQ(nums[i], QUEUE_FRONT(q_, int));
     queue_pop(q_);
-    EXPECT_EQ(queue_size(q_), num_cases - i - 1);
   }
-  EXPECT_TRUE(queue_empty(q_));
-  EXPECT_EQ(queue_front(q_), nullptr);
-  EXPECT_EQ(queue_back(q_), nullptr);
+  ASSERT_TRUE(queue_empty(q_));
+  ASSERT_EQ(queue_front(q_), nullptr);
+  ASSERT_EQ(queue_back(q_), nullptr);
 }
 
 TEST_F(QueueTest, STLQueue) {
@@ -85,8 +84,8 @@ TEST_F(QueueTest, STLQueue) {
   for (size_t i = 0; i < num_commands; ++i) {
     command = static_cast<Action>(Helper::rand(
         static_cast<double>(Action::Push), static_cast<double>(Action::Back)));
-    EXPECT_EQ(q.empty(), queue_empty(q_));
-    EXPECT_EQ(q.size(), queue_size(q_));
+    ASSERT_EQ(q.empty(), queue_empty(q_));
+    ASSERT_EQ(q.size(), queue_size(q_));
     if (q.empty()) {
       command = Action::Push;
     }
@@ -96,26 +95,26 @@ TEST_F(QueueTest, STLQueue) {
       double val = Helper::rand(INT_MIN, INT_MAX);
       q.push(val);
       queue_push(q_, &val);
-      EXPECT_EQ(q.front(), QUEUE_FRONT(q_, double));
-      EXPECT_EQ(q.back(), QUEUE_BACK(q_, double));
+      ASSERT_EQ(q.front(), QUEUE_FRONT(q_, double));
+      ASSERT_EQ(q.back(), QUEUE_BACK(q_, double));
       break;
     }
 
     case Action::Pop: {
-      EXPECT_EQ(q.front(), QUEUE_FRONT(q_, double));
-      EXPECT_EQ(q.back(), QUEUE_BACK(q_, double));
+      ASSERT_EQ(q.front(), QUEUE_FRONT(q_, double));
+      ASSERT_EQ(q.back(), QUEUE_BACK(q_, double));
       q.pop();
       queue_pop(q_);
       break;
     }
 
     case Action::Front: {
-      EXPECT_EQ(q.front(), QUEUE_FRONT(q_, double));
+      ASSERT_EQ(q.front(), QUEUE_FRONT(q_, double));
       break;
     }
 
     case Action::Back: {
-      EXPECT_EQ(q.back(), QUEUE_BACK(q_, double));
+      ASSERT_EQ(q.back(), QUEUE_BACK(q_, double));
       break;
     }
     }

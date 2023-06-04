@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define QUEUE_EMPTY(q) ((q)->size == 0)
+#define QUEUE_EMPTY(q) (!(q)->size)
 
 struct queue {
   void *buffer; /* Buffer for storing elements */
   char *front;  /* Front index of the Queue */
   char *rear;   /* Rear index of the Queue */
   char *end;
+
   size_t size;     /* Size of the Queue */
   size_t capacity; /* Capacity of the Queue */
   size_t esize;    /* Size of a single element in the Queue */
@@ -41,7 +42,7 @@ queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
   q->end = (char *)q->buffer + capacity * elemsize;
   q->size = 0;
   q->front = q->buffer;
-  q->rear = q->end - elemsize;
+  q->rear = q->buffer;
   return q;
 }
 
@@ -49,14 +50,13 @@ void queue_destroy(queue *q) {
   if (!q) {
     return;
   }
-  if (q->free != free_placeholder) {
-    while (!QUEUE_EMPTY(q)) {
-      q->free(q->front);
-      q->size--;
-      q->front += q->esize;
+  if (q->free != free_placeholder && !QUEUE_EMPTY(q)) {
+    q->free(q->front);
+    while ((q->front += q->esize) != q->rear) {
       if (q->front == q->end) {
         q->front = q->buffer;
       }
+      q->free(q->front);
     }
   }
   free(q->buffer);
@@ -73,17 +73,17 @@ static bool queue_resize(queue *q, size_t newsize) {
     YU_LOG_ERROR("Failed to resize the queue to %zu", newsize);
     return false;
   }
-  if (q->front <= q->rear) {
-    memcpy(buffer, q->front, q->rear - q->front + q->esize);
+  if (q->front < q->rear) {
+    memcpy(buffer, q->front, q->rear - q->front);
   } else {
     memcpy(buffer, q->front, q->end - q->front);
     memcpy(buffer + (q->end - q->front), q->buffer,
-           q->rear - (char *)q->buffer + q->esize);
+           q->rear - (char *)q->buffer);
   }
   free(q->buffer);
 
   q->front = buffer;
-  q->rear = buffer + q->esize * (q->size - 1);
+  q->rear = buffer + q->esize * q->size;
   q->end = buffer + blocksize;
   q->buffer = buffer;
   q->capacity = newsize;
@@ -96,12 +96,12 @@ void queue_push(queue *q, const void *elem) {
   if (queue_full(q) && !queue_resize(q, q->capacity * 2)) {
     return;
   }
-  q->size++;
-  q->rear = q->rear + q->esize;
   if (q->rear == q->end) {
     q->rear = q->buffer;
   }
   memcpy(q->rear, elem, q->esize);
+  q->rear += q->esize;
+  q->size++;
 }
 
 void queue_pop(queue *q) {
@@ -110,11 +110,11 @@ void queue_pop(queue *q) {
     return;
   }
   q->free(q->front);
-  q->size--;
   q->front += q->esize;
   if (q->front == q->end) {
     q->front = q->buffer;
   }
+  q->size--;
 }
 
 void *queue_front(queue *q) {
@@ -130,7 +130,7 @@ void *queue_back(queue *q) {
   if (QUEUE_EMPTY(q)) {
     return NULL;
   }
-  return q->rear;
+  return q->rear - q->esize;
 }
 
 bool queue_empty(queue *q) {

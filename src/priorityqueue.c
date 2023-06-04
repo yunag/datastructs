@@ -7,8 +7,12 @@
 
 #define HEAP_AT(node) (((char *)pq->heap + pq->esize * (node)))
 #define PARENT(child) ((child - 1) >> 1)
-#define LCHILD(parent) (pq->heap + (((parent)-pq->heap) << 1) + pq->esize)
-#define RCHILD(parent) (pq->heap + (((parent)-pq->heap + pq->esize) << 1))
+
+#define LEFT_CHILD(node, heap, size) (heap + (((node)-heap) << 1) + size)
+#define RIGHT_CHILD(node, heap, size) (heap + (((node)-heap + size) << 1))
+
+#define LCHILD(parent) LEFT_CHILD(parent, pq->heap, pq->esize)
+#define RCHILD(parent) RIGHT_CHILD(parent, pq->heap, pq->esize)
 #define HAS_PARENT(child) ((child) > 0)
 
 #define PQ_EMPTY(pq) (!(pq)->size)
@@ -156,8 +160,8 @@ size_t pq_esize(priority_queue *pq) {
   return pq->esize;
 }
 
-#define LCBUFF(parent) (base_ptr + (((parent)-base_ptr) << 1) + size)
-#define RCBUFF(parent) (base_ptr + (((parent)-base_ptr + size) << 1))
+#define LCBUFF(parent) LEFT_CHILD(parent, base_ptr, size)
+#define RCBUFF(parent) RIGHT_CHILD(parent, base_ptr, size)
 void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
   assert(base != NULL);
   assert(cmp != NULL);

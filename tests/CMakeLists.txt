@@ -9,6 +9,17 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 set(TEST_LIBS gtest_main datastructs)
+set(TEST_COMPILE_OPTS 
+  -fno-omit-frame-pointer
+  -fno-common
+  -pedantic-errors
+  -Wall
+  -Wextra 
+  -Werror
+  -Wno-unused-label
+  -Wno-unused-function
+  -Wno-unused-parameter
+)
 
 list(APPEND Targets queue priorityqueue stack hashtable bst)
 list(APPEND Sources queuetest.cpp pqtest.cpp stacktest.cpp htabletest.cpp bsttest.cpp)
@@ -18,5 +29,10 @@ foreach(target source IN ZIP_LISTS Targets Sources)
     PRIVATE
       ${TEST_LIBS}
   )
+  target_compile_options(${target}
+    PRIVATE
+      ${TEST_COMPILE_OPTS}
+  )
+
   add_test(${target}Test ${target})
 endforeach()

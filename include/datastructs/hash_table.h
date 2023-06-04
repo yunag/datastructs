@@ -32,6 +32,7 @@ size_t htable_size(hash_table *htable);
 ht_iterator *ht_begin(hash_table *htable);
 ht_iterator *ht_end(hash_table *htable);
 ht_iterator *ht_next(ht_iterator *iterator);
+ht_iterator *ht_prev(ht_iterator *iterator);
 struct key_value ht_get(ht_iterator *iterator);
 
 #define HT_FOR_EACH(htable, KeyT, ValT, keyname, valname)                      \

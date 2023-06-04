@@ -22,12 +22,14 @@ struct hash_entry {
 struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
   struct hash_entry head;      /* Head of `global` linked list */
-  hash_fn hash;                /* Hash function */
-  cmp_key_fn cmp_key;          /* Compare two keys */
-  free_fn kfree;               /* Function to free a key */
-  free_fn vfree;               /* Function to free a value */
-  size_t size;                 /* Number of elements*/
-  size_t capacity;             /* Capacity of the table */
+
+  hash_fn hash;       /* Hash function */
+  cmp_key_fn cmp_key; /* Compare two keys */
+  free_fn kfree;      /* Function to free a key */
+  free_fn vfree;      /* Function to free a value */
+
+  size_t size;     /* Number of elements*/
+  size_t capacity; /* Capacity of the table */
 };
 
 uint64_t hash_bern(const void *key, size_t size) {
@@ -216,6 +218,12 @@ ht_iterator *ht_next(ht_iterator *iterator) {
   assert(iterator != NULL);
   struct hash_entry *hentry = (struct hash_entry *)iterator;
   return (ht_iterator *)hentry->gnext;
+}
+
+ht_iterator *ht_prev(ht_iterator *iterator) {
+  assert(iterator != NULL);
+  struct hash_entry *hentry = (struct hash_entry *)iterator;
+  return (ht_iterator *)hentry->gprev;
 }
 
 struct key_value ht_get(ht_iterator *iterator) {
