@@ -6,17 +6,17 @@ set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(COMPILE_OPTS 
   -pedantic 
-  -pedantic-errors
   -Wall
   -Wextra 
   -Werror
   -Wno-unused-label
   -Wno-unused-function
   -Wno-unused-parameter
-  -Wno-gnu-statement-expression
 )
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  list(APPEND COMPILE_OPTS -Wno-gnu-statement-expression)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(COMPILE_OPTS /Wall)
 endif()
 

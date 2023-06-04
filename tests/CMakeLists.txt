@@ -21,6 +21,12 @@ set(TEST_COMPILE_OPTS
   -Wno-unused-parameter
 )
 
+if(UNIX AND APPLE)
+  list(APPEND TEST_LIBS -fsanitize=leak,address,undefined)
+  list(APPEND TEST_COMPILE_OPTS -fsanitize=leak,address,undefined)
+endif()
+
+
 list(APPEND Targets queue priorityqueue stack hashtable bst)
 list(APPEND Sources queuetest.cpp pqtest.cpp stacktest.cpp htabletest.cpp bsttest.cpp)
 foreach(target source IN ZIP_LISTS Targets Sources)
