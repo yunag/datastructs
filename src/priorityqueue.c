@@ -40,48 +40,45 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
   return true;
 }
 
-#define PQ_INIT(pq, nsize, ncapacity, nelemsize, ncmp)                         \
-  do {                                                                         \
-    assert(ncapacity > 0);                                                     \
-    assert(nelemsize > 0);                                                     \
-    assert(ncmp != NULL);                                                      \
-                                                                               \
-    pq = malloc(sizeof(*pq));                                                  \
-    if (!pq) {                                                                 \
-      YU_LOG_ERROR("Failed to allocate memory for priority queue");            \
-      return NULL;                                                             \
-    }                                                                          \
-    pq->heap = malloc(ncapacity * nelemsize);                                  \
-    if (!pq->heap) {                                                           \
-      free(pq);                                                                \
-      YU_LOG_ERROR("Failed to allocate memory for heap");                      \
-      return NULL;                                                             \
-    }                                                                          \
-    pq->capacity = ncapacity;                                                  \
-    pq->esize = nelemsize;                                                     \
-    pq->cmp = ncmp;                                                            \
-    pq->size = nsize;                                                          \
-    pq->last = pq->heap + pq->size * pq->esize;                                \
-  } while (0)
+static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
+                               cmp_fn cmp) {
+  assert(capacity > 0);
+  assert(esize > 0);
+  assert(cmp != NULL);
+
+  priority_queue *pq = malloc(sizeof(*pq));
+  if (!pq) {
+    YU_LOG_ERROR("Failed to allocate memory for priority queue");
+    return NULL;
+  }
+  pq->heap = malloc(capacity * esize);
+  if (!pq->heap) {
+    free(pq);
+    YU_LOG_ERROR("Failed to allocate memory for heap");
+    return NULL;
+  }
+  pq->capacity = capacity;
+  pq->esize = esize;
+  pq->cmp = cmp;
+  pq->size = size;
+  pq->last = pq->heap + pq->size * pq->esize;
+  return pq;
+}
 
 priority_queue *pq_create(size_t capacity, size_t elemsize, cmp_fn cmp) {
-  priority_queue *pq;
-  PQ_INIT(pq, 0, capacity, elemsize, cmp);
-  return pq;
+  return pq_init(0, capacity, elemsize, cmp);
 }
 
 priority_queue *pq_create_from_heap(const void *heap, size_t count,
                                     size_t elemsize, cmp_fn cmp) {
-  priority_queue *pq;
-  PQ_INIT(pq, count, count, elemsize, cmp);
+  priority_queue *pq = pq_init(count, count, elemsize, cmp);
   memcpy(pq->heap, heap, count * elemsize);
   return pq;
 }
 
 priority_queue *pq_create_from_arr(const void *base, size_t count,
                                    size_t elemsize, cmp_fn cmp) {
-  priority_queue *pq;
-  PQ_INIT(pq, count, count, elemsize, cmp);
+  priority_queue *pq = pq_init(count, count, elemsize, cmp);
   memcpy(pq->heap, base, count * elemsize);
   heapify(pq->heap, count, elemsize, cmp);
   return pq;

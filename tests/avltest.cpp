@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "datastructs/bst.h"
+#include "datastructs/avl_tree.h"
 
 #include "helper.h"
 
@@ -11,14 +11,14 @@
 class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { bst_destroy(bst_); }
+  void TearDown() override { avl_destroy(bst_); }
 
   void setBST() {
-    bst_ = bst_create();
+    bst_ = avl_create();
     ASSERT_NE(bst_, nullptr);
   }
 
-  bst *bst_;
+  avl_tree *bst_;
 };
 
 TEST_F(BSTTest, Insert) {
@@ -27,9 +27,9 @@ TEST_F(BSTTest, Insert) {
   std::array<int, num_cases> numbers;
   for (size_t i = 0; i < numbers.size(); ++i) {
     numbers[i] = Helper::rand(INT_MIN, INT_MAX);
-    bst_insert(bst_, numbers[i]);
-    ASSERT_TRUE(bst_valid_avl(bst_)) << "Is not a valid AVL Tree";
-    ASSERT_TRUE(bst_valid_bst(bst_)) << "Is not a valid Binary Search Tree";
+    avl_insert(bst_, numbers[i]);
+    ASSERT_TRUE(avl_valid_avl(bst_)) << "Is not a valid AVL Tree";
+    ASSERT_TRUE(avl_valid_bst(bst_)) << "Is not a valid Binary Search Tree";
   }
 }
 
@@ -40,15 +40,15 @@ TEST_F(BSTTest, InsertRemove) {
   std::array<int, num_cases> numbers;
   for (size_t i = 0; i < numbers.size(); ++i) {
     numbers[i] = Helper::rand(INT_MIN, INT_MAX);
-    bst_insert(bst_, numbers[i]);
-    ASSERT_EQ(bst_size(bst_), i + 1);
+    avl_insert(bst_, numbers[i]);
+    ASSERT_EQ(avl_size(bst_), i + 1);
   }
   for (size_t i = 0; i < numbers.size(); ++i) {
-    ASSERT_TRUE(bst_find(bst_, numbers[i]));
-    bst_remove(bst_, numbers[i]);
-    ASSERT_FALSE(bst_find(bst_, numbers[i]));
-    ASSERT_TRUE(bst_valid_avl(bst_)) << "Is not a valid AVL Tree";
-    ASSERT_TRUE(bst_valid_bst(bst_)) << "Is not a valid Binary Search Tree";
+    ASSERT_TRUE(avl_find(bst_, numbers[i]));
+    avl_remove(bst_, numbers[i]);
+    ASSERT_FALSE(avl_find(bst_, numbers[i]));
+    ASSERT_TRUE(avl_valid_avl(bst_)) << "Is not a valid AVL Tree";
+    ASSERT_TRUE(avl_valid_bst(bst_)) << "Is not a valid Binary Search Tree";
   }
 }
 
@@ -69,9 +69,9 @@ TEST_F(BSTTest, STLSet) {
   for (size_t i = 0; i < num_commands; ++i) {
     command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Insert),
                                                static_cast<int>(Action::Find)));
-    ASSERT_EQ(stl.size(), bst_size(bst_));
-    ASSERT_TRUE(bst_valid_bst(bst_));
-    ASSERT_TRUE(bst_valid_avl(bst_));
+    ASSERT_EQ(stl.size(), avl_size(bst_));
+    ASSERT_TRUE(avl_valid_bst(bst_));
+    ASSERT_TRUE(avl_valid_avl(bst_));
     if (stl.empty()) {
       command = Action::Insert;
     }
@@ -79,13 +79,13 @@ TEST_F(BSTTest, STLSet) {
     case Action::Insert: {
       int key = Helper::rand(-10000, 10000);
       if (stl.find(key) != stl.end()) {
-        ASSERT_TRUE(bst_find(bst_, key));
+        ASSERT_TRUE(avl_find(bst_, key));
       } else {
         keys.push_back(key);
       }
       stl.insert(key);
-      bst_insert(bst_, key);
-      ASSERT_TRUE(bst_find(bst_, key));
+      avl_insert(bst_, key);
+      ASSERT_TRUE(avl_find(bst_, key));
       break;
     }
 
@@ -93,11 +93,11 @@ TEST_F(BSTTest, STLSet) {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
       ASSERT_TRUE(stl.find(key) != stl.end());
-      ASSERT_TRUE(bst_find(bst_, key));
+      ASSERT_TRUE(avl_find(bst_, key));
       stl.erase(key);
-      bst_remove(bst_, key);
+      avl_remove(bst_, key);
       keys.erase(keys.begin() + idx);
-      ASSERT_FALSE(bst_find(bst_, key));
+      ASSERT_FALSE(avl_find(bst_, key));
       ASSERT_TRUE(stl.find(key) == stl.end());
       break;
     }
@@ -105,7 +105,7 @@ TEST_F(BSTTest, STLSet) {
     case Action::Find: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
-      ASSERT_EQ(stl.find(key) != stl.end(), bst_find(bst_, key));
+      ASSERT_EQ(stl.find(key) != stl.end(), avl_find(bst_, key));
       break;
     }
     }

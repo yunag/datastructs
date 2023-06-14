@@ -21,6 +21,7 @@ struct stack {
 static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL);
   assert(newsize >= 1);
+
   void *tmp = realloc(s->buffer, s->esize * newsize);
   if (!tmp) {
     YU_LOG_ERROR("Failed to resize the stack to %zu", newsize);

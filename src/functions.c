@@ -22,42 +22,30 @@
     return *(T *)a == *(T *)b;                                                 \
   }
 #define FNDUPDEF(T, postfix)                                                   \
-  void *yu_dup_##postfix(const T value) {                                      \
+  void *yu_dup_##postfix(T value) {                                            \
     T *val = malloc(sizeof(T));                                                \
-    *val = value;                                                              \
+    if (val) {                                                                 \
+      *val = value;                                                            \
+    }                                                                          \
     return val;                                                                \
   }
 
-FNDUPDEF(int64_t, i64)
-FNDUPDEF(int32_t, i32)
-FNDUPDEF(int16_t, i16)
-FNDUPDEF(int8_t, i8)
-FNDUPDEF(uint64_t, u64)
-FNDUPDEF(uint32_t, u32)
-FNDUPDEF(uint16_t, u16)
-FNDUPDEF(uint8_t, u8)
-FNDUPDEF(float, float)
-FNDUPDEF(double, double)
+#define TYPED_FUNCTIONS(Type, postfix)                                         \
+  FNDUPDEF(Type, postfix)                                                      \
+  FNHASHDEF(Type, postfix)                                                     \
+  FNCMPDEF(Type, postfix)
 
-FNHASHDEF(int64_t, i64)
-FNHASHDEF(int32_t, i32)
-FNHASHDEF(int16_t, i16)
-FNHASHDEF(int8_t, i8)
-FNHASHDEF(uint64_t, u64)
-FNHASHDEF(uint32_t, u32)
-FNHASHDEF(uint16_t, u16)
-FNHASHDEF(uint8_t, u8)
-FNHASHDEF(float, float)
-FNHASHDEF(double, double)
-
-FNCMPDEF(int64_t, i64)
-FNCMPDEF(int32_t, i32)
-FNCMPDEF(int16_t, i16)
-FNCMPDEF(int8_t, i8)
-FNCMPDEF(uint64_t, u64)
-FNCMPDEF(uint32_t, u32)
-FNCMPDEF(float, float)
-FNCMPDEF(double, double)
+TYPED_FUNCTIONS(int64_t, i64)
+TYPED_FUNCTIONS(int32_t, i32)
+TYPED_FUNCTIONS(int16_t, i16)
+TYPED_FUNCTIONS(int8_t, i8)
+TYPED_FUNCTIONS(uint64_t, u64)
+TYPED_FUNCTIONS(uint32_t, u32)
+TYPED_FUNCTIONS(uint16_t, u16)
+TYPED_FUNCTIONS(uint8_t, u8)
+TYPED_FUNCTIONS(double, double)
+TYPED_FUNCTIONS(float, float)
+TYPED_FUNCTIONS(void *, ptr)
 
 uint64_t yu_hash_str(const void *str) {
   const unsigned char *bytes = (const unsigned char *)str;

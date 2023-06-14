@@ -4,7 +4,7 @@ add_library(${PROJECT_NAME} STATIC
   priorityqueue.c
   queue.c
   stack.c
-  bst.c
+  avltree.c
   functions.c
 )
 

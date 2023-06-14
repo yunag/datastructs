@@ -13,8 +13,8 @@
 struct hash_entry {
   void *key; /* Pointer to key */
   void *val; /* Pointer to value */
-  struct hash_entry *gnext;
-  struct hash_entry *gprev;
+  struct hash_entry *ll_next;
+  struct hash_entry *ll_prev;
 
   struct hash_entry *next; /* Pointer to next struct */
 };
@@ -69,14 +69,14 @@ static bool rehash(hash_table *htable, size_t newsize) {
   htable->buckets = nbuckets;
   htable->capacity = newsize;
 
-  struct hash_entry *walk = htable->head.gnext;
+  struct hash_entry *walk = htable->head.ll_next;
   while (walk != &htable->head) {
     uint64_t bct = GET_BUCKET(htable, walk->key);
 
     walk->next = htable->buckets[bct];
     htable->buckets[bct] = walk;
 
-    walk = walk->gnext;
+    walk = walk->ll_next;
   }
 
   return true;
@@ -103,7 +103,7 @@ hash_table *htable_create(size_t capacity, hash_fn hash, cmp_key_fn cmp_key,
   htable->hash = hash;
   htable->kfree = free_key ? free_key : free_placeholder;
   htable->vfree = free_value ? free_value : free_placeholder;
-  htable->head.gnext = htable->head.gprev = &htable->head;
+  htable->head.ll_next = htable->head.ll_prev = &htable->head;
   htable->size = 0;
   htable->capacity = capacity;
   return htable;
@@ -113,10 +113,10 @@ void htable_destroy(hash_table *htable) {
   if (!htable) {
     return;
   }
-  struct hash_entry *walk = htable->head.gnext;
+  struct hash_entry *walk = htable->head.ll_next;
   while (walk != &htable->head) {
     struct hash_entry *tmp = walk;
-    walk = walk->gnext;
+    walk = walk->ll_next;
     hentry_destroy(htable, tmp);
   }
   free(htable->buckets);
@@ -153,11 +153,11 @@ bool htable_insert(hash_table *htable, void *key, void *val) {
     htable->vfree(val);
     return false;
   }
-  struct hash_entry *tail = htable->head.gprev;
-  entry->gprev = tail;
-  entry->gnext = tail->gnext;
-  tail->gnext->gprev = entry;
-  tail->gnext = entry;
+  struct hash_entry *tail = htable->head.ll_prev;
+  entry->ll_prev = tail;
+  entry->ll_next = tail->ll_next;
+  tail->ll_next->ll_prev = entry;
+  tail->ll_next = entry;
 
   entry->next = htable->buckets[bct];
   htable->buckets[bct] = entry;
@@ -190,8 +190,8 @@ bool htable_remove(hash_table *htable, const void *key) {
     return false;
   }
   struct hash_entry *entry = *fentry;
-  entry->gprev->gnext = entry->gnext;
-  entry->gnext->gprev = entry->gprev;
+  entry->ll_prev->ll_next = entry->ll_next;
+  entry->ll_next->ll_prev = entry->ll_prev;
   *fentry = (*fentry)->next;
 
   hentry_destroy(htable, entry);
@@ -206,7 +206,7 @@ size_t htable_size(hash_table *htable) {
 
 ht_iterator *ht_begin(hash_table *htable) {
   assert(htable != NULL);
-  return (ht_iterator *)htable->head.gnext;
+  return (ht_iterator *)htable->head.ll_next;
 }
 
 ht_iterator *ht_end(hash_table *htable) {
@@ -217,13 +217,13 @@ ht_iterator *ht_end(hash_table *htable) {
 ht_iterator *ht_next(ht_iterator *iterator) {
   assert(iterator != NULL);
   struct hash_entry *hentry = (struct hash_entry *)iterator;
-  return (ht_iterator *)hentry->gnext;
+  return (ht_iterator *)hentry->ll_next;
 }
 
 ht_iterator *ht_prev(ht_iterator *iterator) {
   assert(iterator != NULL);
   struct hash_entry *hentry = (struct hash_entry *)iterator;
-  return (ht_iterator *)hentry->gprev;
+  return (ht_iterator *)hentry->ll_prev;
 }
 
 struct key_value ht_get(ht_iterator *iterator) {

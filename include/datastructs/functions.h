@@ -11,44 +11,23 @@ extern "C" {
 
 static inline void free_placeholder(void *ptr) { YU_UNUSED(ptr); }
 
-void *yu_dup_str(const char *value);
-void *yu_dup_float(float value);
-void *yu_dup_double(double value);
+#define FUNCTION_DECL(Type, postfix)                                           \
+  void *yu_dup_##postfix(Type value);                                          \
+  uint64_t yu_hash_##postfix(const void *value);                               \
+  bool yu_cmp_##postfix(const void *a, const void *b);
 
-void *yu_dup_i64(int64_t value);
-void *yu_dup_i32(int32_t value);
-void *yu_dup_i16(int16_t value);
-void *yu_dup_i8(int8_t value);
-void *yu_dup_u64(uint64_t value);
-void *yu_dup_u32(uint32_t value);
-void *yu_dup_u16(uint16_t value);
-void *yu_dup_u8(uint8_t value);
-
-uint64_t yu_hash_str(const void *value);
-uint64_t yu_hash_float(const void *value);
-uint64_t yu_hash_double(const void *value);
-
-uint64_t yu_hash_i64(const void *value);
-uint64_t yu_hash_i32(const void *value);
-uint64_t yu_hash_i16(const void *value);
-uint64_t yu_hash_i8(const void *value);
-uint64_t yu_hash_u64(const void *value);
-uint64_t yu_hash_u32(const void *value);
-uint64_t yu_hash_u16(const void *value);
-uint64_t yu_hash_u8(const void *value);
-
-bool yu_cmp_str(const void *a, const void *b);
-bool yu_cmp_float(const void *a, const void *b);
-bool yu_cmp_double(const void *a, const void *b);
-
-bool yu_cmp_i64(const void *a, const void *b);
-bool yu_cmp_i32(const void *a, const void *b);
-bool yu_cmp_i16(const void *a, const void *b);
-bool yu_cmp_i8(const void *a, const void *b);
-bool yu_cmp_u64(const void *a, const void *b);
-bool yu_cmp_u32(const void *a, const void *b);
-bool yu_cmp_u16(const void *a, const void *b);
-bool yu_cmp_u8(const void *a, const void *b);
+FUNCTION_DECL(const char *, str)
+FUNCTION_DECL(int64_t, i64)
+FUNCTION_DECL(int32_t, i32)
+FUNCTION_DECL(int16_t, i16)
+FUNCTION_DECL(int8_t, i8)
+FUNCTION_DECL(uint64_t, u64)
+FUNCTION_DECL(uint32_t, u32)
+FUNCTION_DECL(uint16_t, u16)
+FUNCTION_DECL(uint8_t, u8)
+FUNCTION_DECL(double, double)
+FUNCTION_DECL(float, float)
+FUNCTION_DECL(void *, ptr)
 
 #ifdef __cplusplus
 }

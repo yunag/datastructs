@@ -2,7 +2,6 @@
 
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
-#include "datastructs/macros.h"
 
 #include "helper.h"
 
