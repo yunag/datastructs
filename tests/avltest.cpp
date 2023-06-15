@@ -4,6 +4,7 @@
 
 #include "helper.h"
 
+#include <algorithm>
 #include <array>
 #include <climits>
 #include <set>
@@ -11,14 +12,14 @@
 class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { avl_destroy(bst_); }
+  void TearDown() override { avl_destroy(avl_); }
 
   void setBST() {
-    bst_ = avl_create();
-    ASSERT_NE(bst_, nullptr);
+    avl_ = avl_create();
+    ASSERT_NE(avl_, nullptr);
   }
 
-  avl_tree *bst_;
+  avl_tree *avl_;
 };
 
 TEST_F(BSTTest, Insert) {
@@ -27,9 +28,9 @@ TEST_F(BSTTest, Insert) {
   std::array<int, num_cases> numbers;
   for (size_t i = 0; i < numbers.size(); ++i) {
     numbers[i] = Helper::rand(INT_MIN, INT_MAX);
-    avl_insert(bst_, numbers[i]);
-    ASSERT_TRUE(avl_valid_avl(bst_)) << "Is not a valid AVL Tree";
-    ASSERT_TRUE(avl_valid_bst(bst_)) << "Is not a valid Binary Search Tree";
+    avl_insert(avl_, numbers[i]);
+    ASSERT_TRUE(avl_valid_avl(avl_)) << "Is not a valid AVL Tree";
+    ASSERT_TRUE(avl_valid_bst(avl_)) << "Is not a valid Binary Search Tree";
   }
 }
 
@@ -40,15 +41,15 @@ TEST_F(BSTTest, InsertRemove) {
   std::array<int, num_cases> numbers;
   for (size_t i = 0; i < numbers.size(); ++i) {
     numbers[i] = Helper::rand(INT_MIN, INT_MAX);
-    avl_insert(bst_, numbers[i]);
-    ASSERT_EQ(avl_size(bst_), i + 1);
+    avl_insert(avl_, numbers[i]);
+    ASSERT_EQ(avl_size(avl_), i + 1);
   }
   for (size_t i = 0; i < numbers.size(); ++i) {
-    ASSERT_TRUE(avl_find(bst_, numbers[i]));
-    avl_remove(bst_, numbers[i]);
-    ASSERT_FALSE(avl_find(bst_, numbers[i]));
-    ASSERT_TRUE(avl_valid_avl(bst_)) << "Is not a valid AVL Tree";
-    ASSERT_TRUE(avl_valid_bst(bst_)) << "Is not a valid Binary Search Tree";
+    ASSERT_TRUE(avl_find(avl_, numbers[i]));
+    avl_remove(avl_, numbers[i]);
+    ASSERT_FALSE(avl_find(avl_, numbers[i]));
+    ASSERT_TRUE(avl_valid_avl(avl_)) << "Is not a valid AVL Tree";
+    ASSERT_TRUE(avl_valid_bst(avl_)) << "Is not a valid Binary Search Tree";
   }
 }
 
@@ -69,9 +70,9 @@ TEST_F(BSTTest, STLSet) {
   for (size_t i = 0; i < num_commands; ++i) {
     command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Insert),
                                                static_cast<int>(Action::Find)));
-    ASSERT_EQ(stl.size(), avl_size(bst_));
-    ASSERT_TRUE(avl_valid_bst(bst_));
-    ASSERT_TRUE(avl_valid_avl(bst_));
+    ASSERT_EQ(stl.size(), avl_size(avl_));
+    ASSERT_TRUE(avl_valid_bst(avl_));
+    ASSERT_TRUE(avl_valid_avl(avl_));
     if (stl.empty()) {
       command = Action::Insert;
     }
@@ -79,13 +80,13 @@ TEST_F(BSTTest, STLSet) {
     case Action::Insert: {
       int key = Helper::rand(-10000, 10000);
       if (stl.find(key) != stl.end()) {
-        ASSERT_TRUE(avl_find(bst_, key));
+        ASSERT_TRUE(avl_find(avl_, key));
       } else {
         keys.push_back(key);
       }
       stl.insert(key);
-      avl_insert(bst_, key);
-      ASSERT_TRUE(avl_find(bst_, key));
+      avl_insert(avl_, key);
+      ASSERT_TRUE(avl_find(avl_, key));
       break;
     }
 
@@ -93,11 +94,11 @@ TEST_F(BSTTest, STLSet) {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
       ASSERT_TRUE(stl.find(key) != stl.end());
-      ASSERT_TRUE(avl_find(bst_, key));
+      ASSERT_TRUE(avl_find(avl_, key));
       stl.erase(key);
-      avl_remove(bst_, key);
+      avl_remove(avl_, key);
       keys.erase(keys.begin() + idx);
-      ASSERT_FALSE(avl_find(bst_, key));
+      ASSERT_FALSE(avl_find(avl_, key));
       ASSERT_TRUE(stl.find(key) == stl.end());
       break;
     }
@@ -105,11 +106,29 @@ TEST_F(BSTTest, STLSet) {
     case Action::Find: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
-      ASSERT_EQ(stl.find(key) != stl.end(), avl_find(bst_, key));
+      ASSERT_EQ(stl.find(key) != stl.end(), avl_find(avl_, key));
       break;
     }
     }
   }
+}
+
+TEST_F(BSTTest, Case1) {
+  setBST();
+  std::vector<int> nums = {
+      9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+  };
+  std::vector<int> sorted_nums = nums;
+  std::sort(sorted_nums.begin(), sorted_nums.end());
+  for (int num : nums) {
+    avl_insert(avl_, num);
+  }
+  avl_iterator *it = avl_first(avl_);
+  int i = 0;
+  AVL_FOR_EACH(it, int *, int *, key, val) {
+    ASSERT_EQ(*key, sorted_nums[i++]);
+  }
+  avl_it_destroy(it);
 }
 
 int main(int argc, char *argv[]) {

@@ -1,7 +1,7 @@
 #ifndef YU_HASH_TABLE_H
 #define YU_HASH_TABLE_H
 
-#include "types.h"
+#include <datastructs/types.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -13,11 +13,6 @@ typedef struct ht_iterator ht_iterator;
 
 typedef uint64_t (*hash_fn)(const void *);
 typedef bool (*cmp_key_fn)(const void *, const void *);
-
-struct key_value {
-  void *key;
-  void *val;
-};
 
 hash_table *htable_create(size_t initial_capacity, hash_fn hash,
                           cmp_key_fn cmp_key, free_fn free_key,

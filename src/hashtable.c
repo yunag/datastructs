@@ -1,6 +1,7 @@
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
 #include "datastructs/macros.h"
+#include "datastructs/memory.h"
 #include "datastructs/types.h"
 
 #include <assert.h>
@@ -49,9 +50,8 @@ static void hentry_destroy(hash_table *htable, struct hash_entry *hentry) {
 
 static struct hash_entry *hentry_create(hash_table *htable, void *key,
                                         void *val) {
-  struct hash_entry *entry = malloc(sizeof(*entry));
+  struct hash_entry *entry = yu_allocate(sizeof(*entry));
   if (!entry) {
-    YU_LOG_ERROR("Failed to allocate memory for hash entry");
     return NULL;
   }
   entry->key = key;
@@ -60,9 +60,8 @@ static struct hash_entry *hentry_create(hash_table *htable, void *key,
 }
 
 static bool rehash(hash_table *htable, size_t newsize) {
-  struct hash_entry **nbuckets = calloc(newsize, sizeof(*nbuckets));
+  struct hash_entry **nbuckets = yu_calloc(newsize, sizeof(*nbuckets));
   if (!nbuckets) {
-    YU_LOG_ERROR("Failed to resize the hash table to %zu", newsize);
     return false;
   }
   free(htable->buckets);
@@ -88,15 +87,13 @@ hash_table *htable_create(size_t capacity, hash_fn hash, cmp_key_fn cmp_key,
   assert(hash != NULL);
   assert(cmp_key != NULL);
 
-  hash_table *htable = malloc(sizeof(*htable));
+  hash_table *htable = yu_allocate(sizeof(*htable));
   if (!htable) {
-    YU_LOG_ERROR("Failed to allocate memory for hash table");
     return NULL;
   }
-  htable->buckets = calloc(capacity, sizeof(*htable->buckets));
+  htable->buckets = yu_calloc(capacity, sizeof(*htable->buckets));
   if (!htable->buckets) {
     free(htable);
-    YU_LOG_ERROR("Failed to allocate memory for table");
     return NULL;
   }
   htable->cmp_key = cmp_key;

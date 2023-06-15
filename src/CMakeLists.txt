@@ -6,6 +6,7 @@ add_library(${PROJECT_NAME} STATIC
   stack.c
   avltree.c
   functions.c
+  memory.c
 )
 
 target_include_directories(${PROJECT_NAME}

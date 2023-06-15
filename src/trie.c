@@ -1,5 +1,6 @@
 #include "datastructs/trie.h"
 #include "datastructs/macros.h"
+#include "datastructs/memory.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -20,14 +21,12 @@ struct trie_node {
 };
 
 static struct trie_node *trie_node_create(void) {
-  struct trie_node *node = malloc(sizeof(*node));
-  if (node == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for trie node");
+  struct trie_node *node = yu_allocate(sizeof(*node));
+  if (!node) {
     return NULL;
   }
-  node->child = calloc(ASCII_LENGTH, sizeof(struct trie_node *));
-  if (node->child == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for trie node");
+  node->child = yu_calloc(ASCII_LENGTH, sizeof(struct trie_node *));
+  if (!node->child) {
     free(node);
     return NULL;
   }
@@ -43,9 +42,8 @@ static void trie_node_destroy(struct trie_node *node) {
 }
 
 trie *trie_create(void) {
-  trie *trie = malloc(sizeof(*trie));
-  if (trie == NULL) {
-    YU_LOG_ERROR("Failed to allocate memory for trie");
+  trie *trie = yu_allocate(sizeof(*trie));
+  if (!trie) {
     return NULL;
   }
   trie->depth = 0;

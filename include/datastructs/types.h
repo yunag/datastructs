@@ -6,4 +6,9 @@
 
 typedef void (*free_fn)(void *);
 
+struct key_value {
+  void *key;
+  void *val;
+};
+
 #endif // !YU_TYPES_H

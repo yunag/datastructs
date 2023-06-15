@@ -1,3 +1,4 @@
+#include "datastructs/memory.h"
 #include <datastructs/avl_tree.h>
 #include <datastructs/macros.h>
 
@@ -20,11 +21,15 @@ struct avl_tree {
   size_t size;
 };
 
+struct avl_iterator {
+  struct avl_node **parents;
+  struct avl_node **par_sp;
+};
+
 static struct avl_node *avl_node_create(struct avl_node *left,
                                         struct avl_node *right, int key) {
-  struct avl_node *node = malloc(sizeof(*node));
+  struct avl_node *node = yu_allocate(sizeof(*node));
   if (!node) {
-    YU_LOG_ERROR("Failed to allocate memory for node");
     return NULL;
   }
   node->left = left;
@@ -103,6 +108,7 @@ static struct avl_node *balance(struct avl_node *node) {
     }
     return left_rotate(node);
   }
+  node->height = height(node);
   return node;
 }
 
@@ -120,7 +126,6 @@ static struct avl_node *insert_node(avl_tree *avl, struct avl_node *node,
     return node; /* Already exist */
   }
   /* Balance case */
-  node->height = height(node);
   return balance(node);
 }
 
@@ -147,7 +152,6 @@ static struct avl_node *remove_node(avl_tree *avl, struct avl_node *node,
     node->right = remove_node(avl, node->right, ret->key);
   }
   /* Balance case */
-  node->height = height(node);
   return balance(node);
 }
 
@@ -176,9 +180,8 @@ static void avl_free_rec(struct avl_node *node) {
 }
 
 avl_tree *avl_create(void) {
-  avl_tree *avl = malloc(sizeof(*avl));
+  avl_tree *avl = yu_allocate(sizeof(*avl));
   if (!avl) {
-    YU_LOG_ERROR("Failed to allocate memory for binary search tree");
     return NULL;
   }
   avl->root = NULL;
@@ -252,4 +255,53 @@ bool avl_valid_bst(avl_tree *avl) {
 size_t avl_size(avl_tree *avl) {
   assert(avl != NULL);
   return avl->size;
+}
+
+static void avl_it_left_most(avl_iterator *it, struct avl_node *node) {
+  while (node) {
+    *(it->par_sp++) = node;
+    node = node->left;
+  }
+}
+
+avl_iterator *avl_first(avl_tree *avl) {
+  assert(avl != NULL);
+  avl_iterator *it = yu_allocate(sizeof(*it));
+  if (!it) {
+    return NULL;
+  }
+  it->parents = yu_allocate(sizeof(*it->parents) * avl->root->height);
+  if (!it->parents) {
+    free(it);
+    return NULL;
+  }
+  it->par_sp = it->parents;
+  avl_it_left_most(it, avl->root);
+  return it;
+}
+
+void avl_it_destroy(avl_iterator *it) {
+  if (it) {
+    free(it->parents);
+    free(it);
+  }
+}
+
+void avl_next(avl_iterator *it) {
+  assert(it != NULL);
+  struct avl_node *node = *(--it->par_sp);
+  avl_it_left_most(it, node->right);
+}
+
+bool avl_has_next(avl_iterator *it) {
+  assert(it != NULL);
+  return it->par_sp != it->parents;
+}
+
+struct key_value avl_get(avl_iterator *it) {
+  assert(it != NULL);
+  return (struct key_value){
+      .key = &it->par_sp[-1]->key,
+      .val = &it->par_sp[-1]->key,
+  };
 }
