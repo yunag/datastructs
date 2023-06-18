@@ -1,6 +1,5 @@
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
-#include "datastructs/macros.h"
 #include "datastructs/memory.h"
 #include "datastructs/types.h"
 

@@ -1,6 +1,5 @@
 #include "datastructs/queue.h"
 #include "datastructs/functions.h"
-#include "datastructs/macros.h"
 #include "datastructs/memory.h"
 
 #include <assert.h>

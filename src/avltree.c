@@ -57,8 +57,7 @@ static struct avl_node *left_rotate(struct avl_node *node) {
   struct avl_node *rnode = node->right;
   node->right = rnode->left;
   rnode->left = node;
-  /* NOTE: The order in which the heights are counted matters:
-   * the node will become a child of the right node */
+
   node->height = height(node);
   rnode->height = height(rnode);
   return rnode;
@@ -68,8 +67,7 @@ static struct avl_node *right_rotate(struct avl_node *node) {
   struct avl_node *lnode = node->left;
   node->left = lnode->right;
   lnode->right = node;
-  /* NOTE: The order in which the heights are counted matters:
-   * the node will become a child of the left node */
+
   node->height = height(node);
   lnode->height = height(lnode);
   return lnode;
