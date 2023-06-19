@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define STACK_EMPTY(s) ((s)->top == (s)->buffer)
-
 struct stack {
   void *buffer;    /* Buffer for storing elements */
   char *top;       /* Top of the stack */
@@ -58,7 +56,7 @@ void stack_destroy(stack *s) {
     return;
   }
   if (s->free != free_placeholder) {
-    while (!STACK_EMPTY(s)) {
+    while (!stack_empty(s)) {
       s->free(s->top -= s->esize);
     }
   }
@@ -80,7 +78,7 @@ void stack_push(stack *s, const void *elem) {
 
 void stack_pop(stack *s) {
   assert(s != NULL);
-  if (STACK_EMPTY(s)) {
+  if (stack_empty(s)) {
     return;
   }
   s->free(s->top -= s->esize);
@@ -89,7 +87,7 @@ void stack_pop(stack *s) {
 
 void *stack_top(stack *s) {
   assert(s != NULL);
-  if (STACK_EMPTY(s)) {
+  if (stack_empty(s)) {
     return NULL;
   }
   return s->top - s->esize;
@@ -102,7 +100,7 @@ bool stack_full(stack *s) {
 
 bool stack_empty(stack *s) {
   assert(s != NULL);
-  return STACK_EMPTY(s);
+  return s->top == s->buffer;
 }
 
 size_t stack_size(stack *s) {

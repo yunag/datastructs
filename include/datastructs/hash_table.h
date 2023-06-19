@@ -12,11 +12,9 @@ typedef struct hash_table hash_table;
 typedef struct ht_iterator ht_iterator;
 
 typedef uint64_t (*hash_fn)(const void *);
-typedef bool (*cmp_key_fn)(const void *, const void *);
 
-hash_table *htable_create(size_t initial_capacity, hash_fn hash,
-                          cmp_key_fn cmp_key, free_fn free_key,
-                          free_fn free_value);
+hash_table *htable_create(size_t initial_capacity, hash_fn hash, cmp_fn cmp_key,
+                          free_fn free_key, free_fn free_value);
 void htable_destroy(hash_table *htable);
 bool htable_insert(hash_table *htable, void *key, void *val);
 void *htable_lookup(hash_table *htable, const void *key);

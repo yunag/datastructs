@@ -12,11 +12,9 @@
 #define LEFT_CHILD(node, heap, size) (heap + (((node)-heap) << 1) + size)
 #define RIGHT_CHILD(node, heap, size) (heap + (((node)-heap + size) << 1))
 
-#define LCHILD(parent) LEFT_CHILD(parent, pq->heap, pq->esize)
-#define RCHILD(parent) RIGHT_CHILD(parent, pq->heap, pq->esize)
+#define LCHILD(parent) LEFT_CHILD(parent, heap, size)
+#define RCHILD(parent) RIGHT_CHILD(parent, heap, size)
 #define HAS_PARENT(child) ((child) > 0)
-
-#define PQ_EMPTY(pq) (!(pq)->size)
 
 struct priority_queue {
   char *heap; /* Node storage buffer */
@@ -89,6 +87,39 @@ void pq_destroy(priority_queue *pq) {
   }
 }
 
+void heapify_down(char *heap, char *last, char *node, size_t size, cmp_fn cmp) {
+  char *cur = node;
+  char *lch, *rch;
+  while ((lch = LCHILD(cur)) < last) {
+    if ((rch = lch + size) < last && cmp(rch, lch) < 0) {
+      lch = rch;
+    }
+
+    if (cmp(cur, lch) < 0) {
+      break;
+    }
+    YU_BYTE_SWAP(lch, cur, size);
+    cur = lch;
+  }
+}
+
+void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
+  assert(base != NULL);
+  assert(cmp != NULL);
+
+  char *base_ptr = base;
+  char *end = base_ptr + size * count;
+  for (char *node = base_ptr + ((count >> 1) - 1) * size; node >= base_ptr;
+       node -= size) {
+    heapify_down(base, end, node, size, cmp);
+  }
+}
+
+void pq_pushpop(priority_queue *pq, const void *elem) {
+  memcpy(pq->heap, elem, pq->esize);
+  heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->cmp);
+}
+
 void pq_push(priority_queue *pq, const void *elem) {
   assert(pq != NULL);
   assert(elem != NULL);
@@ -110,36 +141,23 @@ void pq_push(priority_queue *pq, const void *elem) {
 
 void pq_pop(priority_queue *pq) {
   assert(pq != NULL);
-  if (PQ_EMPTY(pq)) {
+  if (pq_empty(pq)) {
     return;
   }
   /* Move last element to the top */
   memcpy(pq->heap, pq->last -= pq->esize, pq->esize);
-
-  char *cur = pq->heap;
-  char *lch, *rch;
-  while ((lch = LCHILD(cur)) < pq->last) {
-    if ((rch = RCHILD(cur)) < pq->last && pq->cmp(rch, lch) < 0) {
-      lch = rch;
-    }
-
-    if (pq->cmp(cur, lch) < 0) {
-      break;
-    }
-    YU_BYTE_SWAP(lch, cur, pq->esize);
-    cur = lch;
-  }
+  heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->cmp);
   pq->size--;
 }
 
 bool pq_empty(priority_queue *pq) {
   assert(pq != NULL);
-  return PQ_EMPTY(pq);
+  return !pq->size;
 }
 
 const void *pq_top(priority_queue *pq) {
   assert(pq != NULL);
-  if (PQ_EMPTY(pq)) {
+  if (pq_empty(pq)) {
     return NULL;
   }
   return pq->heap;
@@ -155,28 +173,7 @@ size_t pq_esize(priority_queue *pq) {
   return pq->esize;
 }
 
-#define LCBUFF(parent) LEFT_CHILD(parent, base_ptr, size)
-#define RCBUFF(parent) RIGHT_CHILD(parent, base_ptr, size)
-void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
-  assert(base != NULL);
-  assert(cmp != NULL);
-
-  char *base_ptr = base;
-  char *end = base_ptr + size * count;
-  for (char *node = base_ptr + ((count >> 1) - 1) * size; node >= base_ptr;
-       node -= size) {
-    char *cur = node;
-    char *lch, *rch;
-    while ((lch = LCBUFF(cur)) < end) {
-      if ((rch = RCBUFF(cur)) < end && cmp(rch, lch) < 0) {
-        lch = rch;
-      }
-
-      if (cmp(cur, lch) < 0) {
-        break;
-      }
-      YU_BYTE_SWAP(lch, cur, size);
-      cur = lch;
-    }
-  }
+const void *pq_heap(priority_queue *pq) {
+  assert(pq != NULL);
+  return pq->heap;
 }

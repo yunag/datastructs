@@ -18,8 +18,14 @@
     return hashv;                                                              \
   }
 #define FNCMPDEF(T, postfix)                                                   \
-  bool yu_cmp_##postfix(const void *a, const void *b) {                        \
-    return *(T *)a == *(T *)b;                                                 \
+  int yu_cmp_##postfix(const void *a, const void *b) {                         \
+    if (*(T *)a > *(T *)b) {                                                   \
+      return 1;                                                                \
+    }                                                                          \
+    if (*(T *)a < *(T *)b) {                                                   \
+      return -1;                                                               \
+    }                                                                          \
+    return 0;                                                                  \
   }
 #define FNDUPDEF(T, postfix)                                                   \
   void *yu_dup_##postfix(T value) {                                            \
@@ -57,7 +63,7 @@ uint64_t yu_hash_str(const void *str) {
   return hashv;
 }
 
-bool yu_cmp_str(const void *a, const void *b) { return !strcmp(a, b); }
+int yu_cmp_str(const void *a, const void *b) { return strcmp(a, b); }
 
 void *yu_dup_str(const char *value) {
   size_t slen = strlen(value);

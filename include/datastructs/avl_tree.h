@@ -11,15 +11,13 @@ extern "C" {
 typedef struct avl_tree avl_tree;
 typedef struct avl_iterator avl_iterator;
 
-avl_tree *avl_create(void);
+avl_tree *avl_create(cmp_fn cmp_key, free_fn free_key, free_fn free_val);
 void avl_destroy(avl_tree *avl);
-void avl_insert(avl_tree *avl, int key);
-bool avl_find(avl_tree *avl, int key);
-void avl_remove(avl_tree *avl, int key);
-void avl_inorder_print(avl_tree *avl);
+void avl_insert(avl_tree *avl, void *key, void *val);
+bool avl_find(avl_tree *avl, const void *key);
+void avl_remove(avl_tree *avl, const void *key);
 size_t avl_size(avl_tree *avl);
 bool avl_valid_avl(avl_tree *avl);
-bool avl_valid_bst(avl_tree *avl);
 
 avl_iterator *avl_first(avl_tree *avl);
 void avl_next(avl_iterator *iterator);

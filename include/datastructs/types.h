@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 typedef void (*free_fn)(void *);
+typedef int (*cmp_fn)(const void *, const void *);
 
 struct key_value {
   void *key;

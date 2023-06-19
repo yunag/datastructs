@@ -23,10 +23,10 @@ struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
   struct hash_entry head;      /* Head of `global` linked list */
 
-  hash_fn hash;       /* Hash function */
-  cmp_key_fn cmp_key; /* Compare two keys */
-  free_fn kfree;      /* Function to free a key */
-  free_fn vfree;      /* Function to free a value */
+  hash_fn hash;     /* Hash function */
+  cmp_fn cmp;       /* Compare two keys */
+  free_fn free_key; /* Function to free a key */
+  free_fn free_val; /* Function to free a value */
 
   size_t size;     /* Number of elements*/
   size_t capacity; /* Capacity of the table */
@@ -42,8 +42,8 @@ uint64_t hash_bern(const void *key, size_t size) {
 }
 
 static void hentry_destroy(hash_table *htable, struct hash_entry *hentry) {
-  htable->kfree(hentry->key);
-  htable->vfree(hentry->val);
+  htable->free_key(hentry->key);
+  htable->free_val(hentry->val);
   free(hentry);
 }
 
@@ -80,7 +80,7 @@ static bool rehash(hash_table *htable, size_t newsize) {
   return true;
 }
 
-hash_table *htable_create(size_t capacity, hash_fn hash, cmp_key_fn cmp_key,
+hash_table *htable_create(size_t capacity, hash_fn hash, cmp_fn cmp_key,
                           free_fn free_key, free_fn free_value) {
   assert(capacity > 0);
   assert(hash != NULL);
@@ -95,10 +95,10 @@ hash_table *htable_create(size_t capacity, hash_fn hash, cmp_key_fn cmp_key,
     free(htable);
     return NULL;
   }
-  htable->cmp_key = cmp_key;
+  htable->cmp = cmp_key;
   htable->hash = hash;
-  htable->kfree = free_key ? free_key : free_placeholder;
-  htable->vfree = free_value ? free_value : free_placeholder;
+  htable->free_key = free_key ? free_key : free_placeholder;
+  htable->free_val = free_value ? free_value : free_placeholder;
   htable->head.ll_next = htable->head.ll_prev = &htable->head;
   htable->size = 0;
   htable->capacity = capacity;
@@ -122,7 +122,7 @@ void htable_destroy(hash_table *htable) {
 static struct hash_entry **lookup(hash_table *htable, const void *key,
                                   uint64_t bucket) {
   struct hash_entry **walk = &htable->buckets[bucket];
-  while (*walk && !htable->cmp_key((*walk)->key, key)) {
+  while (*walk && htable->cmp((*walk)->key, key)) {
     walk = &(*walk)->next;
   }
   return walk;
@@ -138,15 +138,15 @@ bool htable_insert(hash_table *htable, void *key, void *val) {
   uint64_t bct = GET_BUCKET(htable, key);
   struct hash_entry *entry = *lookup(htable, key, bct);
   if (entry) { /* The key already exists in the hash table */
-    htable->vfree(entry->val);
-    htable->kfree(key);
+    htable->free_val(entry->val);
+    htable->free_key(key);
     entry->val = val;
     return true;
   }
   entry = hentry_create(htable, key, val);
   if (!entry) {
-    htable->kfree(key);
-    htable->vfree(val);
+    htable->free_key(key);
+    htable->free_val(val);
     return false;
   }
   struct hash_entry *tail = htable->head.ll_prev;

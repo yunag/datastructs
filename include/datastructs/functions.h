@@ -14,7 +14,7 @@ static inline void free_placeholder(void *ptr) { YU_UNUSED(ptr); }
 #define FUNCTION_DECL(Type, postfix)                                           \
   void *yu_dup_##postfix(Type value);                                          \
   uint64_t yu_hash_##postfix(const void *value);                               \
-  bool yu_cmp_##postfix(const void *a, const void *b);
+  int yu_cmp_##postfix(const void *a, const void *b);
 
 FUNCTION_DECL(const char *, str)
 FUNCTION_DECL(int64_t, i64)
@@ -28,6 +28,8 @@ FUNCTION_DECL(uint8_t, u8)
 FUNCTION_DECL(double, double)
 FUNCTION_DECL(float, float)
 FUNCTION_DECL(void *, ptr)
+
+#undef FUNCTION_DECL
 
 #ifdef __cplusplus
 }

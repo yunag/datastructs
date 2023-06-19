@@ -1,5 +1,5 @@
+#include "datastructs/memory.h"
 #include "datastructs/macros.h"
-#include <datastructs/memory.h>
 
 #include <stdlib.h>
 #include <string.h>

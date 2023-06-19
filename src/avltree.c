@@ -1,10 +1,9 @@
+#include "datastructs/avl_tree.h"
+#include "datastructs/functions.h"
+#include "datastructs/macros.h"
 #include "datastructs/memory.h"
-#include <datastructs/avl_tree.h>
-#include <datastructs/macros.h>
 
 #include <assert.h>
-#include <limits.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 static const int threshold = 1;
@@ -12,12 +11,16 @@ static const int threshold = 1;
 struct avl_node {
   struct avl_node *left;
   struct avl_node *right;
-  int key;
-  int height;
+  void *key;
+  void *val;
+  size_t height;
 };
 
 struct avl_tree {
   struct avl_node *root;
+  cmp_fn cmp;
+  free_fn free_key;
+  free_fn free_val;
   size_t size;
 };
 
@@ -26,20 +29,24 @@ struct avl_iterator {
   struct avl_node **par_sp;
 };
 
-static struct avl_node *avl_node_create(struct avl_node *left,
-                                        struct avl_node *right, int key) {
+static struct avl_node *avl_node_create(void *key, void *val) {
   struct avl_node *node = yu_allocate(sizeof(*node));
   if (!node) {
     return NULL;
   }
-  node->left = left;
-  node->right = right;
+  node->left = NULL;
+  node->right = NULL;
   node->key = key;
+  node->val = val;
   node->height = 1;
   return node;
 }
 
-static inline void avl_node_destroy(struct avl_node *node) { free(node); }
+static inline void avl_node_destroy(avl_tree *avl, struct avl_node *node) {
+  avl->free_key(node->key);
+  avl->free_val(node->val);
+  free(node);
+}
 
 static inline int bheight(struct avl_node *node) {
   return !node ? 0 : node->height;
@@ -73,14 +80,6 @@ static struct avl_node *right_rotate(struct avl_node *node) {
   return lnode;
 }
 
-static void inorder_print(struct avl_node *node) {
-  if (node) {
-    inorder_print(node->left);
-    fprintf(stdout, "%d ", node->key);
-    inorder_print(node->right);
-  }
-}
-
 static struct avl_node *left_most(struct avl_node *node) {
   while (node->left) {
     node = node->left;
@@ -111,15 +110,16 @@ static struct avl_node *balance(struct avl_node *node) {
 }
 
 static struct avl_node *insert_node(avl_tree *avl, struct avl_node *node,
-                                    int key) {
+                                    void *key, void *val) {
   if (!node) {
     avl->size++;
-    return avl_node_create(NULL, NULL, key);
+    return avl_node_create(key, val);
   }
-  if (key < node->key) {
-    node->left = insert_node(avl, node->left, key);
-  } else if (key > node->key) {
-    node->right = insert_node(avl, node->right, key);
+  int c = avl->cmp(key, node->key);
+  if (c < 0) {
+    node->left = insert_node(avl, node->left, key, val);
+  } else if (c > 0) {
+    node->right = insert_node(avl, node->right, key, val);
   } else {
     return node; /* Already exist */
   }
@@ -128,21 +128,21 @@ static struct avl_node *insert_node(avl_tree *avl, struct avl_node *node,
 }
 
 static struct avl_node *remove_node(avl_tree *avl, struct avl_node *node,
-                                    int key) {
+                                    const void *key) {
   if (!node) {
     return NULL;
   }
-
-  if (key < node->key) {
+  int c = avl->cmp(key, node->key);
+  if (c < 0) {
     node->left = remove_node(avl, node->left, key);
-  } else if (key > node->key) {
+  } else if (c > 0) {
     node->right = remove_node(avl, node->right, key);
   } else { /* Key found */
     struct avl_node *ret;
     if (!node->left || !node->right) {
       ret = node->left ? node->left : node->right;
       avl->size--;
-      avl_node_destroy(node);
+      avl_node_destroy(avl, node);
       return ret;
     }
     ret = left_most(node->right);
@@ -168,20 +168,26 @@ static bool valid_avl(struct avl_node *node) {
   return valid_avl(node->left) && valid_avl(node->right);
 }
 
-static void avl_free_rec(struct avl_node *node) {
+static void avl_free_rec(avl_tree *avl, struct avl_node *node) {
   if (!node) {
     return;
   }
-  avl_free_rec(node->left);
-  avl_free_rec(node->right);
-  avl_node_destroy(node);
+  avl_free_rec(avl, node->left);
+  avl_free_rec(avl, node->right);
+  avl_node_destroy(avl, node);
 }
 
-avl_tree *avl_create(void) {
+avl_tree *avl_create(cmp_fn cmp_key, free_fn free_key, free_fn free_val) {
+  assert(cmp_key != NULL);
+
   avl_tree *avl = yu_allocate(sizeof(*avl));
   if (!avl) {
     return NULL;
   }
+
+  avl->cmp = cmp_key;
+  avl->free_key = free_key ? free_key : free_placeholder;
+  avl->free_val = free_val ? free_val : free_placeholder;
   avl->root = NULL;
   avl->size = 0;
   return avl;
@@ -189,28 +195,29 @@ avl_tree *avl_create(void) {
 
 void avl_destroy(avl_tree *avl) {
   if (avl) {
-    avl_free_rec(avl->root);
+    avl_free_rec(avl, avl->root);
     free(avl);
   }
 }
 
-void avl_remove(avl_tree *avl, int key) {
+void avl_remove(avl_tree *avl, const void *key) {
   assert(avl != NULL);
   avl->root = remove_node(avl, avl->root, key);
 }
 
-void avl_insert(avl_tree *avl, int key) {
+void avl_insert(avl_tree *avl, void *key, void *val) {
   assert(avl != NULL);
-  avl->root = insert_node(avl, avl->root, key);
+  avl->root = insert_node(avl, avl->root, key, val);
 }
 
-bool avl_find(avl_tree *avl, int key) {
+bool avl_find(avl_tree *avl, const void *key) {
   assert(avl != NULL);
   struct avl_node *walk = avl->root;
   while (walk) {
-    if (key < walk->key) {
+    int c = avl->cmp(key, walk->key);
+    if (c < 0) {
       walk = walk->left;
-    } else if (key > walk->key) {
+    } else if (c > 0) {
       walk = walk->right;
     } else {
       return true;
@@ -219,35 +226,9 @@ bool avl_find(avl_tree *avl, int key) {
   return false;
 }
 
-void avl_inorder_print(avl_tree *avl) {
-  assert(avl != NULL);
-  inorder_print(avl->root);
-  if (avl->root) {
-    printf("\b\n");
-  } else {
-    printf("\n");
-  }
-}
-
 bool avl_valid_avl(avl_tree *avl) {
   assert(avl != NULL);
   return valid_avl(avl->root);
-}
-
-static bool valid_bst(struct avl_node *node, int64_t left, int64_t right) {
-  if (!node) {
-    return true;
-  }
-  if (node->key >= right || node->key <= left) {
-    return false;
-  }
-  return valid_bst(node->left, left, node->key) &&
-         valid_bst(node->right, node->key, right);
-}
-
-bool avl_valid_bst(avl_tree *avl) {
-  assert(avl != NULL);
-  return valid_bst(avl->root, INT_MIN, INT_MAX);
 }
 
 size_t avl_size(avl_tree *avl) {
@@ -299,7 +280,7 @@ bool avl_has_next(avl_iterator *it) {
 struct key_value avl_get(avl_iterator *it) {
   assert(it != NULL);
   return (struct key_value){
-      .key = &it->par_sp[-1]->key,
-      .val = &it->par_sp[-1]->key,
+      .key = it->par_sp[-1]->key,
+      .val = it->par_sp[-1]->val,
   };
 }

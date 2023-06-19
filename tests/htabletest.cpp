@@ -15,7 +15,7 @@ protected:
   void SetUp() override {}
   void TearDown() override { htable_destroy(ht_); }
 
-  void SetHashTable(hash_fn hash, cmp_key_fn cmp_key, size_t size = 1,
+  void SetHashTable(hash_fn hash, cmp_fn cmp_key, size_t size = 1,
                     free_fn kfree = free, free_fn vfree = free) {
     ht_ = htable_create(size, hash, cmp_key, kfree, vfree);
     ASSERT_NE(ht_, nullptr);

@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define QUEUE_EMPTY(q) (!(q)->size)
-
 struct queue {
   void *buffer; /* Buffer for storing elements */
   char *front;  /* Front index of the Queue */
@@ -48,7 +46,7 @@ void queue_destroy(queue *q) {
   if (!q) {
     return;
   }
-  if (q->free != free_placeholder && !QUEUE_EMPTY(q)) {
+  if (q->free != free_placeholder && !queue_empty(q)) {
     q->free(q->front);
     while ((q->front += q->esize) != q->rear) {
       if (q->front == q->end) {
@@ -103,7 +101,7 @@ void queue_push(queue *q, const void *elem) {
 
 void queue_pop(queue *q) {
   assert(q != NULL);
-  if (QUEUE_EMPTY(q)) {
+  if (queue_empty(q)) {
     return;
   }
   q->free(q->front);
@@ -116,7 +114,7 @@ void queue_pop(queue *q) {
 
 void *queue_front(queue *q) {
   assert(q != NULL);
-  if (QUEUE_EMPTY(q)) {
+  if (queue_empty(q)) {
     return NULL;
   }
   return q->front;
@@ -124,7 +122,7 @@ void *queue_front(queue *q) {
 
 void *queue_back(queue *q) {
   assert(q != NULL);
-  if (QUEUE_EMPTY(q)) {
+  if (queue_empty(q)) {
     return NULL;
   }
   return q->rear - q->esize;
@@ -132,7 +130,7 @@ void *queue_back(queue *q) {
 
 bool queue_empty(queue *q) {
   assert(q != NULL);
-  return QUEUE_EMPTY(q);
+  return !q->size;
 }
 
 bool queue_full(queue *q) {
