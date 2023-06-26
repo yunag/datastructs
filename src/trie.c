@@ -54,6 +54,7 @@ trie *trie_create(void) {
 void trie_insert(trie *trie, const char *word) {
   assert(trie != NULL);
   assert(word != NULL);
+
   struct trie_node *root = trie->root;
   size_t i = 0;
   for (; word[i] != '\0'; ++i) {

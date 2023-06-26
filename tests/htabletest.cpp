@@ -168,7 +168,22 @@ TEST_F(HashTableTest, Case1) {
     htable_insert(ht_, yu_dup_i32(kv.first), yu_dup_i32(kv.second));
     unord_map[kv.first] = kv.second;
   }
-  HT_FOR_EACH(ht_, int *, int *, key, val) { ASSERT_EQ(*val, unord_map[*key]); }
+  int cycles = 0;
+  HT_FOR_EACH(ht_, int *, int *, key, val) {
+    cycles++;
+    ASSERT_EQ(*val, unord_map[*key]);
+  }
+  ASSERT_EQ(cycles, 2);
+
+  cycles = 0;
+  HT_FOR_EACH(ht_, int *, int *, key, val) {
+    cycles++;
+    ASSERT_EQ(*val, unord_map[*key]);
+    if (cycles == 1) {
+      break;
+    }
+  }
+  ASSERT_EQ(cycles, 1);
 }
 
 TEST_F(HashTableTest, Strings) {

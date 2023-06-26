@@ -28,6 +28,7 @@ struct priority_queue {
 
 static bool pq_resize(priority_queue *pq, size_t newsize) {
   assert(newsize > pq->size);
+
   char *tmp = yu_realloc(pq->heap, pq->esize * newsize);
   if (!tmp) {
     return false;
@@ -67,6 +68,8 @@ priority_queue *pq_create(size_t capacity, size_t elemsize, cmp_fn cmp) {
 
 priority_queue *pq_create_from_heap(const void *heap, size_t count,
                                     size_t elemsize, cmp_fn cmp) {
+  assert(heap != NULL);
+
   priority_queue *pq = pq_init(count, count, elemsize, cmp);
   memcpy(pq->heap, heap, count * elemsize);
   return pq;
@@ -74,6 +77,8 @@ priority_queue *pq_create_from_heap(const void *heap, size_t count,
 
 priority_queue *pq_create_from_arr(const void *base, size_t count,
                                    size_t elemsize, cmp_fn cmp) {
+  assert(base != NULL);
+
   priority_queue *pq = pq_init(count, count, elemsize, cmp);
   memcpy(pq->heap, base, count * elemsize);
   heapify(pq->heap, count, elemsize, cmp);
@@ -87,7 +92,8 @@ void pq_destroy(priority_queue *pq) {
   }
 }
 
-void heapify_down(char *heap, char *last, char *node, size_t size, cmp_fn cmp) {
+static void heapify_down(char *heap, char *last, char *node, size_t size,
+                         cmp_fn cmp) {
   char *cur = node;
   char *lch, *rch;
   while ((lch = LCHILD(cur)) < last) {
@@ -116,6 +122,9 @@ void heapify(void *base, size_t count, size_t size, cmp_fn cmp) {
 }
 
 void pq_pushpop(priority_queue *pq, const void *elem) {
+  assert(pq != NULL);
+  assert(elem != NULL);
+
   memcpy(pq->heap, elem, pq->esize);
   heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->cmp);
 }

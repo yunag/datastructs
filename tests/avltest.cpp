@@ -125,11 +125,25 @@ TEST_F(BSTTest, Case1) {
     avl_insert(avl_, ins, ins);
   }
   avl_iterator *it = avl_first(avl_);
-  int i = 0;
+  int cycles = 0;
   AVL_FOR_EACH(it, int *, int *, key, val) {
-    EXPECT_EQ(*key, sorted_nums[i++]);
+    EXPECT_EQ(*key, sorted_nums[cycles]);
+    cycles++;
+  }
+  ASSERT_EQ(cycles, nums.size());
+  avl_it_destroy(it);
+
+  it = avl_first(avl_);
+  cycles = 0;
+  AVL_FOR_EACH(it, int *, int *, key, val) {
+    EXPECT_EQ(*key, sorted_nums[cycles]);
+    cycles++;
+    if (cycles == 5) {
+      break;
+    }
   }
   avl_it_destroy(it);
+  ASSERT_EQ(cycles, 5);
 }
 
 int main(int argc, char *argv[]) {

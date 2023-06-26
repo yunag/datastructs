@@ -26,11 +26,13 @@ struct key_value avl_get(avl_iterator *iterator);
 void avl_it_destroy(avl_iterator *iterator);
 
 #define AVL_FOR_EACH(it, KeyT, ValT, keyname, valname)                         \
-  for (; avl_has_next(it); avl_next(it))                                       \
-    for (bool _should_loop = true; _should_loop;)                              \
-      for (KeyT keyname = (KeyT)avl_get(it).key; _should_loop;)                \
-        for (ValT valname = (ValT)avl_get(it).val; _should_loop;               \
-             _should_loop = false)
+  for (bool _should_loop = true, _should_break = false;                        \
+       avl_has_next(it) && !_should_break;                                     \
+       _should_break ? (void)0 : avl_next(it), _should_loop = true)            \
+    for (KeyT keyname = (KeyT)avl_get(it).key; _should_loop;                   \
+         _should_break = _should_loop, _should_loop = false)                   \
+      for (ValT valname = (ValT)avl_get(it).val; _should_loop;                 \
+           _should_loop = false)
 
 #define AVL_FOR_EACH_IT(it) for (; avl_has_next(it); avl_next(it))
 

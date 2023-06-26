@@ -9,15 +9,7 @@
 #include <string.h>
 
 #define GET_BUCKET(htable, key) ((htable)->hash((key)) % (htable)->capacity)
-
-struct hash_entry {
-  void *key; /* Pointer to key */
-  void *val; /* Pointer to value */
-  struct hash_entry *ll_next;
-  struct hash_entry *ll_prev;
-
-  struct hash_entry *next; /* Pointer to next struct */
-};
+#define DUMMY_PTR ((void *)0xffffffffffffffffUL)
 
 struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
@@ -100,6 +92,7 @@ hash_table *htable_create(size_t capacity, hash_fn hash, cmp_fn cmp_key,
   htable->free_key = free_key ? free_key : free_placeholder;
   htable->free_val = free_value ? free_value : free_placeholder;
   htable->head.ll_next = htable->head.ll_prev = &htable->head;
+  htable->head.next = DUMMY_PTR;
   htable->size = 0;
   htable->capacity = capacity;
   return htable;
@@ -200,33 +193,30 @@ size_t htable_size(hash_table *htable) {
   return htable->size;
 }
 
-ht_iterator *ht_begin(hash_table *htable) {
+hash_entry *ht_first(hash_table *htable) {
   assert(htable != NULL);
-  return (ht_iterator *)htable->head.ll_next;
+  return htable->head.ll_next;
 }
 
-ht_iterator *ht_end(hash_table *htable) {
+hash_entry *ht_last(hash_table *htable) {
   assert(htable != NULL);
-  return (ht_iterator *)&htable->head;
+  return htable->head.ll_prev;
 }
 
-ht_iterator *ht_next(ht_iterator *iterator) {
+hash_entry *ht_next(hash_entry *iterator) {
   assert(iterator != NULL);
-  struct hash_entry *hentry = (struct hash_entry *)iterator;
-  return (ht_iterator *)hentry->ll_next;
+  iterator = iterator->ll_next;
+  if (iterator->next == DUMMY_PTR) {
+    iterator = NULL;
+  }
+  return iterator;
 }
 
-ht_iterator *ht_prev(ht_iterator *iterator) {
+hash_entry *ht_prev(hash_entry *iterator) {
   assert(iterator != NULL);
-  struct hash_entry *hentry = (struct hash_entry *)iterator;
-  return (ht_iterator *)hentry->ll_prev;
-}
-
-struct key_value ht_get(ht_iterator *iterator) {
-  assert(iterator != NULL);
-  struct hash_entry *hentry = (struct hash_entry *)iterator;
-  return (struct key_value){
-      .key = hentry->key,
-      .val = hentry->val,
-  };
+  iterator = iterator->ll_prev;
+  if (iterator->next == DUMMY_PTR) {
+    iterator = NULL;
+  }
+  return iterator;
 }

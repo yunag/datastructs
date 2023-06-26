@@ -61,10 +61,11 @@ void queue_destroy(queue *q) {
 
 static bool queue_resize(queue *q, size_t newsize) {
   assert(newsize > q->size);
-  char *buffer;
-  size_t blocksize = newsize * q->esize;
 
-  buffer = yu_allocate(blocksize);
+  char *buffer;
+  size_t bufsize = newsize * q->esize;
+
+  buffer = yu_allocate(bufsize);
   if (!buffer) {
     return false;
   }
@@ -79,7 +80,7 @@ static bool queue_resize(queue *q, size_t newsize) {
 
   q->front = buffer;
   q->rear = buffer + q->esize * q->size;
-  q->end = buffer + blocksize;
+  q->end = buffer + bufsize;
   q->buffer = buffer;
   q->capacity = newsize;
   return true;
@@ -88,6 +89,7 @@ static bool queue_resize(queue *q, size_t newsize) {
 void queue_push(queue *q, const void *elem) {
   assert(q != NULL);
   assert(elem != NULL);
+
   if (queue_full(q) && !queue_resize(q, q->capacity * 2)) {
     return;
   }
@@ -101,6 +103,7 @@ void queue_push(queue *q, const void *elem) {
 
 void queue_pop(queue *q) {
   assert(q != NULL);
+
   if (queue_empty(q)) {
     return;
   }
@@ -114,6 +117,7 @@ void queue_pop(queue *q) {
 
 void *queue_front(queue *q) {
   assert(q != NULL);
+
   if (queue_empty(q)) {
     return NULL;
   }
@@ -122,6 +126,7 @@ void *queue_front(queue *q) {
 
 void *queue_back(queue *q) {
   assert(q != NULL);
+
   if (queue_empty(q)) {
     return NULL;
   }

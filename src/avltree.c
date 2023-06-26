@@ -212,6 +212,7 @@ void avl_insert(avl_tree *avl, void *key, void *val) {
 
 bool avl_find(avl_tree *avl, const void *key) {
   assert(avl != NULL);
+
   struct avl_node *walk = avl->root;
   while (walk) {
     int c = avl->cmp(key, walk->key);
@@ -236,26 +237,30 @@ size_t avl_size(avl_tree *avl) {
   return avl->size;
 }
 
-static void avl_it_left_most(avl_iterator *it, struct avl_node *node) {
-  while (node) {
-    *(it->par_sp++) = node;
-    node = node->left;
-  }
-}
+#define STACK_PUSH(node) (*(it->par_sp++) = (node))
+#define STACK_POP() (*(--it->par_sp))
+#define STACK_TOP() ((it->par_sp[-1]))
 
 avl_iterator *avl_first(avl_tree *avl) {
   assert(avl != NULL);
+
   avl_iterator *it = yu_allocate(sizeof(*it));
   if (!it) {
     return NULL;
   }
-  it->parents = yu_allocate(sizeof(*it->parents) * avl->root->height);
+  it->parents = yu_allocate(sizeof(*it->parents) * (avl->root->height + 2));
   if (!it->parents) {
     free(it);
     return NULL;
   }
   it->par_sp = it->parents;
-  avl_it_left_most(it, avl->root);
+
+  STACK_PUSH(NULL);
+  struct avl_node *node = avl->root;
+  while (node) {
+    STACK_PUSH(node);
+    node = node->left;
+  }
   return it;
 }
 
@@ -268,19 +273,55 @@ void avl_it_destroy(avl_iterator *it) {
 
 void avl_next(avl_iterator *it) {
   assert(it != NULL);
-  struct avl_node *node = *(--it->par_sp);
-  avl_it_left_most(it, node->right);
+  struct avl_node *node = STACK_TOP();
+  struct avl_node *parent;
+  if (node->right) {
+    node = node->right;
+    STACK_PUSH(node);
+    while (node->left) {
+      node = node->left;
+      STACK_PUSH(node);
+    }
+    return;
+  }
+
+  STACK_POP();
+  while ((parent = STACK_TOP()) && node == parent->right) {
+    node = parent;
+    STACK_POP();
+  }
+}
+
+void avl_prev(avl_iterator *it) {
+  assert(it != NULL);
+  struct avl_node *node = STACK_TOP();
+  struct avl_node *parent;
+  if (node->left) {
+    node = node->left;
+    STACK_PUSH(node);
+    while (node->right) {
+      node = node->right;
+      STACK_PUSH(node);
+    }
+    return;
+  }
+
+  STACK_POP();
+  while ((parent = STACK_TOP()) && node == parent->left) {
+    node = parent;
+    STACK_POP();
+  }
 }
 
 bool avl_has_next(avl_iterator *it) {
   assert(it != NULL);
-  return it->par_sp != it->parents;
+  return STACK_TOP();
 }
 
 struct key_value avl_get(avl_iterator *it) {
   assert(it != NULL);
   return (struct key_value){
-      .key = it->par_sp[-1]->key,
-      .val = it->par_sp[-1]->val,
+      .key = STACK_TOP()->key,
+      .val = STACK_TOP()->val,
   };
 }
