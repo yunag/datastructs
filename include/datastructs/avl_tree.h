@@ -13,7 +13,7 @@ typedef struct avl_iterator avl_iterator;
 
 avl_tree *avl_create(cmp_fn cmp_key, free_fn free_key, free_fn free_val);
 void avl_destroy(avl_tree *avl);
-void avl_insert(avl_tree *avl, void *key, void *val);
+bool avl_insert(avl_tree *avl, void *key, void *val);
 bool avl_find(avl_tree *avl, const void *key);
 void avl_remove(avl_tree *avl, const void *key);
 size_t avl_size(avl_tree *avl);

@@ -11,6 +11,8 @@ static const int threshold = 1;
 struct avl_node {
   struct avl_node *left;
   struct avl_node *right;
+  struct avl_node *parent;
+
   void *key;
   void *val;
   size_t height;
@@ -29,13 +31,16 @@ struct avl_iterator {
   struct avl_node **par_sp;
 };
 
-static struct avl_node *avl_node_create(void *key, void *val) {
+static struct avl_node *avl_node_create(void *key, void *val,
+                                        struct avl_node *parent) {
   struct avl_node *node = yu_allocate(sizeof(*node));
   if (!node) {
     return NULL;
   }
   node->left = NULL;
   node->right = NULL;
+  node->parent = parent;
+
   node->key = key;
   node->val = val;
   node->height = 1;
@@ -65,6 +70,11 @@ static struct avl_node *left_rotate(struct avl_node *node) {
   node->right = rnode->left;
   rnode->left = node;
 
+  rnode->parent = node->parent;
+  node->parent = rnode;
+  if (node->right)
+    node->right->parent = node;
+
   node->height = height(node);
   rnode->height = height(rnode);
   return rnode;
@@ -75,82 +85,57 @@ static struct avl_node *right_rotate(struct avl_node *node) {
   node->left = lnode->right;
   lnode->right = node;
 
+  lnode->parent = node->parent;
+  node->parent = lnode;
+  if (node->left)
+    node->left->parent = node;
+
   node->height = height(node);
   lnode->height = height(lnode);
   return lnode;
 }
 
-static struct avl_node *left_most(struct avl_node *node) {
-  while (node->left) {
-    node = node->left;
+static struct avl_node **left_most(struct avl_node **node) {
+  while ((*node)->left) {
+    node = &(*node)->left;
   }
   return node;
 }
 
-static struct avl_node *balance(struct avl_node *node) {
+static struct avl_node *balance(struct avl_node **root, struct avl_node *node) {
   int balance = deviation(node);
   if (balance > threshold) {
-    /* The left node has a right subtree that is heavier than the left subtree
-     */
+    /* left-right heavy? */
     if (deviation(node->left) < 0) {
       node->left = left_rotate(node->left);
     }
-    return right_rotate(node);
+    struct avl_node *parent = node->parent;
+    if (!parent) {
+      return *root = right_rotate(node);
+    }
+    if (parent->left == node) {
+      return parent->left = right_rotate(node);
+    } else {
+      return parent->right = right_rotate(node);
+    }
 
   } else if (balance < -threshold) {
-    /* The right node has a left subtree that is heavier than the right subtree
-     */
+    /* right-left heavy? */
     if (deviation(node->right) > 0) {
       node->right = right_rotate(node->right);
     }
-    return left_rotate(node);
+    struct avl_node *parent = node->parent;
+    if (!parent) {
+      return *root = left_rotate(node);
+    }
+    if (parent->left == node) {
+      return parent->left = left_rotate(node);
+    } else {
+      return parent->right = left_rotate(node);
+    }
   }
   node->height = height(node);
   return node;
-}
-
-static struct avl_node *insert_node(avl_tree *avl, struct avl_node *node,
-                                    void *key, void *val) {
-  if (!node) {
-    avl->size++;
-    return avl_node_create(key, val);
-  }
-  int c = avl->cmp(key, node->key);
-  if (c < 0) {
-    node->left = insert_node(avl, node->left, key, val);
-  } else if (c > 0) {
-    node->right = insert_node(avl, node->right, key, val);
-  } else {
-    return node; /* Already exist */
-  }
-  /* Balance case */
-  return balance(node);
-}
-
-static struct avl_node *remove_node(avl_tree *avl, struct avl_node *node,
-                                    const void *key) {
-  if (!node) {
-    return NULL;
-  }
-  int c = avl->cmp(key, node->key);
-  if (c < 0) {
-    node->left = remove_node(avl, node->left, key);
-  } else if (c > 0) {
-    node->right = remove_node(avl, node->right, key);
-  } else { /* Key found */
-    struct avl_node *ret;
-    if (!node->left || !node->right) {
-      ret = node->left ? node->left : node->right;
-      avl->size--;
-      avl_node_destroy(avl, node);
-      return ret;
-    }
-    ret = left_most(node->right);
-    node->key = ret->key;
-    node->right = remove_node(avl, node->right, ret->key);
-  }
-  /* Balance case */
-  return balance(node);
 }
 
 static inline bool balanced(struct avl_node *node) {
@@ -202,12 +187,78 @@ void avl_destroy(avl_tree *avl) {
 
 void avl_remove(avl_tree *avl, const void *key) {
   assert(avl != NULL);
-  avl->root = remove_node(avl, avl->root, key);
+
+  struct avl_node **target = &avl->root;
+  struct avl_node *parent = NULL;
+  struct avl_node *destroy = NULL;
+
+  while (*target) {
+    parent = *target;
+    int c = avl->cmp(key, parent->key);
+    if (c < 0) {
+      target = &parent->left;
+    } else if (c > 0) {
+      target = &parent->right;
+    } else { /* Key found */
+      avl->size--;
+
+      if (!parent->left || !parent->right) {
+        *target = parent->left ? parent->left : parent->right;
+
+        destroy = parent;
+        parent = parent->parent;
+        if (*target)
+          (*target)->parent = parent;
+
+        avl_node_destroy(avl, destroy);
+        break;
+      }
+      target = left_most(&parent->right);
+      parent->key = (*target)->key;
+      parent->val = (*target)->val;
+
+      destroy = *target;
+      parent = (*target)->parent;
+      *target = (*target)->right;
+      if (*target)
+        (*target)->parent = parent;
+
+      avl_node_destroy(avl, destroy);
+      break;
+    }
+  }
+  if (!destroy) {
+    return;
+  }
+  while (parent) {
+    parent = balance(&avl->root, parent)->parent;
+  }
 }
 
-void avl_insert(avl_tree *avl, void *key, void *val) {
+bool avl_insert(avl_tree *avl, void *key, void *val) {
   assert(avl != NULL);
-  avl->root = insert_node(avl, avl->root, key, val);
+
+  struct avl_node **link = &avl->root;
+  struct avl_node *parent = NULL;
+
+  while (*link) {
+    parent = *link;
+    int c = avl->cmp(key, parent->key);
+    if (c < 0) {
+      link = &parent->left;
+    } else if (c > 0) {
+      link = &parent->right;
+    } else {
+      return false;
+    }
+  }
+  avl->size++;
+  *link = avl_node_create(key, val, parent);
+
+  while (parent) {
+    parent = balance(&avl->root, parent)->parent;
+  }
+  return true;
 }
 
 bool avl_find(avl_tree *avl, const void *key) {

@@ -23,6 +23,51 @@ protected:
   avl_tree *avl_;
 };
 
+TEST_F(BSTTest, Case1) {
+  setBST();
+  std::vector<int> nums = {
+      9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+  };
+  std::vector<int> sorted_nums = nums;
+  std::sort(sorted_nums.begin(), sorted_nums.end());
+  for (int num : nums) {
+    int *ins = reinterpret_cast<int *>(yu_dup_i32(num));
+    avl_insert(avl_, ins, ins);
+  }
+  avl_iterator *it = avl_first(avl_);
+  int cycles = 0;
+  AVL_FOR_EACH(it, int *, int *, key, val) {
+    EXPECT_EQ(*key, sorted_nums[cycles]) << "Cycles is " << cycles << '\n';
+    cycles++;
+  }
+  ASSERT_EQ(cycles, nums.size());
+  avl_it_destroy(it);
+
+  it = avl_first(avl_);
+  cycles = 0;
+  AVL_FOR_EACH(it, int *, int *, key, val) {
+    EXPECT_EQ(*key, sorted_nums[cycles]);
+    cycles++;
+    if (cycles == 5) {
+      break;
+    }
+  }
+  avl_it_destroy(it);
+  ASSERT_EQ(cycles, 5);
+}
+
+TEST_F(BSTTest, Case2) {
+  setBST();
+  std::vector<int> nums = {4, 2, 5, 1, 3, 0};
+  for (int num : nums) {
+    int *ins = reinterpret_cast<int *>(yu_dup_i32(num));
+    avl_insert(avl_, ins, ins);
+  }
+  for (int num : nums) {
+    ASSERT_TRUE(avl_find(avl_, &num));
+  }
+}
+
 TEST_F(BSTTest, Insert) {
   setBST();
   const size_t num_cases = 10000;
@@ -32,6 +77,7 @@ TEST_F(BSTTest, Insert) {
     numbers[i] = Helper::rand(INT_MIN, INT_MAX);
     avl_insert(avl_, &numbers[i], &numbers[i]);
     ASSERT_TRUE(avl_valid_avl(avl_)) << "Is not a valid AVL Tree";
+    ASSERT_TRUE(avl_find(avl_, &numbers[i]));
   }
 }
 
@@ -111,39 +157,6 @@ TEST_F(BSTTest, STLSet) {
     }
     }
   }
-}
-
-TEST_F(BSTTest, Case1) {
-  setBST();
-  std::vector<int> nums = {
-      9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
-  };
-  std::vector<int> sorted_nums = nums;
-  std::sort(sorted_nums.begin(), sorted_nums.end());
-  for (int num : nums) {
-    int *ins = reinterpret_cast<int *>(yu_dup_i32(num));
-    avl_insert(avl_, ins, ins);
-  }
-  avl_iterator *it = avl_first(avl_);
-  int cycles = 0;
-  AVL_FOR_EACH(it, int *, int *, key, val) {
-    EXPECT_EQ(*key, sorted_nums[cycles]);
-    cycles++;
-  }
-  ASSERT_EQ(cycles, nums.size());
-  avl_it_destroy(it);
-
-  it = avl_first(avl_);
-  cycles = 0;
-  AVL_FOR_EACH(it, int *, int *, key, val) {
-    EXPECT_EQ(*key, sorted_nums[cycles]);
-    cycles++;
-    if (cycles == 5) {
-      break;
-    }
-  }
-  avl_it_destroy(it);
-  ASSERT_EQ(cycles, 5);
 }
 
 int main(int argc, char *argv[]) {
