@@ -9,32 +9,44 @@ extern "C" {
 #endif
 
 typedef struct avl_tree avl_tree;
-typedef struct avl_iterator avl_iterator;
+typedef struct avl_node avl_node;
+
+struct avl_node {
+  struct avl_node *left;
+  struct avl_node *right;
+  struct avl_node *parent;
+
+  void *key;
+  void *val;
+  size_t height;
+};
 
 avl_tree *avl_create(cmp_fn cmp_key, free_fn free_key, free_fn free_val);
 void avl_destroy(avl_tree *avl);
 bool avl_insert(avl_tree *avl, void *key, void *val);
-bool avl_find(avl_tree *avl, const void *key);
+avl_node *avl_find(avl_tree *avl, const void *key);
 void avl_remove(avl_tree *avl, const void *key);
 size_t avl_size(avl_tree *avl);
 bool avl_valid_avl(avl_tree *avl);
 
-avl_iterator *avl_first(avl_tree *avl);
-void avl_next(avl_iterator *iterator);
-bool avl_has_next(avl_iterator *iterator);
-struct key_value avl_get(avl_iterator *iterator);
-void avl_it_destroy(avl_iterator *iterator);
+avl_node *avl_first(avl_tree *avl);
+avl_node *avl_last(avl_tree *avl);
+avl_node *avl_next(avl_node *node);
+avl_node *avl_prev(avl_node *node);
 
-#define AVL_FOR_EACH(it, KeyT, ValT, keyname, valname)                         \
-  for (bool _should_loop = true, _should_break = false;                        \
-       avl_has_next(it) && !_should_break;                                     \
-       _should_break ? (void)0 : avl_next(it), _should_loop = true)            \
-    for (KeyT keyname = (KeyT)avl_get(it).key; _should_loop;                   \
-         _should_break = _should_loop, _should_loop = false)                   \
-      for (ValT valname = (ValT)avl_get(it).val; _should_loop;                 \
-           _should_loop = false)
+#define AVL_FOR_EACH(avl, KeyT, ValT, keyname, valname)                        \
+  for (bool _should_loop = true, _should_break = false; _should_loop;          \
+       _should_loop = false)                                                   \
+    for (avl_node *_node = avl_first(avl); _node && !_should_break;            \
+         _node = _should_break ? _node : avl_next(_node), _should_loop = true) \
+      for (KeyT keyname = (KeyT)_node->key; _should_loop;                      \
+           _should_break = _should_loop, _should_loop = false)                 \
+        for (ValT valname = (ValT)_node->val; _should_loop;                    \
+             _should_loop = false)
 
-#define AVL_FOR_EACH_IT(it) for (; avl_has_next(it); avl_next(it))
+#define AVL_FOR_EACH_IT(avl, node_name)                                        \
+  for (avl_node *node_name = avl_first(avl); node_name;                        \
+       node_name = avl_next(node_name))
 
 #ifdef __cplusplus
 }

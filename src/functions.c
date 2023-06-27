@@ -28,7 +28,7 @@
     return 0;                                                                  \
   }
 #define FNDUPDEF(T, postfix)                                                   \
-  void *yu_dup_##postfix(T value) {                                            \
+  T *yu_dup_##postfix(T value) {                                               \
     T *val = malloc(sizeof(T));                                                \
     if (val) {                                                                 \
       *val = value;                                                            \
@@ -65,7 +65,7 @@ uint64_t yu_hash_str(const void *str) {
 
 int yu_cmp_str(const void *a, const void *b) { return strcmp(a, b); }
 
-void *yu_dup_str(const char *value) {
+char *yu_dup_str(const char *value) {
   size_t slen = strlen(value);
   char *str = malloc(slen + 1);
   if (str) {

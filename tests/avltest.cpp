@@ -34,25 +34,21 @@ TEST_F(BSTTest, Case1) {
     int *ins = reinterpret_cast<int *>(yu_dup_i32(num));
     avl_insert(avl_, ins, ins);
   }
-  avl_iterator *it = avl_first(avl_);
   int cycles = 0;
-  AVL_FOR_EACH(it, int *, int *, key, val) {
+  AVL_FOR_EACH(avl_, int *, int *, key, val) {
     EXPECT_EQ(*key, sorted_nums[cycles]) << "Cycles is " << cycles << '\n';
     cycles++;
   }
   ASSERT_EQ(cycles, nums.size());
-  avl_it_destroy(it);
 
-  it = avl_first(avl_);
   cycles = 0;
-  AVL_FOR_EACH(it, int *, int *, key, val) {
+  AVL_FOR_EACH(avl_, int *, int *, key, val) {
     EXPECT_EQ(*key, sorted_nums[cycles]);
     cycles++;
     if (cycles == 5) {
       break;
     }
   }
-  avl_it_destroy(it);
   ASSERT_EQ(cycles, 5);
 }
 
@@ -152,7 +148,7 @@ TEST_F(BSTTest, STLSet) {
     case Action::Find: {
       int idx = Helper::rand(0, keys.size() - 1);
       int key = keys[idx];
-      ASSERT_EQ(stl.find(key) != stl.end(), avl_find(avl_, &key));
+      ASSERT_EQ(stl.find(key) != stl.end(), avl_find(avl_, &key) != NULL);
       break;
     }
     }
