@@ -13,7 +13,7 @@
 #define RIGHT_CHILD(node, heap, size) (heap + (((node)-heap + size) << 1))
 
 #define LCHILD(parent) LEFT_CHILD(parent, heap, size)
-#define RCHILD(parent) RIGHT_CHILD(parent, heap, size)
+#define RCHILD(left_child) (left_child + size)
 #define HAS_PARENT(child) ((child) > 0)
 
 struct priority_queue {
@@ -97,7 +97,7 @@ static void heapify_down(char *heap, char *last, char *node, size_t size,
   char *cur = node;
   char *lch, *rch;
   while ((lch = LCHILD(cur)) < last) {
-    if ((rch = lch + size) < last && cmp(rch, lch) < 0) {
+    if ((rch = RCHILD(lch)) < last && cmp(rch, lch) < 0) {
       lch = rch;
     }
 
@@ -150,6 +150,7 @@ void pq_push(priority_queue *pq, const void *elem) {
 
 void pq_pop(priority_queue *pq) {
   assert(pq != NULL);
+
   if (pq_empty(pq)) {
     return;
   }
@@ -166,6 +167,7 @@ bool pq_empty(priority_queue *pq) {
 
 const void *pq_top(priority_queue *pq) {
   assert(pq != NULL);
+
   if (pq_empty(pq)) {
     return NULL;
   }

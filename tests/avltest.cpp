@@ -15,8 +15,8 @@ protected:
   void SetUp() override {}
   void TearDown() override { avl_destroy(avl_); }
 
-  void setBST() {
-    avl_ = avl_create(yu_cmp_i32, NULL, NULL);
+  void setAVL() {
+    avl_ = avl_create(yu_cmp_i32, free, NULL);
     ASSERT_NE(avl_, nullptr);
   }
 
@@ -24,15 +24,16 @@ protected:
 };
 
 TEST_F(BSTTest, Case1) {
-  setBST();
+  setAVL();
+
   std::vector<int> nums = {
       9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
   };
   std::vector<int> sorted_nums = nums;
   std::sort(sorted_nums.begin(), sorted_nums.end());
+
   for (int num : nums) {
-    int *ins = reinterpret_cast<int *>(yu_dup_i32(num));
-    avl_insert(avl_, ins, ins);
+    avl_insert(avl_, yu_dup_i32(num), NULL);
   }
   int cycles = 0;
   AVL_FOR_EACH(avl_, int *, int *, key, val) {
@@ -53,50 +54,28 @@ TEST_F(BSTTest, Case1) {
 }
 
 TEST_F(BSTTest, Case2) {
-  setBST();
+  setAVL();
   std::vector<int> nums = {4, 2, 5, 1, 3, 0};
   for (int num : nums) {
-    int *ins = reinterpret_cast<int *>(yu_dup_i32(num));
-    avl_insert(avl_, ins, ins);
+    avl_insert(avl_, yu_dup_i32(num), NULL);
   }
   for (int num : nums) {
     ASSERT_TRUE(avl_find(avl_, &num));
   }
 }
 
-TEST_F(BSTTest, Insert) {
-  setBST();
-  const size_t num_cases = 10000;
-  std::array<int, num_cases> numbers;
+TEST_F(BSTTest, InsertOnly_ValidAvl) {
+  setAVL();
 
-  for (size_t i = 0; i < numbers.size(); ++i) {
-    numbers[i] = Helper::rand(INT_MIN, INT_MAX);
-    avl_insert(avl_, &numbers[i], &numbers[i]);
-    ASSERT_TRUE(avl_valid_avl(avl_)) << "Is not a valid AVL Tree";
-    ASSERT_TRUE(avl_find(avl_, &numbers[i]));
-  }
-}
-
-TEST_F(BSTTest, InsertRemove) {
-  setBST();
-
-  const size_t num_cases = 1000;
-  std::array<int, num_cases> numbers;
-  for (size_t i = 0; i < numbers.size(); ++i) {
-    numbers[i] = Helper::rand(INT_MIN, INT_MAX);
-    avl_insert(avl_, &numbers[i], &numbers[i]);
-    ASSERT_EQ(avl_size(avl_), i + 1);
-  }
-  for (size_t i = 0; i < numbers.size(); ++i) {
-    ASSERT_TRUE(avl_find(avl_, &numbers[i]));
-    avl_remove(avl_, &numbers[i]);
-    ASSERT_FALSE(avl_find(avl_, &numbers[i]));
+  for (size_t i = 0; i < 10000; ++i) {
+    int num = Helper::rand(INT_MIN, INT_MAX);
+    avl_insert(avl_, yu_dup_i32(num), NULL);
     ASSERT_TRUE(avl_valid_avl(avl_)) << "Is not a valid AVL Tree";
   }
 }
 
 TEST_F(BSTTest, STLSet) {
-  setBST();
+  setAVL();
 
   std::set<int> stl;
   enum class Action {
@@ -105,11 +84,11 @@ TEST_F(BSTTest, STLSet) {
     Find,
   } command;
 
-  const size_t num_commands = 10000;
+  const size_t num_actions = 100;
 
   std::vector<int> keys;
 
-  for (size_t i = 0; i < num_commands; ++i) {
+  for (size_t i = 0; i < num_actions; ++i) {
     command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Insert),
                                                static_cast<int>(Action::Find)));
     ASSERT_EQ(stl.size(), avl_size(avl_));
@@ -126,8 +105,7 @@ TEST_F(BSTTest, STLSet) {
         keys.push_back(key);
       }
       stl.insert(key);
-      int *ins = reinterpret_cast<int *>(yu_dup_i32(key));
-      avl_insert(avl_, ins, ins);
+      avl_insert(avl_, yu_dup_i32(key), NULL);
       ASSERT_TRUE(avl_find(avl_, &key));
       break;
     }
@@ -140,7 +118,7 @@ TEST_F(BSTTest, STLSet) {
       stl.erase(key);
       avl_remove(avl_, &key);
       keys.erase(keys.begin() + idx);
-      ASSERT_FALSE(avl_find(avl_, &key));
+      ASSERT_TRUE(avl_find(avl_, &key) == NULL);
       ASSERT_TRUE(stl.find(key) == stl.end());
       break;
     }

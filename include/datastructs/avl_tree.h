@@ -21,6 +21,17 @@ struct avl_node {
   size_t height;
 };
 
+struct kv_node {
+  struct avl_node *left;
+  struct avl_node *right;
+  struct avl_node *parent;
+
+  size_t height;
+
+  int key;
+  int val;
+};
+
 avl_tree *avl_create(cmp_fn cmp_key, free_fn free_key, free_fn free_val);
 void avl_destroy(avl_tree *avl);
 bool avl_insert(avl_tree *avl, void *key, void *val);

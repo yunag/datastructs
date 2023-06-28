@@ -8,12 +8,14 @@
 #include <string.h>
 
 struct stack {
-  void *buffer;    /* Buffer for storing elements */
-  char *top;       /* Top of the stack */
-  free_fn free;    /* Function to free a value */
+  void *buffer; /* Buffer for storing elements */
+  char *top;    /* Top of the stack */
+
   size_t size;     /* Size of the Stack */
   size_t capacity; /* Capacity of the Stack */
   size_t esize;    /* Size of a single element in the Stack */
+
+  free_fn free; /* Function to free a value */
 };
 
 static bool stack_resize(stack *s, size_t newsize) {
@@ -55,6 +57,7 @@ void stack_destroy(stack *s) {
   if (!s) {
     return;
   }
+
   if (s->free != free_placeholder) {
     while (!stack_empty(s)) {
       s->free(s->top -= s->esize);
@@ -78,6 +81,7 @@ void stack_push(stack *s, const void *elem) {
 
 void stack_pop(stack *s) {
   assert(s != NULL);
+
   if (stack_empty(s)) {
     return;
   }
@@ -87,6 +91,7 @@ void stack_pop(stack *s) {
 
 void *stack_top(stack *s) {
   assert(s != NULL);
+
   if (stack_empty(s)) {
     return NULL;
   }

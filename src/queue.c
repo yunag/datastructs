@@ -46,6 +46,7 @@ void queue_destroy(queue *q) {
   if (!q) {
     return;
   }
+
   if (q->free != free_placeholder && !queue_empty(q)) {
     q->free(q->front);
     while ((q->front += q->esize) != q->rear) {
