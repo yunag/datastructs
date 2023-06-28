@@ -9,7 +9,6 @@
 #include <string.h>
 
 #define GET_BUCKET(htable, key) ((htable)->hash((key)) % (htable)->capacity)
-#define DUMMY_PTR ((void *)0xffffffffffffffffUL)
 
 struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
@@ -92,7 +91,7 @@ hash_table *htable_create(size_t capacity, hash_fn hash, cmp_fn cmp_key,
   htable->free_key = free_key ? free_key : free_placeholder;
   htable->free_val = free_value ? free_value : free_placeholder;
   htable->head.ll_next = htable->head.ll_prev = &htable->head;
-  htable->head.next = DUMMY_PTR;
+  htable->head.key = NULL;
   htable->size = 0;
   htable->capacity = capacity;
   return htable;
@@ -203,20 +202,20 @@ hash_entry *ht_last(hash_table *htable) {
   return htable->head.ll_prev;
 }
 
-hash_entry *ht_next(hash_entry *iterator) {
-  assert(iterator != NULL);
-  iterator = iterator->ll_next;
-  if (iterator->next == DUMMY_PTR) {
-    iterator = NULL;
+hash_entry *ht_next(hash_entry *entry) {
+  assert(entry != NULL);
+  entry = entry->ll_next;
+  if (entry->key == NULL) {
+    entry = NULL;
   }
-  return iterator;
+  return entry;
 }
 
-hash_entry *ht_prev(hash_entry *iterator) {
-  assert(iterator != NULL);
-  iterator = iterator->ll_prev;
-  if (iterator->next == DUMMY_PTR) {
-    iterator = NULL;
+hash_entry *ht_prev(hash_entry *entry) {
+  assert(entry != NULL);
+  entry = entry->ll_prev;
+  if (entry->key == NULL) {
+    entry = NULL;
   }
-  return iterator;
+  return entry;
 }
