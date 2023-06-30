@@ -59,6 +59,12 @@ extern "C" {
 
 #define YU_UNUSED(param) ((void)(param))
 
+#define YU_CONTAINER_OF(ptr, type, member)                                     \
+  ({                                                                           \
+    const __typeof__(((type *)0)->member) *__mptr = (ptr);                     \
+    (type *)((char *)__mptr - offsetof(type, member));                         \
+  })
+
 #ifdef __cplusplus
 }
 #endif

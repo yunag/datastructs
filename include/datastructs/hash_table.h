@@ -9,48 +9,38 @@ extern "C" {
 #endif
 
 typedef struct hash_table hash_table;
+typedef struct hash_entry hash_entry;
 
-typedef struct hash_entry {
-  void *key;
-  void *val;
+typedef int (*cmp_ht_entries_fn)(const struct hash_entry *,
+                                 const struct hash_entry *);
+typedef uint64_t (*hash_ht_entries_fn)(const struct hash_entry *);
 
+#define ht_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
+
+struct hash_entry {
   /* Linked list of all entries */
-  struct hash_entry *ll_next;
-  struct hash_entry *ll_prev;
+  struct hash_entry *ht_next;
+  struct hash_entry *ht_prev;
 
   struct hash_entry *next; /* Pointer to next entry in current bucket */
-} hash_entry;
+};
 
-typedef uint64_t (*hash_fn)(const void *);
-
-hash_table *htable_create(size_t initial_capacity, hash_fn hash, cmp_fn cmp_key,
-                          free_fn free_key, free_fn free_value);
+hash_table *htable_create(size_t initial_capacity, hash_ht_entries_fn hash,
+                          cmp_ht_entries_fn cmp_key);
 void htable_destroy(hash_table *htable);
-bool htable_insert(hash_table *htable, void *key, void *val);
-void *htable_lookup(hash_table *htable, const void *key);
-bool htable_contains(hash_table *htable, const void *key);
-bool htable_remove(hash_table *htable, const void *key);
+bool htable_insert(hash_table *htable, struct hash_entry *ht_entry);
+struct hash_entry *htable_lookup(hash_table *htable,
+                                 const struct hash_entry *query);
+bool htable_remove(hash_table *htable, const struct hash_entry *query);
 size_t htable_size(hash_table *htable);
 
-hash_entry *ht_last(hash_table *htable);
-hash_entry *ht_first(hash_table *htable);
-hash_entry *ht_next(hash_entry *iterator);
-hash_entry *ht_prev(hash_entry *iterator);
+struct hash_entry *ht_last(hash_table *htable);
+struct hash_entry *ht_first(hash_table *htable);
+struct hash_entry *ht_next(struct hash_entry *iterator);
+struct hash_entry *ht_prev(struct hash_entry *iterator);
 
-#define HT_FOR_EACH(htable, KeyT, ValT, keyname, valname)                      \
-  for (bool _should_loop = true, _should_break = false; _should_loop;          \
-       _should_loop = false)                                                   \
-    for (hash_entry *_it = ht_first(htable); _it && !_should_break;            \
-         _it = _should_break ? _it : ht_next(_it), _should_loop = true)        \
-      for (KeyT keyname = (KeyT)_it->key; _should_loop;                        \
-           _should_break = _should_loop, _should_loop = false)                 \
-        for (ValT valname = (ValT)_it->val; _should_loop; _should_loop = false)
-
-#define HT_FOR_EACH_IT(htable, iterator_name)                                  \
-  for (hash_entry *iterator_name = ht_first(htable); iterator_name;            \
-       iterator_name = ht_next(iterator_name))
-
-#define HT_FIND(htable, key, ValT) ((ValT)htable_lookup(htable, (key)))
+#define HT_FOR_EACH(htable, entry)                                             \
+  for (hash_entry *entry = ht_first(htable); entry; entry = ht_next(entry))
 
 #ifdef __cplusplus
 }

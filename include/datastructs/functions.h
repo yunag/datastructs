@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+uint64_t hash_bern(const void *key, size_t size);
+
 static inline void free_placeholder(void *ptr) { YU_UNUSED(ptr); }
 
 #define FUNCTION_DECL(Type, postfix)                                           \

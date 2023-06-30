@@ -73,3 +73,12 @@ char *yu_dup_str(const char *value) {
   }
   return str;
 }
+
+uint64_t hash_bern(const void *key, size_t size) {
+  const unsigned char *bytes = key;
+  uint64_t hash = 5381;
+  for (size_t i = 0; i < size; ++i) {
+    hash = (hash << 5) + hash + bytes[i];
+  }
+  return hash;
+}

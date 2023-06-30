@@ -15,6 +15,8 @@ set(COMPILE_OPTS
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   list(APPEND COMPILE_OPTS -Wno-gnu-statement-expression)
+  # Disable secure warnings
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(COMPILE_OPTS /Wall)
 endif()
