@@ -51,7 +51,7 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
   }
   pq->heap = yu_allocate(capacity * esize);
   if (!pq->heap) {
-    free(pq);
+    yu_free(pq);
     return NULL;
   }
   pq->capacity = capacity;
@@ -87,8 +87,8 @@ priority_queue *pq_create_from_arr(const void *base, size_t count,
 
 void pq_destroy(priority_queue *pq) {
   if (pq) {
-    free(pq->heap);
-    free(pq);
+    yu_free(pq->heap);
+    yu_free(pq);
   }
 }
 

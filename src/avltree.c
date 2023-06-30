@@ -10,6 +10,7 @@ static const int threshold = 1;
 struct avl_tree {
   struct avl_node *root;
   cmp_avl_nodes_fn cmp;
+  destroy_avl_node_fn destroy;
   size_t size;
 };
 
@@ -124,28 +125,32 @@ static void avl_free_rec(avl_tree *avl, struct avl_node *node) {
   }
   avl_free_rec(avl, node->left);
   avl_free_rec(avl, node->right);
-  /* TODO: Call a function that destroys a node */
+  avl->destroy(node);
 }
 
-avl_tree *avl_create(cmp_avl_nodes_fn cmp_key) {
-  assert(cmp_key != NULL);
+avl_tree *avl_create(cmp_avl_nodes_fn cmp, destroy_avl_node_fn destroy) {
+  assert(cmp != NULL);
 
   avl_tree *avl = yu_allocate(sizeof(*avl));
   if (!avl) {
     return NULL;
   }
 
-  avl->cmp = cmp_key;
+  avl->cmp = cmp;
+  avl->destroy = destroy;
   avl->root = NULL;
   avl->size = 0;
   return avl;
 }
 
 void avl_destroy(avl_tree *avl) {
-  if (avl) {
-    avl_free_rec(avl, avl->root);
-    free(avl);
+  if (!avl) {
+    return;
   }
+  if (avl->destroy) {
+    avl_free_rec(avl, avl->root);
+  }
+  yu_free(avl);
 }
 
 void avl_replace_node(struct avl_node *victim, struct avl_node *new,
@@ -165,7 +170,7 @@ void avl_replace_node(struct avl_node *victim, struct avl_node *new,
 struct avl_node *remove_node(avl_tree *avl, struct avl_node **link,
                              struct avl_node *node) {
   struct avl_node *new;
-
+  struct avl_node *victim = node;
   avl->size--;
 
   /* Does the node have two children? */
@@ -178,7 +183,6 @@ struct avl_node *remove_node(avl_tree *avl, struct avl_node **link,
     new = *link;
     *link = (*link)->right;
 
-    struct avl_node *victim = node;
     node = new->parent == victim ? new : new->parent;
     avl_replace_node(victim, new, &avl->root);
   } else {
@@ -188,11 +192,13 @@ struct avl_node *remove_node(avl_tree *avl, struct avl_node **link,
   if (*link) {
     (*link)->parent = node;
   }
-
+  if (avl->destroy) {
+    avl->destroy(victim);
+  }
   return node;
 }
 
-void avl_remove(avl_tree *avl, const avl_node *query) {
+void avl_remove(avl_tree *avl, const struct avl_node *query) {
   assert(avl != NULL);
 
   struct avl_node **link = &avl->root;
@@ -236,7 +242,7 @@ bool avl_insert(avl_tree *avl, struct avl_node *node) {
   return true;
 }
 
-struct avl_node *avl_find(avl_tree *avl, const avl_node *query) {
+struct avl_node *avl_find(avl_tree *avl, const struct avl_node *query) {
   assert(avl != NULL);
 
   struct avl_node *node = avl->root;
@@ -256,6 +262,11 @@ struct avl_node *avl_find(avl_tree *avl, const avl_node *query) {
 size_t avl_size(avl_tree *avl) {
   assert(avl != NULL);
   return avl->size;
+}
+
+struct avl_node *avl_root(avl_tree *avl) {
+  assert(avl != NULL);
+  return avl->root;
 }
 
 struct avl_node *avl_first(avl_tree *avl) {

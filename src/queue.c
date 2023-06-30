@@ -3,7 +3,6 @@
 #include "datastructs/memory.h"
 
 #include <assert.h>
-#include <stdlib.h>
 #include <string.h>
 
 struct queue {
@@ -29,7 +28,7 @@ queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
   }
   q->buffer = yu_allocate(elemsize * capacity);
   if (!q->buffer) {
-    free(q);
+    yu_free(q);
     return NULL;
   }
   q->free = vfree ? vfree : free_placeholder;
@@ -56,8 +55,8 @@ void queue_destroy(queue *q) {
       q->free(q->front);
     }
   }
-  free(q->buffer);
-  free(q);
+  yu_free(q->buffer);
+  yu_free(q);
 }
 
 static bool queue_resize(queue *q, size_t newsize) {
@@ -77,7 +76,7 @@ static bool queue_resize(queue *q, size_t newsize) {
     memcpy(buffer + (q->end - q->front), q->buffer,
            q->rear - (char *)q->buffer);
   }
-  free(q->buffer);
+  yu_free(q->buffer);
 
   q->front = buffer;
   q->rear = buffer + q->esize * q->size;

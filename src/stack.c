@@ -4,7 +4,6 @@
 #include "datastructs/types.h"
 
 #include <assert.h>
-#include <stdlib.h>
 #include <string.h>
 
 struct stack {
@@ -42,7 +41,7 @@ stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
   }
   s->buffer = yu_allocate(elemsize * capacity);
   if (!s->buffer) {
-    free(s);
+    yu_free(s);
     return NULL;
   }
   s->top = s->buffer;
@@ -63,8 +62,8 @@ void stack_destroy(stack *s) {
       s->free(s->top -= s->esize);
     }
   }
-  free(s->buffer);
-  free(s);
+  yu_free(s->buffer);
+  yu_free(s);
 }
 
 void stack_push(stack *s, const void *elem) {

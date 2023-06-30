@@ -1,16 +1,14 @@
-#include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
-#include "datastructs/macros.h"
 #include "datastructs/memory.h"
 #include "datastructs/types.h"
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define GET_BUCKET(htable, key) ((htable)->hash((key)) % (htable)->capacity)
 
+/* Pointer to invalid memory address */
 static unsigned char __dummy_ptr;
 #define DUMMY_PTR ((void *)&__dummy_ptr)
 
@@ -18,8 +16,9 @@ struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
   struct hash_entry head;      /* Head of `global` linked list */
 
-  hash_ht_entries_fn hash; /* Hash entry */
-  cmp_ht_entries_fn cmp;   /* Compare two entries */
+  hash_ht_entries_fn hash;     /* Hash entry */
+  cmp_ht_entries_fn cmp;       /* Compare two entries */
+  destroy_ht_entry_fn destroy; /* Destory entry */
 
   size_t size;     /* Number of elements*/
   size_t capacity; /* Capacity of the table */
@@ -30,7 +29,7 @@ static bool rehash(hash_table *htable, size_t newsize) {
   if (!nbuckets) {
     return false;
   }
-  free(htable->buckets);
+  yu_free(htable->buckets);
   htable->buckets = nbuckets;
   htable->capacity = newsize;
 
@@ -48,10 +47,10 @@ static bool rehash(hash_table *htable, size_t newsize) {
 }
 
 hash_table *htable_create(size_t capacity, hash_ht_entries_fn hash,
-                          cmp_ht_entries_fn cmp_key) {
+                          cmp_ht_entries_fn cmp, destroy_ht_entry_fn destroy) {
   assert(capacity > 0);
   assert(hash != NULL);
-  assert(cmp_key != NULL);
+  assert(cmp != NULL);
 
   hash_table *htable = yu_allocate(sizeof(*htable));
   if (!htable) {
@@ -59,11 +58,12 @@ hash_table *htable_create(size_t capacity, hash_ht_entries_fn hash,
   }
   htable->buckets = yu_calloc(capacity, sizeof(*htable->buckets));
   if (!htable->buckets) {
-    free(htable);
+    yu_free(htable);
     return NULL;
   }
-  htable->cmp = cmp_key;
+  htable->cmp = cmp;
   htable->hash = hash;
+  htable->destroy = destroy;
   htable->head.ht_next = htable->head.ht_prev = &htable->head;
   htable->head.next = DUMMY_PTR;
 
@@ -76,14 +76,16 @@ void htable_destroy(hash_table *htable) {
   if (!htable) {
     return;
   }
-  struct hash_entry *walk = htable->head.ht_next;
-  while (walk != &htable->head) {
-    struct hash_entry *tmp = walk;
-    walk = walk->ht_next;
-    /* TODO: Destroy entry */
+  if (htable->destroy) {
+    struct hash_entry *walk = htable->head.ht_next;
+    while (walk != &htable->head) {
+      struct hash_entry *tmp = walk;
+      walk = walk->ht_next;
+      htable->destroy(tmp);
+    }
   }
-  free(htable->buckets);
-  free(htable);
+  yu_free(htable->buckets);
+  yu_free(htable);
 }
 
 static struct hash_entry **
@@ -93,6 +95,18 @@ lookup(hash_table *htable, const struct hash_entry *query, uint64_t bucket) {
     walk = &(*walk)->next;
   }
   return walk;
+}
+
+void replace_entry(hash_table *htable, struct hash_entry **victim,
+                   struct hash_entry *new) {
+  struct hash_entry *destroy_node = *victim;
+  *new = *destroy_node;
+  *victim = new;
+  if (htable->destroy) {
+    htable->destroy(destroy_node);
+  }
+  new->ht_prev->ht_next = new;
+  new->ht_next->ht_prev = new;
 }
 
 bool htable_insert(hash_table *htable, struct hash_entry *ht_entry) {
@@ -105,12 +119,7 @@ bool htable_insert(hash_table *htable, struct hash_entry *ht_entry) {
   uint64_t bct = GET_BUCKET(htable, ht_entry);
   struct hash_entry **entry = lookup(htable, ht_entry, bct);
   if (*entry) { /* The key already exists in the hash table */
-    /* TODO: Destroy previous entry */
-    *ht_entry = **entry;
-    *entry = ht_entry;
-
-    ht_entry->ht_prev->ht_next = ht_entry;
-    ht_entry->ht_next->ht_prev = ht_entry;
+    replace_entry(htable, entry, ht_entry);
     return true;
   }
   struct hash_entry *tail = htable->head.ht_prev;
@@ -147,8 +156,9 @@ bool htable_remove(hash_table *htable, const struct hash_entry *query) {
   entry->ht_next->ht_prev = entry->ht_prev;
   *fentry = (*fentry)->next;
 
-  /* TODO: Destroy entry */
-  free_placeholder(NULL);
+  if (htable->destroy) {
+    htable->destroy(entry);
+  }
   htable->size--;
   return true;
 }
@@ -158,17 +168,17 @@ size_t htable_size(hash_table *htable) {
   return htable->size;
 }
 
-hash_entry *ht_first(hash_table *htable) {
+struct hash_entry *ht_first(hash_table *htable) {
   assert(htable != NULL);
   return htable->head.ht_next;
 }
 
-hash_entry *ht_last(hash_table *htable) {
+struct hash_entry *ht_last(hash_table *htable) {
   assert(htable != NULL);
   return htable->head.ht_prev;
 }
 
-hash_entry *ht_next(hash_entry *entry) {
+struct hash_entry *ht_next(struct hash_entry *entry) {
   assert(entry != NULL);
   entry = entry->ht_next;
   if (entry->next == DUMMY_PTR) {
@@ -177,7 +187,7 @@ hash_entry *ht_next(hash_entry *entry) {
   return entry;
 }
 
-hash_entry *ht_prev(hash_entry *entry) {
+struct hash_entry *ht_prev(struct hash_entry *entry) {
   assert(entry != NULL);
   entry = entry->ht_prev;
   if (entry->next == DUMMY_PTR) {

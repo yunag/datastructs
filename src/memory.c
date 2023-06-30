@@ -43,3 +43,5 @@ void *yu_realloc(void *block, size_t size) {
     return yu_calloc(1, size);
   }
 }
+
+void yu_free(void *block) { free(block); }

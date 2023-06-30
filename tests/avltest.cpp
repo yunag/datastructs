@@ -27,19 +27,27 @@ static inline bool balanced(struct avl_node *node) {
   return YU_ABS(deviation(node)) <= 1;
 }
 
-static bool valid_avl(avl_tree *avl) {
-  AVL_FOR_EACH(avl, node) {
-    if (!balanced(node)) {
-      return false;
-    }
+static bool valid_avl_rec(avl_node *node) {
+  if (!node) {
+    return true;
   }
-  return true;
+  if (!balanced(node)) {
+    return false;
+  }
+  return valid_avl_rec(node->left) && valid_avl_rec(node->right);
 }
+
+static bool valid_avl(avl_tree *avl) { return valid_avl_rec(avl_root(avl)); }
 
 int cmp_kv_node(const avl_node *a, const avl_node *b) {
   struct kv_node *kva = avl_entry(a, struct kv_node, node);
   struct kv_node *kvb = avl_entry(b, struct kv_node, node);
   return yu_cmp_i32(&kva->key, &kvb->key);
+}
+
+void destroy_kv_node(avl_node *a) {
+  struct kv_node *kv = avl_entry(a, struct kv_node, node);
+  delete kv;
 }
 
 class BSTTest : public ::testing::Test {
@@ -48,7 +56,7 @@ protected:
   void TearDown() override { avl_destroy(avl_); }
 
   void setAVL() {
-    avl_ = avl_create(cmp_kv_node);
+    avl_ = avl_create(cmp_kv_node, destroy_kv_node);
     ASSERT_NE(avl_, nullptr);
   }
 
@@ -87,8 +95,7 @@ TEST_F(BSTTest, STLSet) {
         keys.push_back(key);
       }
       stl.insert(key);
-      struct kv_node *toinsert =
-          reinterpret_cast<struct kv_node *>(malloc(sizeof(*toinsert)));
+      kv_node *toinsert = new kv_node;
       toinsert->key = key;
       toinsert->val = 0;
       avl_insert(avl_, &toinsert->node);
@@ -132,8 +139,7 @@ TEST_F(BSTTest, Case1) {
   std::sort(sorted_nums.begin(), sorted_nums.end());
 
   for (int num : nums) {
-    struct kv_node *toinsert =
-        reinterpret_cast<struct kv_node *>(malloc(sizeof(*toinsert)));
+    kv_node *toinsert = new kv_node;
     toinsert->key = num;
     toinsert->val = 0;
     avl_insert(avl_, &toinsert->node);
@@ -161,8 +167,7 @@ TEST_F(BSTTest, Case2) {
   setAVL();
   std::vector<int> nums = {4, 1, 5, 0, 2, 6};
   for (int num : nums) {
-    struct kv_node *toinsert =
-        reinterpret_cast<struct kv_node *>(malloc(sizeof(*toinsert)));
+    kv_node *toinsert = new kv_node;
     toinsert->key = num;
     toinsert->val = 0;
     avl_insert(avl_, &toinsert->node);
@@ -177,8 +182,7 @@ TEST_F(BSTTest, Case3) {
   setAVL();
   std::vector<int> nums = {4, 2, 5, 1, 3, 0};
   for (int num : nums) {
-    struct kv_node *toinsert =
-        reinterpret_cast<struct kv_node *>(malloc(sizeof(*toinsert)));
+    kv_node *toinsert = new kv_node;
     toinsert->key = num;
     toinsert->val = 0;
     avl_insert(avl_, &toinsert->node);

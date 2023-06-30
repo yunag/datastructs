@@ -18,8 +18,8 @@ protected:
   void TearDown() override { htable_destroy(ht_); }
 
   void SetHashTable(hash_ht_entries_fn hash, cmp_ht_entries_fn cmp_key,
-                    size_t size = 1) {
-    ht_ = htable_create(size, hash, cmp_key);
+                    destroy_ht_entry_fn destroy = NULL, size_t size = 1) {
+    ht_ = htable_create(size, hash, cmp_key, destroy);
     ASSERT_NE(ht_, nullptr);
   }
 
@@ -43,8 +43,13 @@ int cmp_ht_key_value(const hash_entry *a, const hash_entry *b) {
   return yu_cmp_i32(&kva->key, &kvb->key);
 }
 
+void destroy_ht_key_value(hash_entry *entry) {
+  ht_key_value *kv = ht_entry(entry, ht_key_value, ht_entry);
+  delete kv;
+}
+
 TEST_F(HashTableTest, RemoveNotExistent) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value);
+  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
 
   ht_key_value query;
   int key = 5;
@@ -66,7 +71,7 @@ TEST_F(HashTableTest, RemoveNotExistent) {
 }
 
 TEST_F(HashTableTest, STLTable) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value);
+  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
 
   std::unordered_map<int, int> stl;
   ht_key_value query;
@@ -157,7 +162,7 @@ TEST_F(HashTableTest, STLTable) {
 }
 
 TEST_F(HashTableTest, Case1) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value);
+  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
   std::unordered_map<int, int> unord_map;
 
   std::vector<std::pair<int, int>> kvalues = {
@@ -207,8 +212,13 @@ int cmp_ht_str_entry(const hash_entry *a, const hash_entry *b) {
   return yu_cmp_str(kva->key, kvb->key);
 }
 
+void destroy_ht_str_entry(hash_entry *entry) {
+  ht_str_entry *kv = ht_entry(entry, ht_str_entry, ht_entry);
+  delete kv;
+}
+
 TEST_F(HashTableTest, Strings) {
-  SetHashTable(hash_ht_str_entry, cmp_ht_str_entry);
+  SetHashTable(hash_ht_str_entry, cmp_ht_str_entry, destroy_ht_str_entry);
 
   std::vector<std::pair<const char *, int>> kvalues = {
       {"Jacob", 9},   {"Banana", 10}, {"Banana", 25},
