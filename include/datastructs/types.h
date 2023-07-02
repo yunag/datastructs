@@ -4,12 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef void (*free_fn)(void *);
-typedef int (*cmp_fn)(const void *, const void *);
-
-struct key_value {
-  void *key;
-  void *val;
-};
+typedef int (*compare_fn)(const void *, const void *);
 
 #endif // !YU_TYPES_H

@@ -9,6 +9,8 @@ add_library(${PROJECT_NAME} STATIC
   memory.c
 )
 
+list(APPEND COMPILE_OPTS -O2 -flto)
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     ${INCLUDE_PATH}

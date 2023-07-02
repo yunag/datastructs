@@ -1,5 +1,4 @@
 #include "datastructs/queue.h"
-#include "datastructs/functions.h"
 #include "datastructs/memory.h"
 
 #include <assert.h>
@@ -14,11 +13,9 @@ struct queue {
   size_t size;     /* Size of the Queue */
   size_t capacity; /* Capacity of the Queue */
   size_t esize;    /* Size of a single element in the Queue */
-
-  free_fn free;
 };
 
-queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
+queue *queue_create(size_t capacity, size_t elemsize) {
   assert(capacity > 0);
   assert(elemsize > 0);
 
@@ -26,12 +23,12 @@ queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
   if (!q) {
     return NULL;
   }
+
   q->buffer = yu_allocate(elemsize * capacity);
   if (!q->buffer) {
     yu_free(q);
     return NULL;
   }
-  q->free = vfree ? vfree : free_placeholder;
   q->capacity = capacity;
   q->esize = elemsize;
   q->end = (char *)q->buffer + capacity * elemsize;
@@ -42,21 +39,10 @@ queue *queue_create(size_t capacity, size_t elemsize, free_fn vfree) {
 }
 
 void queue_destroy(queue *q) {
-  if (!q) {
-    return;
+  if (q) {
+    yu_free(q->buffer);
+    yu_free(q);
   }
-
-  if (q->free != free_placeholder && !queue_empty(q)) {
-    q->free(q->front);
-    while ((q->front += q->esize) != q->rear) {
-      if (q->front == q->end) {
-        q->front = q->buffer;
-      }
-      q->free(q->front);
-    }
-  }
-  yu_free(q->buffer);
-  yu_free(q);
 }
 
 static bool queue_resize(queue *q, size_t newsize) {
@@ -107,7 +93,6 @@ void queue_pop(queue *q) {
   if (queue_empty(q)) {
     return;
   }
-  q->free(q->front);
   q->front += q->esize;
   if (q->front == q->end) {
     q->front = q->buffer;

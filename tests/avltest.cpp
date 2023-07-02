@@ -1,13 +1,15 @@
 #include "gtest/gtest.h"
 
 #include "datastructs/avl_tree.h"
-
 #include "datastructs/functions.h"
+#include "datastructs/macros.h"
 #include "helper.h"
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <set>
+#include <unordered_set>
 
 struct kv_node {
   int key;
@@ -24,7 +26,7 @@ static inline int deviation(struct avl_node *node) {
 }
 
 static inline bool balanced(struct avl_node *node) {
-  return YU_ABS(deviation(node)) <= 1;
+  return abs(deviation(node)) <= 1;
 }
 
 static bool valid_avl_rec(avl_node *node) {
@@ -38,6 +40,17 @@ static bool valid_avl_rec(avl_node *node) {
 }
 
 static bool valid_avl(avl_tree *avl) { return valid_avl_rec(avl_root(avl)); }
+static bool valid_bst(avl_tree *avl) {
+  int prev = INT_MIN;
+  AVL_FOR_EACH(avl, node) {
+    kv_node *kv = avl_entry(node, kv_node, node);
+    if (kv->key < prev) {
+      return false;
+    }
+    prev = kv->key;
+  }
+  return true;
+}
 
 int cmp_kv_node(const avl_node *a, const avl_node *b) {
   struct kv_node *kva = avl_entry(a, struct kv_node, node);
@@ -60,38 +73,42 @@ protected:
     ASSERT_NE(avl_, nullptr);
   }
 
-  avl_tree *avl_;
+  avl_tree *avl_ = nullptr;
 };
 
 TEST_F(BSTTest, STLSet) {
   setAVL();
 
-  std::set<int> stl;
   enum class Action {
     Insert,
     Remove,
     Find,
   } command;
 
-  const size_t num_actions = 10000;
-
+  std::unordered_set<int> stl;
   std::vector<int> keys;
 
+  const size_t num_actions = 100000;
+
   for (size_t i = 0; i < num_actions; ++i) {
-    command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Insert),
-                                               static_cast<int>(Action::Find)));
+    command = static_cast<Action>(Helper::rand_inrange(
+        static_cast<int>(Action::Insert), static_cast<int>(Action::Find)));
+
     ASSERT_EQ(stl.size(), avl_size(avl_));
     ASSERT_TRUE(valid_avl(avl_));
+    ASSERT_TRUE(valid_bst(avl_));
     if (stl.empty()) {
       command = Action::Insert;
     }
+
     switch (command) {
     case Action::Insert: {
-      int key = Helper::rand(-10000, 10000);
+      int key = Helper::rand_inrange(-10000, 10000);
       struct kv_node query = {.key = key};
       if (stl.find(key) != stl.end()) {
-        ASSERT_TRUE(avl_find(avl_, &query.node));
+        ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       } else {
+        ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
         keys.push_back(key);
       }
       stl.insert(key);
@@ -99,30 +116,31 @@ TEST_F(BSTTest, STLSet) {
       toinsert->key = key;
       toinsert->val = 0;
       avl_insert(avl_, &toinsert->node);
-      ASSERT_TRUE(avl_find(avl_, &query.node));
+      ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       break;
     }
 
     case Action::Remove: {
-      int idx = Helper::rand(0, keys.size() - 1);
+      int idx = Helper::rand_inrange(0, keys.size() - 1);
       int key = keys[idx];
-      ASSERT_TRUE(stl.find(key) != stl.end());
       struct kv_node query = {.key = key};
-      ASSERT_TRUE(avl_find(avl_, &query.node) != NULL);
+      ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       stl.erase(key);
       avl_remove(avl_, &query.node);
       keys.erase(keys.begin() + idx);
-      ASSERT_TRUE(avl_find(avl_, &query.node) == NULL);
-      ASSERT_TRUE(stl.find(key) == stl.end());
+      ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
       break;
     }
 
     case Action::Find: {
-      int idx = Helper::rand(0, keys.size() - 1);
+      int idx = Helper::rand_inrange(0, keys.size() - 1);
       int key = keys[idx];
       struct kv_node query = {.key = key};
-      ASSERT_EQ(stl.find(key) != stl.end(),
-                avl_find(avl_, &query.node) != NULL);
+      if (stl.find(key) != stl.end()) {
+        ASSERT_NE(avl_find(avl_, &query.node), nullptr);
+      } else {
+        ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
+      }
       break;
     }
     }
@@ -138,13 +156,15 @@ TEST_F(BSTTest, Case1) {
   std::vector<int> sorted_nums = nums;
   std::sort(sorted_nums.begin(), sorted_nums.end());
 
+  int cycles;
   for (int num : nums) {
     kv_node *toinsert = new kv_node;
     toinsert->key = num;
     toinsert->val = 0;
     avl_insert(avl_, &toinsert->node);
   }
-  int cycles = 0;
+
+  cycles = 0;
   AVL_FOR_EACH(avl_, node) {
     EXPECT_EQ(avl_entry(node, struct kv_node, node)->key, sorted_nums[cycles])
         << "Cycles is " << cycles << '\n';
@@ -175,7 +195,7 @@ TEST_F(BSTTest, Case2) {
 
   struct kv_node query = {.key = 1};
   avl_remove(avl_, &query.node);
-  ASSERT_TRUE(avl_find(avl_, &query.node) == NULL);
+  ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
 }
 
 TEST_F(BSTTest, Case3) {
@@ -189,25 +209,27 @@ TEST_F(BSTTest, Case3) {
   }
   for (int num : nums) {
     struct kv_node query = {.key = num};
-    ASSERT_TRUE(avl_find(avl_, &query.node) != NULL);
+    ASSERT_NE(avl_find(avl_, &query.node), nullptr);
   }
 }
 
 TEST_F(BSTTest, InsertOnly_ValidAvl) {
   setAVL();
 
-  for (size_t i = 0; i < 10000; ++i) {
-    int num = Helper::rand(INT_MIN, INT_MAX);
-    struct kv_node *node =
-        reinterpret_cast<struct kv_node *>(malloc(sizeof(*node)));
+  size_t num_inserts = 1000;
+  for (size_t i = 0; i < num_inserts; ++i) {
+    int num = Helper::rand_inrange(INT_MIN, INT_MAX);
+    kv_node *node = new kv_node;
     node->key = num;
     node->val = 0;
     avl_insert(avl_, &node->node);
-    ASSERT_TRUE(valid_avl(avl_)) << "Is not a valid AVL Tree";
+    ASSERT_TRUE(valid_avl(avl_)) << "It is not a valid AVL Tree";
+    ASSERT_TRUE(valid_bst(avl_)) << "It is not a valid BST";
   }
 }
 
 int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
+  srand(time(nullptr));
   return RUN_ALL_TESTS();
 }

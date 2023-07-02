@@ -76,6 +76,7 @@ void htable_destroy(hash_table *htable) {
   if (!htable) {
     return;
   }
+
   if (htable->destroy) {
     struct hash_entry *walk = htable->head.ht_next;
     while (walk != &htable->head) {
@@ -180,6 +181,7 @@ struct hash_entry *ht_last(hash_table *htable) {
 
 struct hash_entry *ht_next(struct hash_entry *entry) {
   assert(entry != NULL);
+
   entry = entry->ht_next;
   if (entry->next == DUMMY_PTR) {
     entry = NULL;
@@ -189,6 +191,7 @@ struct hash_entry *ht_next(struct hash_entry *entry) {
 
 struct hash_entry *ht_prev(struct hash_entry *entry) {
   assert(entry != NULL);
+
   entry = entry->ht_prev;
   if (entry->next == DUMMY_PTR) {
     entry = NULL;

@@ -14,7 +14,7 @@ protected:
   void TearDown() override { stack_destroy(s_); }
 
   template <typename T> void SetStack(size_t size = 1) {
-    s_ = stack_create(size, sizeof(T), NULL);
+    s_ = stack_create(size, sizeof(T));
     ASSERT_NE(s_, nullptr);
   }
 
@@ -29,7 +29,7 @@ TEST(Stack, Initialization) {
   size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
-    stack *s = stack_create(Helper::rand(1, 20000), types[i], NULL);
+    stack *s = stack_create(Helper::rand_inrange(1, 20000), types[i]);
     ASSERT_NE(s, nullptr);
     EXPECT_TRUE(stack_empty(s));
     EXPECT_EQ(stack_esize(s), types[i]);
@@ -42,7 +42,7 @@ TEST_F(StackTest, PushResize) {
   SetStack<int>(2);
   const size_t num_cases = 200;
   for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
+    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
     stack_push(s_, &val);
     EXPECT_FALSE(stack_empty(s_));
     EXPECT_EQ(STACK_TOP(s_, int), val);
@@ -55,7 +55,7 @@ TEST_F(StackTest, PushPop) {
   const size_t num_cases = 10000;
   int nums[num_cases];
   for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
+    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
     nums[i] = val;
     stack_push(s_, &val);
   }
@@ -79,8 +79,8 @@ TEST_F(StackTest, STLStack) {
   std::stack<double> s;
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Push),
-                                               static_cast<int>(Action::Top)));
+    command = static_cast<Action>(Helper::rand_inrange(
+        static_cast<int>(Action::Push), static_cast<int>(Action::Top)));
     EXPECT_EQ(s.empty(), stack_empty(s_));
     EXPECT_EQ(s.size(), stack_size(s_));
 
@@ -89,7 +89,7 @@ TEST_F(StackTest, STLStack) {
     }
     switch (command) {
     case Action::Push: {
-      double val = Helper::rand(INT_MIN, INT_MAX);
+      double val = Helper::rand_inrange(INT_MIN, INT_MAX);
       s.push(val);
       stack_push(s_, &val);
       EXPECT_EQ(s.top(), STACK_TOP(s_, double));

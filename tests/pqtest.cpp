@@ -32,7 +32,7 @@ protected:
   void TearDown() override { pq_destroy(pq_); }
 
   template <typename T>
-  void SetPQueue(size_t size = 1, cmp_fn cmp = cmp_great<T>) {
+  void SetPQueue(size_t size = 1, compare_fn cmp = cmp_great<T>) {
     pq_ = pq_create(size, sizeof(T), cmp);
     ASSERT_NE(pq_, nullptr);
   }
@@ -49,7 +49,7 @@ TEST(PriorityQueue, Initialization) {
 
   for (size_t i = 0; i < types_size; ++i) {
     priority_queue *pq =
-        pq_create(Helper::rand(1, 10000), types[i], cmp_great<int>);
+        pq_create(Helper::rand_inrange(1, 10000), types[i], cmp_great<int>);
     ASSERT_NE(pq, nullptr);
     EXPECT_TRUE(pq_empty(pq));
     EXPECT_EQ(pq_esize(pq), types[i]);
@@ -62,7 +62,7 @@ TEST_F(PriorityQueueTest, PushResize) {
   SetPQueue<int>();
   const size_t num_cases = 200;
   for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
+    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
     pq_push(pq_, &val);
     EXPECT_FALSE(pq_empty(pq_));
     EXPECT_EQ(pq_size(pq_), i + 1);
@@ -75,7 +75,7 @@ TEST_F(PriorityQueueTest, Greater) {
   int nums[num_cases];
 
   for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
+    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
     nums[i] = val;
     pq_push(pq_, &val);
   }
@@ -96,7 +96,7 @@ TEST_F(PriorityQueueTest, Lesser) {
   double nums[num_cases];
 
   for (size_t i = 0; i < num_cases; ++i) {
-    double val = Helper::rand(INT_MIN, INT_MAX);
+    double val = Helper::rand_inrange(INT_MIN, INT_MAX);
     nums[i] = val;
     pq_push(pq_, &val);
   }
@@ -120,8 +120,8 @@ void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
 
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand(static_cast<int>(Action::Push),
-                                               static_cast<int>(Action::Top)));
+    command = static_cast<Action>(Helper::rand_inrange(
+        static_cast<int>(Action::Push), static_cast<int>(Action::Top)));
     ASSERT_EQ(pq.empty(), pq_empty(pq_));
     ASSERT_EQ(pq.size(), pq_size(pq_));
     if (pq_empty(pq_)) {
@@ -130,7 +130,7 @@ void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
     switch (command) {
 
     case Action::Push: {
-      double val = Helper::rand(INT_MIN, INT_MAX);
+      double val = Helper::rand_inrange(INT_MIN, INT_MAX);
       pq.push(val);
       pq_push(pq_, &val);
       ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));

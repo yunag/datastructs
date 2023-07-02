@@ -1,7 +1,6 @@
 #ifndef YU_FUNCITONS_H
 #define YU_FUNCITONS_H
 
-#include "macros.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -11,11 +10,9 @@ extern "C" {
 
 uint64_t hash_bern(const void *key, size_t size);
 
-static inline void free_placeholder(void *ptr) { YU_UNUSED(ptr); }
-
-#define FUNCTION_DECL(Type, postfix)                                           \
-  Type *yu_dup_##postfix(Type value);                                          \
-  uint64_t yu_hash_##postfix(const void *value);                               \
+#define FUNCTION_DECL(type, postfix)                                           \
+  type *yu_dup_##postfix(type value);                                          \
+  uint64_t yu_hash_##postfix(type key);                                        \
   int yu_cmp_##postfix(const void *a, const void *b);
 
 FUNCTION_DECL(int64_t, i64)

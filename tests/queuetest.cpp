@@ -14,7 +14,7 @@ protected:
   void TearDown() override { queue_destroy(q_); }
 
   template <typename T> void SetQueue(size_t size = 1) {
-    q_ = queue_create(size, sizeof(T), NULL);
+    q_ = queue_create(size, sizeof(T));
     ASSERT_NE(q_, nullptr);
   }
 
@@ -29,7 +29,7 @@ TEST(Queue, Initialization) {
   size_t types_size = YU_ARRAYSIZE(types);
 
   for (size_t i = 0; i < types_size; ++i) {
-    queue *q = queue_create(Helper::rand(1, 20000), types[i], NULL);
+    queue *q = queue_create(Helper::rand_inrange(1, 20000), types[i]);
     ASSERT_NE(q, nullptr);
     ASSERT_TRUE(queue_empty(q));
     ASSERT_EQ(queue_esize(q), types[i]);
@@ -43,7 +43,7 @@ TEST_F(QueueTest, PushResize) {
   SetQueue<int>(2);
   const size_t num_cases = 200;
   for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
+    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
     QUEUE_PUSH(q_, val);
     ASSERT_FALSE(queue_empty(q_));
     ASSERT_EQ(QUEUE_BACK(q_, int), val);
@@ -56,7 +56,7 @@ TEST_F(QueueTest, PushPop) {
   const size_t num_cases = 10000;
   int nums[num_cases];
   for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand(INT_MIN, INT_MAX);
+    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
     nums[i] = val;
     QUEUE_PUSH(q_, val);
   }
@@ -82,7 +82,7 @@ TEST_F(QueueTest, STLQueue) {
   std::queue<double> q;
   const size_t num_commands = 100000;
   for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand(
+    command = static_cast<Action>(Helper::rand_inrange(
         static_cast<double>(Action::Push), static_cast<double>(Action::Back)));
     ASSERT_EQ(q.empty(), queue_empty(q_));
     ASSERT_EQ(q.size(), queue_size(q_));
@@ -92,7 +92,7 @@ TEST_F(QueueTest, STLQueue) {
 
     switch (command) {
     case Action::Push: {
-      double val = Helper::rand(INT_MIN, INT_MAX);
+      double val = Helper::rand_inrange(INT_MIN, INT_MAX);
       q.push(val);
       queue_push(q_, &val);
       ASSERT_EQ(q.front(), QUEUE_FRONT(q_, double));

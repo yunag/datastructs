@@ -1,5 +1,4 @@
 #include "datastructs/stack.h"
-#include "datastructs/functions.h"
 #include "datastructs/memory.h"
 #include "datastructs/types.h"
 
@@ -13,8 +12,6 @@ struct stack {
   size_t size;     /* Size of the Stack */
   size_t capacity; /* Capacity of the Stack */
   size_t esize;    /* Size of a single element in the Stack */
-
-  free_fn free; /* Function to free a value */
 };
 
 static bool stack_resize(stack *s, size_t newsize) {
@@ -31,7 +28,7 @@ static bool stack_resize(stack *s, size_t newsize) {
   return true;
 }
 
-stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
+stack *stack_create(size_t capacity, size_t elemsize) {
   assert(capacity > 0);
   assert(elemsize > 0);
 
@@ -45,7 +42,6 @@ stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
     return NULL;
   }
   s->top = s->buffer;
-  s->free = vfree ? vfree : free_placeholder;
   s->capacity = capacity;
   s->esize = elemsize;
   s->size = 0;
@@ -53,17 +49,10 @@ stack *stack_create(size_t capacity, size_t elemsize, free_fn vfree) {
 }
 
 void stack_destroy(stack *s) {
-  if (!s) {
-    return;
+  if (s) {
+    yu_free(s->buffer);
+    yu_free(s);
   }
-
-  if (s->free != free_placeholder) {
-    while (!stack_empty(s)) {
-      s->free(s->top -= s->esize);
-    }
-  }
-  yu_free(s->buffer);
-  yu_free(s);
 }
 
 void stack_push(stack *s, const void *elem) {
@@ -84,7 +73,7 @@ void stack_pop(stack *s) {
   if (stack_empty(s)) {
     return;
   }
-  s->free(s->top -= s->esize);
+  s->top -= s->esize;
   s->size--;
 }
 

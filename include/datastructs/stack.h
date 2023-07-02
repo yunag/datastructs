@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct stack stack;
 
-stack *stack_create(size_t capacity, size_t elemsize, free_fn free_elem);
+stack *stack_create(size_t initial_capacity, size_t elemsize);
 void stack_destroy(stack *stack);
 void stack_push(stack *stack, const void *elem);
 void stack_pop(stack *stack);
@@ -20,17 +20,17 @@ bool stack_full(stack *stack);
 size_t stack_size(stack *stack);
 size_t stack_esize(stack *stack);
 
-#define STACK_PUSH(S, T, elem)                                                 \
+#define STACK_PUSH(stack, elem)                                                \
   do {                                                                         \
     __typeof__(elem) __elem = (elem);                                          \
-    stack_push(S, &__elem);                                                    \
+    stack_push(stack, &__elem);                                                \
   } while (0)
 
-#define STACK_TOP(S, T) (*(T *)stack_top(S))
-#define STACK_POP(S, ret)                                                      \
+#define STACK_TOP(stack, type) (*(type *)stack_top(stack))
+#define STACK_POP(stack, return_value)                                         \
   do {                                                                         \
-    ret = STACK_TOP(S, __typeof__(ret));                                       \
-    stack_pop(S);                                                              \
+    return_value = STACK_TOP(stack, __typeof__(return_value));                 \
+    stack_pop(stack);                                                          \
   } while (0)
 
 #ifdef __cplusplus

@@ -2,11 +2,12 @@
 #define HELPER_H
 
 #include <cassert>
+#include <cstdlib>
 #include <random>
 
 namespace Helper {
 
-static inline double rand(double low, double high) {
+static inline double rand_inrange(double low, double high) {
   assert(low <= high);
   static std::random_device rd;
   static std::mt19937 gen(rd());
@@ -14,12 +15,10 @@ static inline double rand(double low, double high) {
   return dis(gen);
 }
 
-static inline int rand(int low, int high) {
+static inline int rand_inrange(int low, int high) {
   assert(low <= high);
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(low, high);
-  return dis(gen);
+  double scale = (double)rand() / (RAND_MAX + 1.0);
+  return (high - low + 1) * scale + low;
 }
 
 } // namespace Helper

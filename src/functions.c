@@ -7,29 +7,29 @@
 
 #define FNV_PRIME 0x100000001b3
 #define FNV_OFFSET 0xcbf29ce484222325UL
-#define FNHASHDEF(T, postfix)                                                  \
-  uint64_t yu_hash_##postfix(const void *key) {                                \
-    const unsigned char *bytes = key;                                          \
+#define FNHASHDEF(type, postfix)                                               \
+  uint64_t yu_hash_##postfix(type key) {                                       \
+    const unsigned char *bytes = (const unsigned char *)&key;                  \
     uint64_t hashv = FNV_OFFSET;                                               \
-    for (size_t i = 0; i < sizeof(T); ++i) {                                   \
+    for (size_t i = 0; i < sizeof(type); ++i) {                                \
       hashv ^= bytes[i];                                                       \
       hashv *= FNV_PRIME;                                                      \
     }                                                                          \
     return hashv;                                                              \
   }
-#define FNCMPDEF(T, postfix)                                                   \
+#define FNCMPDEF(type, postfix)                                                \
   int yu_cmp_##postfix(const void *a, const void *b) {                         \
-    if (*(T *)a > *(T *)b) {                                                   \
+    if (*(type *)a > *(type *)b) {                                             \
       return 1;                                                                \
     }                                                                          \
-    if (*(T *)a < *(T *)b) {                                                   \
+    if (*(type *)a < *(type *)b) {                                             \
       return -1;                                                               \
     }                                                                          \
     return 0;                                                                  \
   }
-#define FNDUPDEF(T, postfix)                                                   \
-  T *yu_dup_##postfix(T value) {                                               \
-    T *val = malloc(sizeof(T));                                                \
+#define FNDUPDEF(type, postfix)                                                \
+  type *yu_dup_##postfix(type value) {                                         \
+    type *val = malloc(sizeof(type));                                          \
     if (val) {                                                                 \
       *val = value;                                                            \
     }                                                                          \

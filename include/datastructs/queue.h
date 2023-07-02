@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct queue queue;
 
-queue *queue_create(size_t capacity, size_t elemsize, free_fn free_elem);
+queue *queue_create(size_t initial_capacity, size_t elemsize);
 void queue_destroy(queue *queue);
 void queue_push(queue *queue, const void *elem);
 void queue_pop(queue *queue);
@@ -21,18 +21,17 @@ bool queue_full(queue *queue);
 size_t queue_size(queue *queue);
 size_t queue_esize(queue *queue);
 
-#define QUEUE_PUSH(Q, elem)                                                    \
+#define QUEUE_PUSH(queue, elem)                                                \
   do {                                                                         \
     __typeof__(elem) __elem = (elem);                                          \
-    queue_push(Q, &__elem);                                                    \
+    queue_push(queue, &__elem);                                                \
   } while (0)
-
-#define QUEUE_FRONT(Q, T) (*(T *)queue_front(Q))
-#define QUEUE_BACK(Q, T) (*(T *)queue_back(Q))
-#define QUEUE_POP(Q, ret)                                                      \
+#define QUEUE_FRONT(queue, type) (*(type *)queue_front(queue))
+#define QUEUE_BACK(queue, type) (*(type *)queue_back(queue))
+#define QUEUE_POP(queue, return_value)                                         \
   do {                                                                         \
-    ret = QUEUE_FRONT(Q, __typeof__(ret));                                     \
-    queue_pop(Q);                                                              \
+    return_value = QUEUE_FRONT(Q, __typeof__(return_value));                   \
+    queue_pop(queue);                                                          \
   } while (0)
 
 #ifdef __cplusplus
