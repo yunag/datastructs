@@ -7,8 +7,7 @@
 
 #include <algorithm>
 #include <array>
-#include <map>
-#include <set>
+#include <climits>
 #include <unordered_set>
 
 struct kv_node {
@@ -68,8 +67,8 @@ protected:
   void SetUp() override {}
   void TearDown() override { avl_destroy(avl_); }
 
-  void setAVL() {
-    avl_ = avl_create(cmp_kv_node, destroy_kv_node);
+  void setAVL(destroy_avl_node_fn destroy = destroy_kv_node) {
+    avl_ = avl_create(cmp_kv_node, destroy);
     ASSERT_NE(avl_, nullptr);
   }
 
@@ -87,6 +86,7 @@ TEST_F(BSTTest, STLSet) {
 
   std::unordered_set<int> stl;
   std::vector<int> keys;
+  kv_node query;
 
   const size_t num_actions = 100000;
 
@@ -104,7 +104,7 @@ TEST_F(BSTTest, STLSet) {
     switch (command) {
     case Action::Insert: {
       int key = Helper::rand_inrange(-10000, 10000);
-      struct kv_node query = {.key = key};
+      query.key = key;
       if (stl.find(key) != stl.end()) {
         ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       } else {
@@ -123,7 +123,7 @@ TEST_F(BSTTest, STLSet) {
     case Action::Remove: {
       int idx = Helper::rand_inrange(0, keys.size() - 1);
       int key = keys[idx];
-      struct kv_node query = {.key = key};
+      query.key = key;
       ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       stl.erase(key);
       avl_remove(avl_, &query.node);
@@ -135,7 +135,7 @@ TEST_F(BSTTest, STLSet) {
     case Action::Find: {
       int idx = Helper::rand_inrange(0, keys.size() - 1);
       int key = keys[idx];
-      struct kv_node query = {.key = key};
+      query.key = key;
       if (stl.find(key) != stl.end()) {
         ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       } else {
@@ -185,6 +185,7 @@ TEST_F(BSTTest, Case1) {
 
 TEST_F(BSTTest, Case2) {
   setAVL();
+  kv_node query;
   std::vector<int> nums = {4, 1, 5, 0, 2, 6};
   for (int num : nums) {
     kv_node *toinsert = new kv_node;
@@ -193,13 +194,14 @@ TEST_F(BSTTest, Case2) {
     avl_insert(avl_, &toinsert->node);
   }
 
-  struct kv_node query = {.key = 1};
+  query.key = 1;
   avl_remove(avl_, &query.node);
   ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
 }
 
 TEST_F(BSTTest, Case3) {
   setAVL();
+  kv_node query;
   std::vector<int> nums = {4, 2, 5, 1, 3, 0};
   for (int num : nums) {
     kv_node *toinsert = new kv_node;
@@ -208,14 +210,13 @@ TEST_F(BSTTest, Case3) {
     avl_insert(avl_, &toinsert->node);
   }
   for (int num : nums) {
-    struct kv_node query = {.key = num};
+    query.key = num;
     ASSERT_NE(avl_find(avl_, &query.node), nullptr);
   }
 }
 
 TEST_F(BSTTest, InsertOnly_ValidAvl) {
   setAVL();
-
   size_t num_inserts = 1000;
   for (size_t i = 0; i < num_inserts; ++i) {
     int num = Helper::rand_inrange(INT_MIN, INT_MAX);

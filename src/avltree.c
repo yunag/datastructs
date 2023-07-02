@@ -86,38 +86,34 @@ static struct avl_node *avl_change_child(struct avl_node *parent,
 
 static struct avl_node *rebalance(struct avl_node **root,
                                   struct avl_node *node) {
-  int balance = deviation(node);
   struct avl_node *parent = node->parent;
+
+  size_t height = node->height;
+  int balance = deviation(node);
+
   if (balance > threshold) {
     /* left-right heavy? */
     if (deviation(node->left) < 0) {
       node->left = left_rotate(node->left);
     }
-    return avl_change_child(parent, node, right_rotate(node), root);
+    node = avl_change_child(parent, node, right_rotate(node), root);
 
   } else if (balance < -threshold) {
     /* right-left heavy? */
     if (deviation(node->right) > 0) {
       node->right = right_rotate(node->right);
     }
-    return avl_change_child(parent, node, left_rotate(node), root);
+    node = avl_change_child(parent, node, left_rotate(node), root);
+  } else {
+    node->height = avl_height(node);
   }
-  node->height = avl_height(node);
-  return node;
+  return node->height == height ? NULL : parent;
 }
 
 static void restore_avl_properties(struct avl_node **root,
                                    struct avl_node *node) {
-  size_t height;
-
   while (node) {
-    height = node->height;
     node = rebalance(root, node);
-    /* Rebalancing didn't affect the height of the tree */
-    if (node->height == height) {
-      break;
-    }
-    node = node->parent;
   }
 }
 

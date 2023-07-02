@@ -5,7 +5,7 @@
 
 #include "helper.h"
 
-#include <limits.h>
+#include <climits>
 #include <queue>
 
 class QueueTest : public ::testing::Test {

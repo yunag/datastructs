@@ -5,7 +5,7 @@
 
 #include "helper.h"
 
-#include <limits.h>
+#include <climits>
 #include <stack>
 
 class StackTest : public ::testing::Test {

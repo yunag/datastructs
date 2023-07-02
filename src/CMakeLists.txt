@@ -9,7 +9,7 @@ add_library(${PROJECT_NAME} STATIC
   memory.c
 )
 
-list(APPEND COMPILE_OPTS -O2 -flto)
+list(APPEND COMPILE_OPTS -O2)
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC

@@ -1,3 +1,5 @@
+project(datastructs_test LANGUAGES CXX)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest

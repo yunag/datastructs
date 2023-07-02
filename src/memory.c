@@ -1,6 +1,7 @@
 #include "datastructs/memory.h"
 #include "datastructs/macros.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 

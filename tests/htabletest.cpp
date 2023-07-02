@@ -6,6 +6,7 @@
 #include "datastructs/macros.h"
 #include "helper.h"
 
+#include <climits>
 #include <cstring>
 #include <unordered_map>
 #include <utility>
