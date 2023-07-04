@@ -38,6 +38,7 @@ foreach(target source IN ZIP_LISTS Targets Sources)
     PRIVATE
       ${TEST_COMPILE_OPTS}
   )
+  set_property(TARGET ${target} PROPERTY CXX_STANDARD 11)
 
   add_test(${target}Test ${target})
 endforeach()

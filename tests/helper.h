@@ -18,7 +18,7 @@ static inline double rand_inrange(double low, double high) {
 static inline int rand_inrange(int low, int high) {
   assert(low <= high);
   double scale = (double)rand() / (RAND_MAX + 1.0);
-  return (high - low + 1) * scale + low;
+  return (1LL + high - low) * scale + low;
 }
 
 } // namespace Helper

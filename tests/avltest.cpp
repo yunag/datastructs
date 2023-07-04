@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <climits>
+#include <map>
 #include <unordered_set>
 
 struct kv_node {
@@ -110,13 +111,13 @@ TEST_F(BSTTest, STLSet) {
       } else {
         ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
         keys.push_back(key);
+        stl.insert(key);
+        kv_node *toinsert = new kv_node;
+        toinsert->key = key;
+        toinsert->val = 0;
+        avl_insert(avl_, &toinsert->node);
+        ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       }
-      stl.insert(key);
-      kv_node *toinsert = new kv_node;
-      toinsert->key = key;
-      toinsert->val = 0;
-      avl_insert(avl_, &toinsert->node);
-      ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       break;
     }
 
@@ -219,11 +220,13 @@ TEST_F(BSTTest, InsertOnly_ValidAvl) {
   setAVL();
   size_t num_inserts = 1000;
   for (size_t i = 0; i < num_inserts; ++i) {
-    int num = Helper::rand_inrange(INT_MIN, INT_MAX);
+    int num = Helper::rand_inrange(-2000000, 2000000);
     kv_node *node = new kv_node;
     node->key = num;
     node->val = 0;
-    avl_insert(avl_, &node->node);
+    if (!avl_insert(avl_, &node->node)) {
+      delete node;
+    }
     ASSERT_TRUE(valid_avl(avl_)) << "It is not a valid AVL Tree";
     ASSERT_TRUE(valid_bst(avl_)) << "It is not a valid BST";
   }

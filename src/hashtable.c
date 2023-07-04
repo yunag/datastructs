@@ -9,8 +9,8 @@
 #define GET_BUCKET(htable, key) ((htable)->hash((key)) % (htable)->capacity)
 
 /* Pointer to invalid memory address */
-static unsigned char __dummy_ptr;
-#define DUMMY_PTR ((void *)&__dummy_ptr)
+static unsigned char ___dummy_ptr;
+#define DUMMY_PTR ((void *)&___dummy_ptr)
 
 struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
