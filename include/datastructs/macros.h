@@ -43,7 +43,7 @@ extern "C" {
 
 #define YU_LOG_ERROR(...) YU_LOG_ERROR2(__VA_ARGS__, "\n")
 #else
-#define YU_LOG_ERROR(msg)
+#define YU_LOG_ERROR(...)
 #endif // !DEBUG
 
 #define YU_BYTE_SWAP(a, b, size)                                               \

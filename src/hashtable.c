@@ -98,8 +98,8 @@ lookup(hash_table *htable, const struct hash_entry *query, uint64_t bucket) {
   return walk;
 }
 
-void replace_entry(hash_table *htable, struct hash_entry **victim,
-                   struct hash_entry *new) {
+void htable_replace_entry(hash_table *htable, struct hash_entry **victim,
+                          struct hash_entry *new) {
   struct hash_entry *destroy_node = *victim;
   *new = *destroy_node;
   *victim = new;
@@ -120,7 +120,7 @@ bool htable_insert(hash_table *htable, struct hash_entry *ht_entry) {
   uint64_t bct = GET_BUCKET(htable, ht_entry);
   struct hash_entry **entry = lookup(htable, ht_entry, bct);
   if (*entry) { /* The key already exists in the hash table */
-    replace_entry(htable, entry, ht_entry);
+    htable_replace_entry(htable, entry, ht_entry);
     return true;
   }
   struct hash_entry *tail = htable->head.ht_prev;

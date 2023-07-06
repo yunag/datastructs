@@ -6,7 +6,6 @@
 #include "helper.h"
 
 #include <algorithm>
-#include <array>
 #include <climits>
 #include <map>
 #include <unordered_set>
@@ -39,10 +38,13 @@ static bool valid_avl_rec(avl_node *node) {
   return valid_avl_rec(node->left) && valid_avl_rec(node->right);
 }
 
-static bool valid_avl(avl_tree *avl) { return valid_avl_rec(avl_root(avl)); }
+static bool valid_avl(avl_tree *avl) {
+  return valid_avl_rec(avl->root.avl_node);
+}
+
 static bool valid_bst(avl_tree *avl) {
   int prev = INT_MIN;
-  AVL_FOR_EACH(avl, node) {
+  AVL_FOR_EACH(&avl->root, node) {
     kv_node *kv = avl_entry(node, kv_node, node);
     if (kv->key < prev) {
       return false;
@@ -95,7 +97,7 @@ TEST_F(BSTTest, STLSet) {
     command = static_cast<Action>(Helper::rand_inrange(
         static_cast<int>(Action::Insert), static_cast<int>(Action::Find)));
 
-    ASSERT_EQ(stl.size(), avl_size(avl_));
+    ASSERT_EQ(stl.size(), avl_->size);
     ASSERT_TRUE(valid_avl(avl_));
     ASSERT_TRUE(valid_bst(avl_));
     if (stl.empty()) {
@@ -166,7 +168,7 @@ TEST_F(BSTTest, Case1) {
   }
 
   cycles = 0;
-  AVL_FOR_EACH(avl_, node) {
+  AVL_FOR_EACH(&avl_->root, node) {
     EXPECT_EQ(avl_entry(node, struct kv_node, node)->key, sorted_nums[cycles])
         << "Cycles is " << cycles << '\n';
     cycles++;
@@ -174,7 +176,7 @@ TEST_F(BSTTest, Case1) {
   ASSERT_EQ(cycles, nums.size());
 
   cycles = 0;
-  AVL_FOR_EACH(avl_, node) {
+  AVL_FOR_EACH(&avl_->root, node) {
     EXPECT_EQ(avl_entry(node, struct kv_node, node)->key, sorted_nums[cycles]);
     cycles++;
     if (cycles == 5) {
