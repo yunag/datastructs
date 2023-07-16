@@ -9,38 +9,40 @@ extern "C" {
 #endif
 
 typedef struct hash_table hash_table;
-typedef struct hash_entry hash_entry;
-
-typedef int (*cmp_ht_entries_fn)(const struct hash_entry *,
-                                 const struct hash_entry *);
-typedef uint64_t (*hash_ht_entries_fn)(const struct hash_entry *);
-typedef void (*destroy_ht_entry_fn)(struct hash_entry *);
-
-#define ht_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
 
 struct hash_entry {
-  /* Linked list of all entries */
+  /* List of all entries */
   struct hash_entry *ht_next;
   struct hash_entry *ht_prev;
 
   struct hash_entry *next; /* Pointer to next entry in current bucket */
 };
 
-hash_table *htable_create(size_t initial_capacity, hash_ht_entries_fn hash,
-                          cmp_ht_entries_fn cmp, destroy_ht_entry_fn destroy);
+typedef int (*compare_ht_entries_fun)(const struct hash_entry *,
+                                      const struct hash_entry *);
+typedef uint64_t (*hash_ht_entry_fun)(const struct hash_entry *);
+typedef void (*destroy_ht_entry_fun)(struct hash_entry *);
+
+#define ht_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
+
+hash_table *htable_create(size_t initial_capacity, hash_ht_entry_fun hash,
+                          compare_ht_entries_fun cmp,
+                          destroy_ht_entry_fun destroy);
 void htable_destroy(hash_table *htable);
-bool htable_insert(hash_table *htable, hash_entry *ht_entry);
-hash_entry *htable_lookup(hash_table *htable, const hash_entry *query);
-bool htable_remove(hash_table *htable, const hash_entry *query);
+bool htable_insert(hash_table *htable, struct hash_entry *ht_entry);
+struct hash_entry *htable_lookup(hash_table *htable,
+                                 const struct hash_entry *query);
+bool htable_remove(hash_table *htable, const struct hash_entry *query);
 size_t htable_size(hash_table *htable);
 
-hash_entry *ht_last(hash_table *htable);
-hash_entry *ht_first(hash_table *htable);
-hash_entry *ht_next(hash_entry *entry);
-hash_entry *ht_prev(hash_entry *entry);
+struct hash_entry *htable_last(hash_table *htable);
+struct hash_entry *htable_first(hash_table *htable);
+struct hash_entry *htable_next(const struct hash_entry *entry);
+struct hash_entry *htable_prev(const struct hash_entry *entry);
 
-#define HT_FOR_EACH(htable, entry)                                             \
-  for (hash_entry *entry = ht_first(htable); entry; entry = ht_next(entry))
+#define HTABLE_FOR_EACH(htable, entry)                                         \
+  for (hash_entry *entry = htable_first(htable); entry;                        \
+       entry = htable_next(entry))
 
 #ifdef __cplusplus
 }

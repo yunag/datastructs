@@ -11,6 +11,9 @@
 #include <unordered_set>
 
 struct kv_node {
+  kv_node() {}
+  kv_node(int _key, int _val) : key(_key), val(_val) {}
+
   int key;
   int val;
   struct avl_node node;
@@ -70,7 +73,7 @@ protected:
   void SetUp() override {}
   void TearDown() override { avl_destroy(avl_); }
 
-  void setAVL(destroy_avl_node_fn destroy = destroy_kv_node) {
+  void setAVL(destroy_avl_node_fun destroy = destroy_kv_node) {
     avl_ = avl_create(cmp_kv_node, destroy);
     ASSERT_NE(avl_, nullptr);
   }
@@ -114,9 +117,7 @@ TEST_F(BSTTest, STLSet) {
         ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
         keys.push_back(key);
         stl.insert(key);
-        kv_node *toinsert = new kv_node;
-        toinsert->key = key;
-        toinsert->val = 0;
+        kv_node *toinsert = new kv_node(key, 0);
         avl_insert(avl_, &toinsert->node);
         ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       }
@@ -161,9 +162,7 @@ TEST_F(BSTTest, Case1) {
 
   int cycles;
   for (int num : nums) {
-    kv_node *toinsert = new kv_node;
-    toinsert->key = num;
-    toinsert->val = 0;
+    kv_node *toinsert = new kv_node(num, 0);
     avl_insert(avl_, &toinsert->node);
   }
 
@@ -191,9 +190,7 @@ TEST_F(BSTTest, Case2) {
   kv_node query;
   std::vector<int> nums = {4, 1, 5, 0, 2, 6};
   for (int num : nums) {
-    kv_node *toinsert = new kv_node;
-    toinsert->key = num;
-    toinsert->val = 0;
+    kv_node *toinsert = new kv_node(num, 0);
     avl_insert(avl_, &toinsert->node);
   }
 
@@ -207,9 +204,7 @@ TEST_F(BSTTest, Case3) {
   kv_node query;
   std::vector<int> nums = {4, 2, 5, 1, 3, 0};
   for (int num : nums) {
-    kv_node *toinsert = new kv_node;
-    toinsert->key = num;
-    toinsert->val = 0;
+    kv_node *toinsert = new kv_node(num, 0);
     avl_insert(avl_, &toinsert->node);
   }
   for (int num : nums) {
@@ -223,9 +218,7 @@ TEST_F(BSTTest, InsertOnly_ValidAvl) {
   size_t num_inserts = 1000;
   for (size_t i = 0; i < num_inserts; ++i) {
     int num = Helper::rand_inrange(-2000000, 2000000);
-    kv_node *node = new kv_node;
-    node->key = num;
-    node->val = 0;
+    kv_node *node = new kv_node(num, 0);
     if (!avl_insert(avl_, &node->node)) {
       delete node;
     }

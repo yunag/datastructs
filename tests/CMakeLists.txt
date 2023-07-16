@@ -26,8 +26,8 @@ if(UNIX OR APPLE)
   list(APPEND TEST_COMPILE_OPTS -fsanitize=leak,address,undefined)
 endif()
 
-list(APPEND Targets queue priorityqueue stack hashtable avl)
-list(APPEND Sources queuetest.cpp pqtest.cpp stacktest.cpp htabletest.cpp avltest.cpp)
+list(APPEND Targets queue priorityqueue stack hashtable avltree)
+list(APPEND Sources queue.cpp priorityqueue.cpp stack.cpp hashtable.cpp avltree.cpp)
 foreach(target source IN ZIP_LISTS Targets Sources)
   add_executable(${target} ${source})
   target_link_libraries(${target}
@@ -40,5 +40,5 @@ foreach(target source IN ZIP_LISTS Targets Sources)
   )
   set_property(TARGET ${target} PROPERTY CXX_STANDARD 11)
 
-  add_test(${target}Test ${target})
+  add_test(${target} ${target})
 endforeach()

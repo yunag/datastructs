@@ -60,8 +60,8 @@ protected:
   void SetUp() override {}
   void TearDown() override { htable_destroy(ht_); }
 
-  void SetHashTable(hash_ht_entries_fn hash, cmp_ht_entries_fn cmp_key,
-                    destroy_ht_entry_fn destroy = NULL, size_t size = 1) {
+  void SetHashTable(hash_ht_entry_fun hash, compare_ht_entries_fun cmp_key,
+                    destroy_ht_entry_fun destroy = NULL, size_t size = 1) {
     ht_ = htable_create(size, hash, cmp_key, destroy);
     ASSERT_NE(ht_, nullptr);
   }
@@ -204,7 +204,7 @@ TEST_F(HashTableTest, Case1) {
   }
 
   cycles = 0;
-  HT_FOR_EACH(ht_, entry) {
+  HTABLE_FOR_EACH(ht_, entry) {
     ht_key_value *kv = ht_entry(entry, ht_key_value, ht_entry);
     cycles++;
     ASSERT_EQ(kv->val, stl_map[kv->key]);
@@ -212,7 +212,7 @@ TEST_F(HashTableTest, Case1) {
   ASSERT_EQ(cycles, 2);
 
   cycles = 0;
-  HT_FOR_EACH(ht_, entry) {
+  HTABLE_FOR_EACH(ht_, entry) {
     ht_key_value *kv = ht_entry(entry, ht_key_value, ht_entry);
     cycles++;
     ASSERT_EQ(kv->val, stl_map[kv->key]);
