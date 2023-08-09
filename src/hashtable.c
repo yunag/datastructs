@@ -47,7 +47,8 @@ static bool rehash(hash_table *htable, size_t newsize) {
 }
 
 static struct hash_entry **
-lookup(hash_table *htable, const struct hash_entry *query, uint64_t bucket) {
+htable_lookup_internal(hash_table *htable, const struct hash_entry *query,
+                       uint64_t bucket) {
   struct hash_entry **walk = &htable->buckets[bucket];
   while (*walk && htable->cmp(*walk, query)) {
     walk = &(*walk)->next;
@@ -111,27 +112,27 @@ void htable_destroy(hash_table *htable) {
   yu_free(htable);
 }
 
-bool htable_insert(hash_table *htable, struct hash_entry *ht_entry) {
+bool htable_insert(hash_table *htable, struct hash_entry *hentry) {
   assert(htable != NULL);
-  assert(ht_entry != NULL);
+  assert(hentry != NULL);
 
   if (htable->capacity == htable->size && !rehash(htable, htable->size * 2)) {
     return false;
   }
-  uint64_t bct = GET_BUCKET(htable, ht_entry);
-  struct hash_entry **link = lookup(htable, ht_entry, bct);
+  uint64_t bct = GET_BUCKET(htable, hentry);
+  struct hash_entry **link = htable_lookup_internal(htable, hentry, bct);
   if (*link) { /* The key already exists in the hash table */
-    htable_replace_entry(htable, link, ht_entry);
+    htable_replace_entry(htable, link, hentry);
     return true;
   }
   struct hash_entry *tail = htable->head.ht_prev;
-  ht_entry->ht_prev = tail;
-  ht_entry->ht_next = tail->ht_next;
-  tail->ht_next->ht_prev = ht_entry;
-  tail->ht_next = ht_entry;
+  hentry->ht_prev = tail;
+  hentry->ht_next = tail->ht_next;
+  tail->ht_next->ht_prev = hentry;
+  tail->ht_next = hentry;
 
-  ht_entry->next = htable->buckets[bct];
-  htable->buckets[bct] = ht_entry;
+  hentry->next = htable->buckets[bct];
+  htable->buckets[bct] = hentry;
   htable->size++;
   return true;
 }
@@ -141,7 +142,8 @@ struct hash_entry *htable_lookup(hash_table *htable,
   assert(htable != NULL);
   assert(query != NULL);
 
-  struct hash_entry *entry = *lookup(htable, query, GET_BUCKET(htable, query));
+  struct hash_entry *entry =
+      *htable_lookup_internal(htable, query, GET_BUCKET(htable, query));
   return entry;
 }
 
@@ -149,7 +151,8 @@ bool htable_remove(hash_table *htable, const struct hash_entry *query) {
   assert(htable != NULL);
   assert(query != NULL);
 
-  struct hash_entry **link = lookup(htable, query, GET_BUCKET(htable, query));
+  struct hash_entry **link =
+      htable_lookup_internal(htable, query, GET_BUCKET(htable, query));
   if (!*link) {
     return false;
   }

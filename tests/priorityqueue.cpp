@@ -32,7 +32,7 @@ protected:
   void TearDown() override { pq_destroy(pq_); }
 
   template <typename T>
-  void SetPQueue(size_t size = 1, compare_fn cmp = cmp_great<T>) {
+  void SetPQueue(size_t size = 1, compare_fun cmp = cmp_great<T>) {
     pq_ = pq_create(size, sizeof(T), cmp);
     ASSERT_NE(pq_, nullptr);
   }

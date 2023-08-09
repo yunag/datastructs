@@ -29,7 +29,7 @@ hash_table *htable_create(size_t initial_capacity, hash_ht_entry_fun hash,
                           compare_ht_entries_fun cmp,
                           destroy_ht_entry_fun destroy);
 void htable_destroy(hash_table *htable);
-bool htable_insert(hash_table *htable, struct hash_entry *ht_entry);
+bool htable_insert(hash_table *htable, struct hash_entry *hentry);
 struct hash_entry *htable_lookup(hash_table *htable,
                                  const struct hash_entry *query);
 bool htable_remove(hash_table *htable, const struct hash_entry *query);

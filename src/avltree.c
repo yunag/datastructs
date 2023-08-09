@@ -26,9 +26,9 @@ static struct avl_node *avl_left_rotate(struct avl_node *node) {
 
   rnode->parent = node->parent;
   node->parent = rnode;
-  if (node->right)
+  if (node->right) {
     node->right->parent = node;
-
+  }
   node->height = avl_height(node);
   rnode->height = avl_height(rnode);
   return rnode;
@@ -41,9 +41,9 @@ static struct avl_node *avl_right_rotate(struct avl_node *node) {
 
   lnode->parent = node->parent;
   node->parent = lnode;
-  if (node->left)
+  if (node->left) {
     node->left->parent = node;
-
+  }
   node->height = avl_height(node);
   lnode->height = avl_height(lnode);
   return lnode;
@@ -271,7 +271,7 @@ struct avl_node *avl_find(avl_tree *avl, const struct avl_node *query) {
 }
 
 struct avl_node *avl_first(const struct avl_root *root) {
-  assert(avl != NULL);
+  assert(root != NULL);
 
   struct avl_node *node = root->avl_node;
   if (!node) {
@@ -284,7 +284,7 @@ struct avl_node *avl_first(const struct avl_root *root) {
 }
 
 struct avl_node *avl_last(const struct avl_root *root) {
-  assert(avl != NULL);
+  assert(root != NULL);
 
   struct avl_node *node = root->avl_node;
   if (!node) {

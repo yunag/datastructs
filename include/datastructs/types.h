@@ -4,6 +4,4 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef int (*compare_fn)(const void *, const void *);
-
 #endif // !YU_TYPES_H

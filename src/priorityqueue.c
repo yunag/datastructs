@@ -20,7 +20,7 @@ struct priority_queue {
   char *heap; /* Node storage buffer */
   char *last;
 
-  compare_fn cmp;  /* Function for comparing two nodes */
+  compare_fun cmp; /* Function for comparing two nodes */
   size_t size;     /* Size of the Priority Queue */
   size_t capacity; /* Capacity of the Priority Queue */
   size_t esize;    /* Size of a single element in the Priority Queue*/
@@ -40,7 +40,7 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
 }
 
 static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
-                               compare_fn cmp) {
+                               compare_fun cmp) {
   assert(capacity > 0);
   assert(esize > 0);
   assert(cmp != NULL);
@@ -62,12 +62,12 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
   return pq;
 }
 
-priority_queue *pq_create(size_t capacity, size_t elemsize, compare_fn cmp) {
+priority_queue *pq_create(size_t capacity, size_t elemsize, compare_fun cmp) {
   return pq_init(0, capacity, elemsize, cmp);
 }
 
 priority_queue *pq_create_from_heap(const void *heap, size_t count,
-                                    size_t elemsize, compare_fn cmp) {
+                                    size_t elemsize, compare_fun cmp) {
   assert(heap != NULL);
 
   priority_queue *pq = pq_init(count, count, elemsize, cmp);
@@ -76,7 +76,7 @@ priority_queue *pq_create_from_heap(const void *heap, size_t count,
 }
 
 priority_queue *pq_create_from_arr(const void *base, size_t count,
-                                   size_t elemsize, compare_fn cmp) {
+                                   size_t elemsize, compare_fun cmp) {
   assert(base != NULL);
 
   priority_queue *pq = pq_init(count, count, elemsize, cmp);
@@ -93,7 +93,7 @@ void pq_destroy(priority_queue *pq) {
 }
 
 static void heapify_down(char *heap, char *last, char *node, size_t size,
-                         compare_fn cmp) {
+                         compare_fun cmp) {
   char *cur = node;
   char *lch, *rch;
   while ((lch = LCHILD(cur)) < last) {
@@ -109,7 +109,7 @@ static void heapify_down(char *heap, char *last, char *node, size_t size,
   }
 }
 
-void heapify(void *base, size_t count, size_t size, compare_fn cmp) {
+void heapify(void *base, size_t count, size_t size, compare_fun cmp) {
   assert(base != NULL);
   assert(cmp != NULL);
 
