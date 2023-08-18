@@ -9,7 +9,6 @@ struct stack {
   void *buffer; /* Buffer for storing elements */
   char *top;    /* Top of the stack */
 
-  size_t size;     /* Size of the Stack */
   size_t capacity; /* Capacity of the Stack */
   size_t esize;    /* Size of a single element in the Stack */
 };
@@ -18,12 +17,12 @@ static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL);
   assert(newsize >= 1);
 
-  void *tmp = yu_realloc(s->buffer, s->esize * newsize);
+  char *tmp = yu_realloc(s->buffer, s->esize * newsize);
   if (!tmp) {
     return false;
   }
+  s->top = tmp + (s->top - (char *)s->buffer);
   s->buffer = tmp;
-  s->top = (char *)tmp + (s->esize * s->size);
   s->capacity = newsize;
   return true;
 }
@@ -44,7 +43,6 @@ stack *stack_create(size_t capacity, size_t elemsize) {
   s->top = s->buffer;
   s->capacity = capacity;
   s->esize = elemsize;
-  s->size = 0;
   return s;
 }
 
@@ -64,7 +62,6 @@ void stack_push(stack *s, const void *elem) {
   }
   memcpy(s->top, elem, s->esize);
   s->top += s->esize;
-  s->size++;
 }
 
 void stack_pop(stack *s) {
@@ -74,7 +71,6 @@ void stack_pop(stack *s) {
     return;
   }
   s->top -= s->esize;
-  s->size--;
 }
 
 void *stack_top(stack *s) {
@@ -88,7 +84,7 @@ void *stack_top(stack *s) {
 
 bool stack_full(stack *s) {
   assert(s != NULL);
-  return s->size == s->capacity;
+  return stack_size(s) == s->capacity;
 }
 
 bool stack_empty(stack *s) {
@@ -98,7 +94,7 @@ bool stack_empty(stack *s) {
 
 size_t stack_size(stack *s) {
   assert(s != NULL);
-  return s->size;
+  return (s->top - (char *)s->buffer) / s->esize;
 }
 
 size_t stack_esize(stack *s) {
