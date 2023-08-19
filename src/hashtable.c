@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#define IDEAL_LOAD_FACTOR 0.7
+
 #define GET_BUCKET(htable, key) ((htable)->hash((key)) % (htable)->capacity)
 
 /* Pointer to invalid memory address */
@@ -16,9 +18,12 @@ struct hash_table {
   struct hash_entry **buckets; /* Buckets to store pointers to hash entrys */
   struct hash_entry head;      /* Head of `global` linked list */
 
-  hash_ht_entry_fun hash;       /* Hash entry */
-  compare_ht_entries_fun cmp;   /* Compare two entries */
-  destroy_ht_entry_fun destroy; /* Destory entry */
+  hash_entry_fun hash;
+  compare_ht_fun cmp;
+  destroy_ht_fun destroy;
+
+  size_t ideal_size; /* Size of the hash table should not be greater than this
+                        value */
 
   size_t size;     /* Number of elements*/
   size_t capacity; /* Capacity of the table */
@@ -32,6 +37,7 @@ static bool rehash(hash_table *htable, size_t newsize) {
   yu_free(htable->buckets);
   htable->buckets = nbuckets;
   htable->capacity = newsize;
+  htable->ideal_size = newsize * IDEAL_LOAD_FACTOR + 1;
 
   struct hash_entry *walk = htable->head.ht_next;
   while (walk != &htable->head) {
@@ -68,9 +74,8 @@ static void htable_replace_entry(hash_table *htable, struct hash_entry **victim,
   new->ht_next->ht_prev = new;
 }
 
-hash_table *htable_create(size_t capacity, hash_ht_entry_fun hash,
-                          compare_ht_entries_fun cmp,
-                          destroy_ht_entry_fun destroy) {
+hash_table *htable_create(size_t capacity, hash_entry_fun hash,
+                          compare_ht_fun cmp, destroy_ht_fun destroy) {
   assert(capacity > 0);
   assert(hash != NULL);
   assert(cmp != NULL);
@@ -91,6 +96,7 @@ hash_table *htable_create(size_t capacity, hash_ht_entry_fun hash,
   htable->head.next = DUMMY_PTR;
 
   htable->size = 0;
+  htable->ideal_size = capacity * IDEAL_LOAD_FACTOR + 1;
   htable->capacity = capacity;
   return htable;
 }
@@ -116,9 +122,11 @@ bool htable_insert(hash_table *htable, struct hash_entry *hentry) {
   assert(htable != NULL);
   assert(hentry != NULL);
 
-  if (htable->capacity == htable->size && !rehash(htable, htable->size * 2)) {
+  if (htable->size == htable->ideal_size &&
+      !rehash(htable, htable->capacity * 2)) {
     return false;
   }
+
   uint64_t bct = GET_BUCKET(htable, hentry);
   struct hash_entry **link = htable_lookup_internal(htable, hentry, bct);
   if (*link) { /* The key already exists in the hash table */

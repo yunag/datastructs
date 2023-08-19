@@ -18,16 +18,15 @@ struct hash_entry {
   struct hash_entry *next; /* Pointer to next entry in current bucket */
 };
 
-typedef int (*compare_ht_entries_fun)(const struct hash_entry *,
-                                      const struct hash_entry *);
-typedef uint64_t (*hash_ht_entry_fun)(const struct hash_entry *);
-typedef void (*destroy_ht_entry_fun)(struct hash_entry *);
+typedef int (*compare_ht_fun)(const struct hash_entry *,
+                              const struct hash_entry *);
+typedef uint64_t (*hash_entry_fun)(const struct hash_entry *);
+typedef void (*destroy_ht_fun)(struct hash_entry *);
 
 #define ht_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
 
-hash_table *htable_create(size_t initial_capacity, hash_ht_entry_fun hash,
-                          compare_ht_entries_fun cmp,
-                          destroy_ht_entry_fun destroy);
+hash_table *htable_create(size_t initial_capacity, hash_entry_fun hash,
+                          compare_ht_fun cmp, destroy_ht_fun destroy);
 void htable_destroy(hash_table *htable);
 bool htable_insert(hash_table *htable, struct hash_entry *hentry);
 struct hash_entry *htable_lookup(hash_table *htable,

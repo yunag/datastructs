@@ -60,8 +60,8 @@ protected:
   void SetUp() override {}
   void TearDown() override { htable_destroy(ht_); }
 
-  void SetHashTable(hash_ht_entry_fun hash, compare_ht_entries_fun cmp_key,
-                    destroy_ht_entry_fun destroy = NULL, size_t size = 1) {
+  void SetHashTable(hash_entry_fun hash, compare_ht_fun cmp_key,
+                    destroy_ht_fun destroy = NULL, size_t size = 1) {
     ht_ = htable_create(size, hash, cmp_key, destroy);
     ASSERT_NE(ht_, nullptr);
   }
