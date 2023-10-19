@@ -22,11 +22,11 @@ struct trie_node {
 };
 
 static struct trie_node *trie_node_create(void) {
-  struct trie_node *node = yu_allocate(sizeof(*node));
+  struct trie_node *node = _yu_allocator.allocate(sizeof(*node));
   if (!node) {
     return NULL;
   }
-  node->child = yu_calloc(ASCII_LENGTH, sizeof(struct trie_node *));
+  node->child = _yu_allocator.calloc(ASCII_LENGTH, sizeof(struct trie_node *));
   if (!node->child) {
     free(node);
     return NULL;
@@ -43,7 +43,7 @@ static void trie_node_destroy(struct trie_node *node) {
 }
 
 trie *trie_create(void) {
-  trie *trie = yu_allocate(sizeof(*trie));
+  trie *trie = _yu_allocator.allocate(sizeof(*trie));
   if (!trie) {
     return NULL;
   }

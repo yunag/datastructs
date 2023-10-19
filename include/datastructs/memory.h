@@ -7,10 +7,14 @@
 extern "C" {
 #endif
 
-void *yu_allocate(size_t size);
-void *yu_calloc(size_t count, size_t size);
-void *yu_realloc(void *block, size_t size);
-void yu_free(void *block);
+struct yu_allocator {
+  void *(*allocate)(size_t);
+  void *(*calloc)(size_t, size_t);
+  void *(*realloc)(void *, size_t);
+  void (*free)(void *);
+};
+
+extern struct yu_allocator _yu_allocator;
 
 #ifdef __cplusplus
 }

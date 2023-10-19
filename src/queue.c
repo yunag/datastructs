@@ -19,14 +19,14 @@ queue *queue_create(size_t capacity, size_t elemsize) {
   assert(capacity > 0);
   assert(elemsize > 0);
 
-  queue *q = yu_allocate(sizeof(*q));
+  queue *q = _yu_allocator.allocate(sizeof(*q));
   if (!q) {
     return NULL;
   }
 
-  q->buffer = yu_allocate(elemsize * capacity);
+  q->buffer = _yu_allocator.allocate(elemsize * capacity);
   if (!q->buffer) {
-    yu_free(q);
+    _yu_allocator.free(q);
     return NULL;
   }
   q->capacity = capacity;
@@ -40,8 +40,8 @@ queue *queue_create(size_t capacity, size_t elemsize) {
 
 void queue_destroy(queue *q) {
   if (q) {
-    yu_free(q->buffer);
-    yu_free(q);
+    _yu_allocator.free(q->buffer);
+    _yu_allocator.free(q);
   }
 }
 
@@ -51,10 +51,11 @@ static bool queue_resize(queue *q, size_t newsize) {
   char *buffer;
   size_t bufsize = newsize * q->esize;
 
-  buffer = yu_allocate(bufsize);
+  buffer = _yu_allocator.allocate(bufsize);
   if (!buffer) {
     return false;
   }
+
   if (q->front < q->rear) {
     memcpy(buffer, q->front, q->rear - q->front);
   } else {
@@ -62,7 +63,7 @@ static bool queue_resize(queue *q, size_t newsize) {
     memcpy(buffer + (q->end - q->front), q->buffer,
            q->rear - (char *)q->buffer);
   }
-  yu_free(q->buffer);
+  _yu_allocator.free(q->buffer);
 
   q->front = buffer;
   q->rear = buffer + q->esize * q->size;

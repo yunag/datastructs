@@ -29,6 +29,7 @@ static struct avl_node *avl_left_rotate(struct avl_node *node) {
   if (node->right) {
     node->right->parent = node;
   }
+
   node->height = avl_height(node);
   rnode->height = avl_height(rnode);
   return rnode;
@@ -44,6 +45,7 @@ static struct avl_node *avl_right_rotate(struct avl_node *node) {
   if (node->left) {
     node->left->parent = node;
   }
+
   node->height = avl_height(node);
   lnode->height = avl_height(lnode);
   return lnode;
@@ -87,6 +89,7 @@ static struct avl_node *rebalance(struct avl_root *root,
   } else {
     node->height = avl_height(node);
   }
+
   return height != new->height ? parent : NULL;
 }
 
@@ -141,7 +144,7 @@ void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp,
 avl_tree *avl_create(compare_avl_nodes_fun cmp, destroy_avl_node_fun destroy) {
   assert(cmp != NULL);
 
-  avl_tree *avl = yu_allocate(sizeof(*avl));
+  avl_tree *avl = _yu_allocator.allocate(sizeof(*avl));
   if (!avl) {
     return NULL;
   }
@@ -162,7 +165,7 @@ void avl_destroy(avl_tree *avl) {
     avl_free_rec(avl->root.avl_node, avl->destroy);
   }
   if (avl->allocated) {
-    yu_free(avl);
+    _yu_allocator.free(avl);
   }
 }
 

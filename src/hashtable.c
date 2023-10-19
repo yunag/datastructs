@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Should be arranged from 0.5 to 0.8 */
@@ -24,10 +25,7 @@ struct hash_table {
   struct hash_entry head;      /* Head of `global` linked list */
 
   hash_entry_fun hash;
-  union {
-    /* TODO: implement custom lookup function */
-    compare_ht_fun cmp;
-  };
+  compare_ht_fun cmp;
   destroy_ht_fun destroy;
 
   size_t ideal_size; /* Size of the hash table should not be greater than this
@@ -40,12 +38,13 @@ struct hash_table {
 bool htable_rehash(hash_table *htable, size_t newsize) {
   assert(htable != NULL);
 
-  struct hash_bucket *nbuckets = yu_calloc(newsize, sizeof(*nbuckets));
+  struct hash_bucket *nbuckets =
+      _yu_allocator.calloc(newsize, sizeof(*nbuckets));
   if (!nbuckets) {
     return false;
   }
 
-  yu_free(htable->buckets);
+  _yu_allocator.free(htable->buckets);
 
   htable->buckets = nbuckets;
   htable->capacity = newsize;
@@ -93,14 +92,14 @@ hash_table *htable_create(size_t capacity, hash_entry_fun hash,
   assert(hash != NULL);
   assert(cmp != NULL);
 
-  hash_table *htable = yu_allocate(sizeof(*htable));
+  hash_table *htable = _yu_allocator.allocate(sizeof(*htable));
   if (!htable) {
     return NULL;
   }
 
-  htable->buckets = yu_calloc(capacity, sizeof(*htable->buckets));
+  htable->buckets = _yu_allocator.calloc(capacity, sizeof(*htable->buckets));
   if (!htable->buckets) {
-    yu_free(htable);
+    _yu_allocator.free(htable);
     return NULL;
   }
 
@@ -129,8 +128,8 @@ void htable_destroy(hash_table *htable) {
       htable->destroy(tmp);
     }
   }
-  yu_free(htable->buckets);
-  yu_free(htable);
+  _yu_allocator.free(htable->buckets);
+  _yu_allocator.free(htable);
 }
 
 bool htable_insert(hash_table *htable, struct hash_entry *hentry) {
