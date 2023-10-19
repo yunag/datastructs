@@ -65,11 +65,11 @@ uint64_t yu_hash_str(const void *str) {
 
 int yu_cmp_str(const void *a, const void *b) { return strcmp(a, b); }
 
-char *yu_dup_str(const char *value) {
-  size_t slen = strlen(value);
+char *yu_dup_str(const char *s) {
+  size_t slen = strlen(s);
   char *str = malloc(slen + 1);
   if (str) {
-    memcpy(str, value, slen + 1);
+    memcpy(str, s, slen + 1);
   }
   return str;
 }

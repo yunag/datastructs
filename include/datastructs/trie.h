@@ -15,7 +15,6 @@ void trie_insert(trie *trie, const char *word);
 bool trie_search(trie *trie, const char *word);
 bool trie_remove(trie *trie, const char *word);
 bool trie_starts_with(trie *trie, const char *prefix);
-void trie_print(trie *trie);
 
 #ifdef __cplusplus
 }
