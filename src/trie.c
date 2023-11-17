@@ -20,15 +20,17 @@ struct trie_node {
 };
 
 static struct trie_node *trie_node_create(void) {
-  struct trie_node *node = _yu_allocator.allocate(sizeof(*node));
+  struct trie_node *node = yu_malloc(sizeof(*node));
   if (!node) {
     return NULL;
   }
-  node->child = _yu_allocator.calloc(ASCII_LENGTH, sizeof(struct trie_node *));
+
+  node->child = yu_calloc(ASCII_LENGTH, sizeof(struct trie_node *));
   if (!node->child) {
     free(node);
     return NULL;
   }
+
   node->word = false;
   node->child_count = 0;
   return node;
@@ -41,10 +43,11 @@ static void trie_node_destroy(struct trie_node *node) {
 }
 
 trie *trie_create(void) {
-  trie *trie = _yu_allocator.allocate(sizeof(*trie));
+  trie *trie = yu_malloc(sizeof(*trie));
   if (!trie) {
     return NULL;
   }
+
   trie->root = trie_node_create();
   return trie;
 }

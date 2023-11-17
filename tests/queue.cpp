@@ -123,6 +123,7 @@ TEST_F(QueueTest, STLQueue) {
 
 TEST_F(QueueTest, Case1) {
   SetQueue<double>();
+
   QUEUE_PUSH(q_, 5.0);
   EXPECT_EQ(QUEUE_FRONT(q_, double), 5);
   EXPECT_EQ(QUEUE_BACK(q_, double), 5);
@@ -152,6 +153,7 @@ TEST_F(QueueTest, Case1) {
 
 TEST_F(QueueTest, Case2) {
   SetQueue<double>(5);
+
   QUEUE_PUSH(q_, 5.0);
   QUEUE_PUSH(q_, 5.0);
   QUEUE_PUSH(q_, 1.0);
@@ -164,6 +166,7 @@ TEST_F(QueueTest, Case2) {
   QUEUE_PUSH(q_, 5.0);
   QUEUE_PUSH(q_, 6.0);
   EXPECT_EQ(queue_size(q_), 6);
+
   for (size_t i = 0, qsize = queue_size(q_); i < qsize - 1; ++i) {
     EXPECT_EQ(QUEUE_FRONT(q_, double), i + 1);
     queue_pop(q_);

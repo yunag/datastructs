@@ -1,6 +1,5 @@
 #include "datastructs/avl_tree.h"
 #include "datastructs/macros.h"
-#include "datastructs/memory.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -107,6 +106,7 @@ static struct avl_node *avl_remove_node_internal(avl_tree *avl,
                                                  struct avl_node **link) {
   struct avl_node *node = *link;
   struct avl_node *new = avl_remove_node(&avl->root, link);
+
   if (avl->destroy) {
     avl->destroy(node);
   }
@@ -138,34 +138,14 @@ void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp,
   avl->destroy = destroy;
   avl->root.avl_node = NULL;
   avl->size = 0;
-  avl->allocated = false;
 }
 
-avl_tree *avl_create(compare_avl_nodes_fun cmp, destroy_avl_node_fun destroy) {
-  assert(cmp != NULL);
-
-  avl_tree *avl = _yu_allocator.allocate(sizeof(*avl));
-  if (!avl) {
-    return NULL;
-  }
-
-  avl->cmp = cmp;
-  avl->destroy = destroy;
-  avl->root.avl_node = NULL;
-  avl->size = 0;
-  avl->allocated = true;
-  return avl;
-}
-
-void avl_destroy(avl_tree *avl) {
+void avl_uninit(avl_tree *avl) {
   if (!avl) {
     return;
   }
   if (avl->destroy) {
     avl_free_rec(avl->root.avl_node, avl->destroy);
-  }
-  if (avl->allocated) {
-    _yu_allocator.free(avl);
   }
 }
 
@@ -205,9 +185,11 @@ struct avl_node *avl_remove_node(struct avl_root *root,
     new = node->parent == victim ? node : node->parent;
     avl_replace_node(victim, node, root);
   }
+
   if (*link) {
     (*link)->parent = new;
   }
+
   return new;
 }
 

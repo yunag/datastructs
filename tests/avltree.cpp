@@ -2,13 +2,11 @@
 
 #include "datastructs/avl_tree.h"
 #include "datastructs/functions.h"
-#include "datastructs/macros.h"
 
 #include "helper.h"
 
 #include <algorithm>
 #include <climits>
-#include <map>
 #include <unordered_set>
 
 struct kv_node {
@@ -72,10 +70,14 @@ void destroy_kv_node(avl_node *a) {
 class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { avl_destroy(avl_); }
+  void TearDown() override {
+    avl_uninit(avl_);
+    delete avl_;
+  }
 
   void setAVL(destroy_avl_node_fun destroy = destroy_kv_node) {
-    avl_ = avl_create(cmp_kv_node, destroy);
+    avl_ = new avl_tree;
+    avl_init(avl_, cmp_kv_node, destroy);
     ASSERT_NE(avl_, nullptr);
   }
 
@@ -104,6 +106,7 @@ TEST_F(BSTTest, STLSet) {
     ASSERT_EQ(stl.size(), avl_->size);
     ASSERT_TRUE(valid_avl(avl_));
     ASSERT_TRUE(valid_bst(avl_));
+
     if (stl.empty()) {
       command = Action::Insert;
     }
@@ -116,10 +119,12 @@ TEST_F(BSTTest, STLSet) {
         ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       } else {
         ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
+
         keys.push_back(key);
         stl.insert(key);
         kv_node *toinsert = new kv_node(key, 0);
         avl_insert(avl_, &toinsert->node);
+
         ASSERT_NE(avl_find(avl_, &query.node), nullptr);
       }
       break;
@@ -129,10 +134,13 @@ TEST_F(BSTTest, STLSet) {
       int idx = Helper::rand_inrange(0, keys.size() - 1);
       int key = keys[idx];
       query.key = key;
+
       ASSERT_NE(avl_find(avl_, &query.node), nullptr);
+
       stl.erase(key);
       avl_remove(avl_, &query.node);
       keys.erase(keys.begin() + idx);
+
       ASSERT_EQ(avl_find(avl_, &query.node), nullptr);
       break;
     }
@@ -173,6 +181,7 @@ TEST_F(BSTTest, Case1) {
         << "Cycles is " << cycles << '\n';
     cycles++;
   }
+
   ASSERT_EQ(cycles, nums.size());
 
   cycles = 0;
@@ -183,6 +192,7 @@ TEST_F(BSTTest, Case1) {
       break;
     }
   }
+
   ASSERT_EQ(cycles, 5);
 }
 
@@ -202,12 +212,15 @@ TEST_F(BSTTest, Case2) {
 
 TEST_F(BSTTest, Case3) {
   setAVL();
+
   kv_node query;
   std::vector<int> nums = {4, 2, 5, 1, 3, 0};
+
   for (int num : nums) {
     kv_node *toinsert = new kv_node(num, 0);
     avl_insert(avl_, &toinsert->node);
   }
+
   for (int num : nums) {
     query.key = num;
     ASSERT_NE(avl_find(avl_, &query.node), nullptr);
@@ -216,6 +229,7 @@ TEST_F(BSTTest, Case3) {
 
 TEST_F(BSTTest, InsertOnly_ValidAvl) {
   setAVL();
+
   size_t num_inserts = 1000;
   for (size_t i = 0; i < num_inserts; ++i) {
     int num = Helper::rand_inrange(-2000000, 2000000);
@@ -223,6 +237,7 @@ TEST_F(BSTTest, InsertOnly_ValidAvl) {
     if (!avl_insert(avl_, &node->node)) {
       delete node;
     }
+
     ASSERT_TRUE(valid_avl(avl_)) << "It is not a valid AVL Tree";
     ASSERT_TRUE(valid_bst(avl_)) << "It is not a valid BST";
   }

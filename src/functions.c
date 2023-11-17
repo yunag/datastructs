@@ -1,6 +1,5 @@
 #include "datastructs/functions.h"
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,9 +7,9 @@
 #define FNV_PRIME 0x100000001b3
 #define FNV_OFFSET 0xcbf29ce484222325UL
 #define FNHASHDEF(type, postfix)                                               \
-  uint64_t yu_hash_##postfix(type key) {                                       \
+  size_t yu_hash_##postfix(type key) {                                         \
     const unsigned char *bytes = (const unsigned char *)&key;                  \
-    uint64_t hashv = FNV_OFFSET;                                               \
+    size_t hashv = FNV_OFFSET;                                                 \
     for (size_t i = 0; i < sizeof(type); ++i) {                                \
       hashv ^= bytes[i];                                                       \
       hashv *= FNV_PRIME;                                                      \

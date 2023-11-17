@@ -3,19 +3,35 @@
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
 
-#include "datastructs/macros.h"
 #include "helper.h"
 
+#include <cassert>
 #include <climits>
 #include <cstring>
 #include <unordered_map>
 #include <utility>
 
-typedef struct ht_key_value {
+class HashTableTest : public ::testing::Test {
+protected:
+  void SetUp() override {}
+  void TearDown() override { htable_destroy(ht_, destroy_entry_); }
+
+  void SetHashTable(hash_entry_fun hash, lookup_ht_fun lookup,
+                    destroy_ht_fun destroy = nullptr, size_t size = 1) {
+    destroy_entry_ = destroy;
+    ht_ = htable_create(size, hash, lookup);
+    ASSERT_NE(ht_, nullptr);
+  }
+
+  destroy_ht_fun destroy_entry_ = nullptr;
+  hash_table *ht_ = nullptr;
+};
+
+struct ht_key_value {
   int key;
   int val;
   hash_entry he;
-} ht_key_value;
+};
 
 uint64_t hash_ht_key_value(const hash_entry *a) {
   ht_key_value *kva = ht_entry(a, ht_key_value, he);
@@ -34,13 +50,63 @@ int cmp_ht_key_value(const hash_entry *a, const hash_entry *b) {
   return 0;
 }
 
+struct hash_entry **lookup_ht_key_value(const struct hash_entry *query,
+                                        struct hash_bucket *bucket) {
+  ht_key_value *kv_query = ht_entry(query, ht_key_value, he);
+  HTABLE_LOOKUP_ITERATE(entry, link, bucket) {
+    ht_key_value *kv = ht_entry(entry, ht_key_value, he);
+    if (entry->hashv == query->hashv && kv->key == kv_query->key) {
+      return link;
+    }
+  }
+  return link;
+}
+
 void destroy_ht_key_value(hash_entry *entry) {
   ht_key_value *kv = ht_entry(entry, ht_key_value, he);
   delete kv;
 }
 
+ht_key_value *find_kv(hash_table *htable, int key) {
+  ht_key_value kv = {.key = key};
+  struct hash_entry *entry = htable_lookup(htable, &kv.he);
+  if (entry) {
+    return ht_entry(entry, ht_key_value, he);
+  }
+  return NULL;
+}
+
+bool insert_kv(hash_table *htable, int key, int val) {
+  ht_key_value *kv = find_kv(htable, key);
+  if (kv) {
+    kv->val = val;
+    return true;
+  }
+  kv = new ht_key_value;
+  kv->key = key;
+  kv->val = val;
+  if (!htable_insert(htable, &kv->he)) {
+    delete kv;
+    return false;
+  }
+
+  return true;
+}
+
+bool remove_kv(hash_table *htable, int key) {
+  ht_key_value kv = {.key = key};
+  struct hash_entry *entry = htable_remove(htable, &kv.he);
+
+  if (entry) {
+    delete ht_entry(entry, ht_key_value, he);
+    return true;
+  }
+
+  return false;
+}
+
 typedef struct ht_str_entry {
-  char *key;
+  char key[96];
   int val;
   struct hash_entry he;
 } ht_str_entry;
@@ -56,47 +122,83 @@ int cmp_ht_str_entry(const hash_entry *a, const hash_entry *b) {
   return strcmp(kva->key, kvb->key);
 }
 
+struct hash_entry **lookup_ht_str_entry(const struct hash_entry *query,
+                                        struct hash_bucket *bucket) {
+  ht_str_entry *query_str = ht_entry(query, ht_str_entry, he);
+  HTABLE_LOOKUP_ITERATE(entry, link, bucket) {
+    ht_str_entry *str = ht_entry(entry, ht_str_entry, he);
+    if (entry->hashv == query->hashv && strcmp(str->key, query_str->key) == 0) {
+      return link;
+    }
+  }
+  return link;
+}
+
 void destroy_ht_str_entry(hash_entry *entry) {
   ht_str_entry *kv = ht_entry(entry, ht_str_entry, he);
   delete kv;
 }
 
-class HashTableTest : public ::testing::Test {
-protected:
-  void SetUp() override {}
-  void TearDown() override { htable_destroy(ht_); }
+bool insert_str(hash_table *htable, const char *str, int val) {
+  struct hash_entry *replaced;
 
-  void SetHashTable(hash_entry_fun hash, compare_ht_fun cmp_key,
-                    destroy_ht_fun destroy = NULL, size_t size = 1) {
-    ht_ = htable_create(size, hash, cmp_key, destroy);
-    ASSERT_NE(ht_, nullptr);
+  ht_str_entry *kv = new ht_str_entry;
+  strcpy(kv->key, str);
+  kv->val = val;
+
+  bool res = htable_replace(htable, &kv->he, &replaced);
+  if (!res) {
+    delete kv;
   }
 
-  hash_table *ht_ = nullptr;
-};
+  if (replaced) {
+    delete ht_entry(replaced, ht_str_entry, he);
+  }
+  return res;
+}
+
+bool remove_str(hash_table *htable, const char *str) {
+  ht_str_entry kv;
+  assert(strlen(str) < sizeof(kv.key));
+
+  strcpy(kv.key, str);
+  struct hash_entry *entry = htable_remove(htable, &kv.he);
+
+  if (entry) {
+    delete ht_entry(entry, ht_str_entry, he);
+    return true;
+  }
+
+  return false;
+}
+
+ht_str_entry *find_str(hash_table *htable, const char *str) {
+  ht_str_entry kv;
+  assert(strlen(str) < sizeof(kv.key));
+
+  strcpy(kv.key, str);
+  struct hash_entry *entry = htable_lookup(htable, &kv.he);
+
+  if (entry) {
+    return ht_entry(entry, ht_str_entry, he);
+  }
+  return NULL;
+}
 
 TEST_F(HashTableTest, RemoveNotExistent) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
 
-  ht_key_value query;
+  remove_kv(ht_, 5);
 
-  query.key = 5;
-  htable_remove(ht_, &query.he);
+  insert_kv(ht_, 5, 0);
+  remove_kv(ht_, 6);
 
-  ht_key_value *toinsert = new ht_key_value;
-  toinsert->key = 5;
-  htable_insert(ht_, &toinsert->he);
-
-  query.key = 6;
-  htable_remove(ht_, &query.he);
-
-  query.key = 5;
-  htable_remove(ht_, &query.he);
-  htable_remove(ht_, &query.he);
+  remove_kv(ht_, 5);
+  remove_kv(ht_, 5);
 }
 
 TEST_F(HashTableTest, STLTable) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
 
   enum class Action {
     Insert,
@@ -106,7 +208,6 @@ TEST_F(HashTableTest, STLTable) {
 
   std::unordered_map<int, int> stl;
   std::vector<int> keys;
-  ht_key_value query;
   const size_t num_commands = 1000000;
 
   for (size_t i = 0; i < num_commands; ++i) {
@@ -121,29 +222,25 @@ TEST_F(HashTableTest, STLTable) {
     switch (command) {
     case Action::Insert: {
       int key = Helper::rand_inrange(-10000, 10000);
-      query.key = key;
+
+      ht_key_value *found = find_kv(ht_, key);
       if (stl.find(key) != stl.end()) {
-        ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
-        ht_key_value *kv =
-            ht_entry(htable_lookup(ht_, &query.he), ht_key_value, he);
-        EXPECT_EQ(stl.at(key), kv->val);
+        ASSERT_NE(found, nullptr);
+        EXPECT_EQ(stl.at(key), found->val);
       } else {
-        ASSERT_EQ(htable_lookup(ht_, &query.he), nullptr);
+        ASSERT_EQ(found, nullptr);
         keys.push_back(key);
       }
+
       int val = Helper::rand_inrange(INT_MIN, INT_MAX);
-      ht_key_value *toinsert = new ht_key_value;
-      toinsert->key = key;
-      toinsert->val = val;
-      htable_insert(ht_, &toinsert->he);
+      insert_kv(ht_, key, val);
 
       stl[key] = val;
-      query.key = key;
-      ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
 
-      ht_key_value *kv =
-          ht_entry(htable_lookup(ht_, &query.he), ht_key_value, he);
-      EXPECT_EQ(stl.at(key), kv->val);
+      found = find_kv(ht_, key);
+      ASSERT_NE(found, nullptr);
+
+      EXPECT_EQ(stl.at(key), found->val);
       break;
     }
 
@@ -153,19 +250,17 @@ TEST_F(HashTableTest, STLTable) {
 
       ASSERT_NE(stl.find(key), stl.end());
 
-      query.key = key;
-      ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
+      ht_key_value *found = find_kv(ht_, key);
+      ASSERT_NE(found, nullptr);
 
-      ht_key_value *kv =
-          ht_entry(htable_lookup(ht_, &query.he), ht_key_value, he);
-      EXPECT_EQ(stl.at(key), kv->val);
+      EXPECT_EQ(stl.at(key), found->val);
 
       stl.erase(key);
-      htable_remove(ht_, &query.he);
+      remove_kv(ht_, key);
       keys.erase(keys.begin() + idx);
 
       EXPECT_EQ(stl.find(key), stl.end());
-      EXPECT_EQ(htable_lookup(ht_, &query.he), nullptr);
+      EXPECT_EQ(find_kv(ht_, key), nullptr);
       break;
     }
 
@@ -173,15 +268,13 @@ TEST_F(HashTableTest, STLTable) {
       int idx = Helper::rand_inrange(0, keys.size() - 1);
       int key = keys[idx];
 
-      query.key = key;
-      if (stl.find(key) != stl.end()) {
-        ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
+      ht_key_value *found = find_kv(ht_, key);
 
-        ht_key_value *kv =
-            ht_entry(htable_lookup(ht_, &query.he), ht_key_value, he);
-        EXPECT_EQ(stl.at(key), kv->val);
+      if (stl.find(key) != stl.end()) {
+        ASSERT_NE(found, nullptr);
+        EXPECT_EQ(stl.at(key), found->val);
       } else {
-        ASSERT_EQ(htable_lookup(ht_, &query.he), nullptr);
+        ASSERT_EQ(found, nullptr);
       }
       break;
     }
@@ -190,7 +283,7 @@ TEST_F(HashTableTest, STLTable) {
 }
 
 TEST_F(HashTableTest, Case1) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
   std::unordered_map<int, int> stl_map;
   std::vector<std::pair<int, int>> kvalues = {
       {8, 9},
@@ -201,11 +294,7 @@ TEST_F(HashTableTest, Case1) {
 
   int cycles;
   for (const auto &kv : kvalues) {
-    ht_key_value *toinsert = new ht_key_value;
-    toinsert->key = kv.first;
-    toinsert->val = kv.second;
-
-    htable_insert(ht_, &toinsert->he);
+    insert_kv(ht_, kv.first, kv.second);
     stl_map[kv.first] = kv.second;
   }
 
@@ -230,100 +319,74 @@ TEST_F(HashTableTest, Case1) {
 }
 
 TEST_F(HashTableTest, SortTable) {
-  SetHashTable(hash_ht_key_value, cmp_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
   std::vector<int> values = {5, 7, 1,   8, 2, 227, 80, 117, 2000, -5, -7, 9,
                              3, 5, 100, 8, 9, 10,  22, 2,   1,    5,  7,  9};
   for (int val : values) {
-    ht_key_value *kv = new ht_key_value;
-    kv->key = val;
-    htable_insert(ht_, &kv->he);
+    insert_kv(ht_, val, 0);
   }
 
   /* Sort ascending */
   htable_sort(ht_, cmp_ht_key_value);
 
-  size_t size = 0;
+  size_t num_iters = 0;
   int val = INT_MIN;
   HTABLE_FOR_EACH(ht_, entry) {
     ht_key_value *kv = ht_entry(entry, ht_key_value, he);
     ASSERT_GE(kv->key, val);
 
-    size++;
+    num_iters++;
     val = kv->key;
   }
-  ASSERT_EQ(htable_size(ht_), size);
+  ASSERT_EQ(htable_size(ht_), num_iters);
 }
 
 TEST_F(HashTableTest, Strings) {
-  SetHashTable(hash_ht_str_entry, cmp_ht_str_entry, destroy_ht_str_entry);
+  SetHashTable(hash_ht_str_entry, lookup_ht_str_entry, destroy_ht_str_entry);
 
   std::vector<std::pair<const char *, int>> kvalues = {
       {"Jacob", 9},   {"Banana", 10}, {"Banana", 25},
       {"Haruhi", 30}, {"Apple", 31},
   };
 
-  ht_str_entry query;
-
   for (const auto &kv : kvalues) {
-    ht_str_entry *toinsert = new ht_str_entry;
-    toinsert->key = (char *)kv.first;
-    toinsert->val = kv.second;
-    htable_insert(ht_, &toinsert->he);
+    insert_str(ht_, kv.first, kv.second);
   }
 
-  char buffer[256];
-  query.key = buffer;
+  ASSERT_NE(find_str(ht_, "Banana"), nullptr);
+  ASSERT_NE(find_str(ht_, "Apple"), nullptr);
+  ASSERT_NE(find_str(ht_, "Haruhi"), nullptr);
+  ASSERT_NE(find_str(ht_, "Jacob"), nullptr);
+  ASSERT_EQ(find_str(ht_, "Orange"), nullptr);
 
-  strcpy(buffer, "Banana");
-  ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
-  strcpy(buffer, "Apple");
-  ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
-  strcpy(buffer, "Haruhi");
-  ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
-  strcpy(buffer, "Jacob");
-  ASSERT_NE(htable_lookup(ht_, &query.he), nullptr);
-  strcpy(buffer, "Orange");
-  ASSERT_EQ(htable_lookup(ht_, &query.he), nullptr);
-
-  strcpy(buffer, "Banana");
-  ht_str_entry *kv = ht_entry(htable_lookup(ht_, &query.he), ht_str_entry, he);
+  ht_str_entry *kv = find_str(ht_, "Banana");
   EXPECT_EQ(kv->val, 25);
 
-  strcpy(buffer, "Apple");
-  kv = ht_entry(htable_lookup(ht_, &query.he), ht_str_entry, he);
+  kv = find_str(ht_, "Apple");
   EXPECT_EQ(kv->val, 31);
 
-  strcpy(buffer, "Haruhi");
-  kv = ht_entry(htable_lookup(ht_, &query.he), ht_str_entry, he);
+  kv = find_str(ht_, "Haruhi");
   EXPECT_EQ(kv->val, 30);
 
-  strcpy(buffer, "Jacob");
-  kv = ht_entry(htable_lookup(ht_, &query.he), ht_str_entry, he);
+  kv = find_str(ht_, "Jacob");
   EXPECT_EQ(kv->val, 9);
 
-  strcpy(buffer, "Jacob");
-  EXPECT_TRUE(htable_remove(ht_, &query.he));
+  EXPECT_TRUE(remove_str(ht_, "Jacob"));
+  ASSERT_EQ(find_str(ht_, "Jacob"), nullptr);
 
-  ASSERT_EQ(htable_lookup(ht_, &query.he), nullptr);
+  EXPECT_NE(find_str(ht_, "Banana"), nullptr);
 
-  strcpy(buffer, "Banana");
-  EXPECT_NE(htable_lookup(ht_, &query.he), nullptr);
+  EXPECT_FALSE(remove_str(ht_, "Africa"));
 
-  strcpy(buffer, "Moscow");
-  EXPECT_FALSE(htable_remove(ht_, &query.he));
-
-  strcpy(buffer, "Banana");
-  EXPECT_TRUE(htable_remove(ht_, &query.he));
-  EXPECT_EQ(htable_lookup(ht_, &query.he), nullptr);
+  EXPECT_TRUE(remove_str(ht_, "Banana"));
+  EXPECT_EQ(find_str(ht_, "Banana"), nullptr);
 
   EXPECT_EQ(htable_size(ht_), 2);
 
-  strcpy(buffer, "Apple");
-  kv = ht_entry(htable_lookup(ht_, &query.he), ht_str_entry, he);
+  kv = find_str(ht_, "Apple");
   EXPECT_EQ(kv->val, 31);
 
-  strcpy(buffer, "Haruhi");
-  kv = ht_entry(htable_lookup(ht_, &query.he), ht_str_entry, he);
+  kv = find_str(ht_, "Haruhi");
   EXPECT_EQ(kv->val, 30);
 }
 

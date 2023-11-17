@@ -2,7 +2,6 @@
 #define YU_AVL_TREE_H
 
 #include "datastructs/macros.h"
-#include "datastructs/types.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -33,7 +32,6 @@ struct avl_tree {
   compare_avl_nodes_fun cmp;
   destroy_avl_node_fun destroy;
 
-  bool allocated;
   size_t size;
 };
 
@@ -41,8 +39,8 @@ struct avl_tree {
 
 void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp,
               destroy_avl_node_fun destroy);
-avl_tree *avl_create(compare_avl_nodes_fun cmp, destroy_avl_node_fun destroy);
-void avl_destroy(avl_tree *avl);
+void avl_uninit(avl_tree *avl);
+
 bool avl_insert(avl_tree *avl, struct avl_node *node);
 void avl_remove(avl_tree *avl, const struct avl_node *query);
 struct avl_node *avl_find(avl_tree *avl, const struct avl_node *query);
@@ -58,7 +56,7 @@ struct avl_node *avl_next(const struct avl_node *node);
 struct avl_node *avl_prev(const struct avl_node *node);
 
 #define AVL_FOR_EACH(root, node)                                               \
-  for (avl_node *node = avl_first(root); node; node = avl_next(node))
+  for (struct avl_node *node = avl_first(root); node; node = avl_next(node))
 
 #ifdef __cplusplus
 }

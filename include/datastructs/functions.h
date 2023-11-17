@@ -11,7 +11,7 @@ uint64_t hash_bern(const void *key, size_t size);
 
 #define FUNCTION_DECL(type, postfix)                                           \
   type *yu_dup_##postfix(type value);                                          \
-  uint64_t yu_hash_##postfix(type key);                                        \
+  size_t yu_hash_##postfix(type key);                                          \
   int yu_cmp_##postfix(const void *a, const void *b);
 
 FUNCTION_DECL(int64_t, i64)
@@ -27,7 +27,7 @@ FUNCTION_DECL(float, float)
 FUNCTION_DECL(void *, ptr)
 
 char *yu_dup_str(const char *str);
-uint64_t yu_hash_str(const void *str);
+size_t yu_hash_str(const void *str);
 int yu_cmp_str(const void *a, const void *b);
 
 #undef FUNCTION_DECL

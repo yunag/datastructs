@@ -17,7 +17,7 @@ static bool stack_resize(stack *s, size_t newsize) {
   assert(s != NULL);
   assert(newsize > 0);
 
-  char *tmp = _yu_allocator.realloc(s->buffer, s->esize * newsize);
+  char *tmp = yu_realloc(s->buffer, s->esize * newsize);
   if (!tmp) {
     return false;
   }
@@ -31,13 +31,13 @@ stack *stack_create(size_t capacity, size_t elemsize) {
   assert(capacity > 0);
   assert(elemsize > 0);
 
-  stack *s = _yu_allocator.allocate(sizeof(*s));
+  stack *s = yu_malloc(sizeof(*s));
   if (!s) {
     return NULL;
   }
-  s->buffer = _yu_allocator.allocate(elemsize * capacity);
+  s->buffer = yu_malloc(elemsize * capacity);
   if (!s->buffer) {
-    _yu_allocator.free(s);
+    yu_free(s);
     return NULL;
   }
   s->top = s->buffer;
@@ -48,8 +48,8 @@ stack *stack_create(size_t capacity, size_t elemsize) {
 
 void stack_destroy(stack *s) {
   if (s) {
-    _yu_allocator.free(s->buffer);
-    _yu_allocator.free(s);
+    yu_free(s->buffer);
+    yu_free(s);
   }
 }
 

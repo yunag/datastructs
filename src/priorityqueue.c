@@ -29,7 +29,7 @@ struct priority_queue {
 static bool pq_resize(priority_queue *pq, size_t newsize) {
   assert(newsize > pq->size);
 
-  char *tmp = _yu_allocator.realloc(pq->heap, pq->esize * newsize);
+  char *tmp = yu_realloc(pq->heap, pq->esize * newsize);
   if (!tmp) {
     return false;
   }
@@ -45,13 +45,13 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
   assert(esize > 0);
   assert(cmp != NULL);
 
-  priority_queue *pq = _yu_allocator.allocate(sizeof(*pq));
+  priority_queue *pq = yu_malloc(sizeof(*pq));
   if (!pq) {
     return NULL;
   }
-  pq->heap = _yu_allocator.allocate(capacity * esize);
+  pq->heap = yu_malloc(capacity * esize);
   if (!pq->heap) {
-    _yu_allocator.free(pq);
+    yu_free(pq);
     return NULL;
   }
   pq->capacity = capacity;
@@ -87,8 +87,8 @@ priority_queue *pq_create_from_arr(const void *base, size_t count,
 
 void pq_destroy(priority_queue *pq) {
   if (pq) {
-    _yu_allocator.free(pq->heap);
-    _yu_allocator.free(pq);
+    yu_free(pq->heap);
+    yu_free(pq);
   }
 }
 
