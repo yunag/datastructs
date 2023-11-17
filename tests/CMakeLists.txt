@@ -26,8 +26,8 @@ if(UNIX OR APPLE)
   list(APPEND TEST_COMPILE_OPTS -fsanitize=leak,address,undefined)
 endif()
 
-list(APPEND Targets queue priorityqueue stack hashtable avltree)
-list(APPEND Sources queue.cpp priorityqueue.cpp stack.cpp hashtable.cpp avltree.cpp)
+list(APPEND Targets queue priorityqueue hashtable avltree)
+list(APPEND Sources queue.cpp priorityqueue.cpp hashtable.cpp avltree.cpp)
 foreach(target source IN ZIP_LISTS Targets Sources)
   add_executable(${target} ${source})
   target_link_libraries(${target}

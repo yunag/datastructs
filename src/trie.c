@@ -49,6 +49,11 @@ trie *trie_create(void) {
   }
 
   trie->root = trie_node_create();
+  if (!trie->root) {
+    yu_free(trie);
+    return NULL;
+  }
+
   return trie;
 }
 

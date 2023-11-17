@@ -3,7 +3,6 @@ add_library(${PROJECT_NAME} STATIC
   trie.c
   priorityqueue.c
   queue.c
-  stack.c
   avltree.c
   functions.c
   memory.c
