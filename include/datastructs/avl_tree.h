@@ -30,25 +30,26 @@ struct avl_tree {
   struct avl_root root;
 
   compare_avl_nodes_fun cmp;
-  destroy_avl_node_fun destroy;
 
   size_t size;
 };
 
 #define avl_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
 
-void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp,
-              destroy_avl_node_fun destroy);
-void avl_uninit(avl_tree *avl);
+void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp);
+void avl_uninit(avl_tree *avl, destroy_avl_node_fun destroy_node);
 
-bool avl_insert(avl_tree *avl, struct avl_node *node);
-void avl_remove(avl_tree *avl, const struct avl_node *query);
+struct avl_node *avl_insert(avl_tree *avl, struct avl_node *node);
+struct avl_node *avl_remove(avl_tree *avl, const struct avl_node *query);
 struct avl_node *avl_find(avl_tree *avl, const struct avl_node *query);
 
 struct avl_node *avl_remove_node(struct avl_root *root, struct avl_node **link);
 void avl_restore_properties(struct avl_root *root, struct avl_node *node);
 void avl_link_node(struct avl_node *node, struct avl_node *parent,
                    struct avl_node **link);
+
+struct avl_node *avl_first_postorder(const struct avl_root *root);
+struct avl_node *avl_next_postorder(const struct avl_node *node);
 
 struct avl_node *avl_first(const struct avl_root *root);
 struct avl_node *avl_last(const struct avl_root *root);

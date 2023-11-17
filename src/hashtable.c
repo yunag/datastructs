@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TABLE_GROWTH_FACTOR 2
-
 /* Should be arranged from 0.5 to 0.8 */
 #define IDEAL_LOAD_FACTOR 0.7
 
@@ -130,7 +128,7 @@ void htable_destroy(hash_table *htable, destroy_ht_fun destroy_entry) {
 
 static inline bool htable_expand_buckets(hash_table *htable) {
   return htable->size >= htable->ideal_size &&
-         !htable_rehash(htable, htable->num_buckets * TABLE_GROWTH_FACTOR);
+         !htable_rehash(htable, htable->num_buckets * 2);
 }
 
 static void htable_link_entry(struct hash_entry *tail,
@@ -253,12 +251,12 @@ size_t htable_size(hash_table *htable) {
 
 struct hash_entry *htable_first(hash_table *htable) {
   assert(htable != NULL);
-  return htable->head.ht_next;
+  return HT_HEAD(htable);
 }
 
 struct hash_entry *htable_last(hash_table *htable) {
   assert(htable != NULL);
-  return htable->head.ht_prev;
+  return HT_TAIL(htable);
 }
 
 struct hash_entry *htable_next(const struct hash_entry *entry) {

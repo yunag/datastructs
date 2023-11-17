@@ -71,16 +71,17 @@ class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
   void TearDown() override {
-    avl_uninit(avl_);
+    avl_uninit(avl_, destroy_node_);
     delete avl_;
   }
 
   void setAVL(destroy_avl_node_fun destroy = destroy_kv_node) {
     avl_ = new avl_tree;
-    avl_init(avl_, cmp_kv_node, destroy);
+    avl_init(avl_, cmp_kv_node);
     ASSERT_NE(avl_, nullptr);
   }
 
+  destroy_avl_node_fun destroy_node_ = nullptr;
   avl_tree *avl_ = nullptr;
 };
 
@@ -234,7 +235,7 @@ TEST_F(BSTTest, InsertOnly_ValidAvl) {
   for (size_t i = 0; i < num_inserts; ++i) {
     int num = Helper::rand_inrange(-2000000, 2000000);
     kv_node *node = new kv_node(num, 0);
-    if (!avl_insert(avl_, &node->node)) {
+    if (avl_insert(avl_, &node->node)) {
       delete node;
     }
 

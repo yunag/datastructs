@@ -92,28 +92,6 @@ static struct avl_node *rebalance(struct avl_root *root,
   return height != new->height ? parent : NULL;
 }
 
-static void avl_free_rec(struct avl_node *node,
-                         destroy_avl_node_fun destroy_node) {
-  if (!node) {
-    return;
-  }
-  avl_free_rec(node->left, destroy_node);
-  avl_free_rec(node->right, destroy_node);
-  destroy_node(node);
-}
-
-static struct avl_node *avl_remove_node_internal(avl_tree *avl,
-                                                 struct avl_node **link) {
-  struct avl_node *node = *link;
-  struct avl_node *new = avl_remove_node(&avl->root, link);
-
-  if (avl->destroy) {
-    avl->destroy(node);
-  }
-  avl->size--;
-  return new;
-}
-
 void avl_link_node(struct avl_node *node, struct avl_node *parent,
                    struct avl_node **link) {
   node->left = node->right = NULL;
@@ -129,23 +107,26 @@ void avl_restore_properties(struct avl_root *root, struct avl_node *node) {
   }
 }
 
-void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp,
-              destroy_avl_node_fun destroy) {
+void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp) {
   assert(avl != NULL);
   assert(cmp != NULL);
 
   avl->cmp = cmp;
-  avl->destroy = destroy;
   avl->root.avl_node = NULL;
   avl->size = 0;
 }
 
-void avl_uninit(avl_tree *avl) {
-  if (!avl) {
+void avl_uninit(avl_tree *avl, destroy_avl_node_fun destroy_node) {
+  if (!avl || !destroy_node) {
     return;
   }
-  if (avl->destroy) {
-    avl_free_rec(avl->root.avl_node, avl->destroy);
+
+  struct avl_node *node = avl_first_postorder(&avl->root);
+  while (node) {
+    struct avl_node *temp = node;
+    node = avl_next_postorder(node);
+
+    destroy_node(temp);
   }
 }
 
@@ -193,11 +174,12 @@ struct avl_node *avl_remove_node(struct avl_root *root,
   return new;
 }
 
-void avl_remove(avl_tree *avl, const struct avl_node *query) {
+struct avl_node *avl_remove(avl_tree *avl, const struct avl_node *query) {
   assert(avl != NULL);
 
   struct avl_node **link = &avl->root.avl_node;
   struct avl_node *node = NULL;
+  struct avl_node *removed = NULL;
 
   while (*link) {
     int c = avl->cmp(query, *link);
@@ -206,15 +188,20 @@ void avl_remove(avl_tree *avl, const struct avl_node *query) {
     } else if (c > 0) {
       link = &(*link)->right;
     } else {
-      node = avl_remove_node_internal(avl, link);
+      removed = *link;
+
+      node = avl_remove_node(&avl->root, link);
+      avl->size--;
       break;
     }
   }
 
   avl_restore_properties(&avl->root, node);
+
+  return removed;
 }
 
-bool avl_insert(avl_tree *avl, struct avl_node *node) {
+struct avl_node *avl_insert(avl_tree *avl, struct avl_node *node) {
   assert(avl != NULL);
 
   struct avl_node **link = &avl->root.avl_node;
@@ -228,13 +215,15 @@ bool avl_insert(avl_tree *avl, struct avl_node *node) {
     } else if (c > 0) {
       link = &parent->right;
     } else {
-      return false;
+      return parent;
     }
   }
+
   avl->size++;
   avl_link_node(node, parent, link);
   avl_restore_properties(&avl->root, parent);
-  return true;
+
+  return NULL;
 }
 
 struct avl_node *avl_find(avl_tree *avl, const struct avl_node *query) {
@@ -252,7 +241,40 @@ struct avl_node *avl_find(avl_tree *avl, const struct avl_node *query) {
       return node;
     }
   }
+
   return NULL;
+}
+
+static struct avl_node *avl_left_deepest_node(const struct avl_node *node) {
+  for (;;) {
+    if (node->left) {
+      node = node->left;
+    } else if (node->right) {
+      node = node->right;
+    } else {
+      return (struct avl_node *)node;
+    }
+  }
+}
+
+struct avl_node *avl_first_postorder(const struct avl_root *root) {
+  if (!root->avl_node) {
+    return NULL;
+  }
+  return avl_left_deepest_node(root->avl_node);
+}
+
+struct avl_node *avl_next_postorder(const struct avl_node *node) {
+  assert(node != NULL);
+
+  const struct avl_node *parent = node->parent;
+  if (parent && parent->left == node && parent->right) {
+
+    return avl_left_deepest_node(parent->right);
+  } else {
+
+    return (struct avl_node *)parent;
+  }
 }
 
 struct avl_node *avl_first(const struct avl_root *root) {

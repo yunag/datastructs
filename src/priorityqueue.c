@@ -49,11 +49,13 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
   if (!pq) {
     return NULL;
   }
+
   pq->heap = yu_malloc(capacity * esize);
   if (!pq->heap) {
     yu_free(pq);
     return NULL;
   }
+
   pq->capacity = capacity;
   pq->esize = esize;
   pq->cmp = cmp;
