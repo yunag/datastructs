@@ -10,9 +10,9 @@ struct queue {
   char *rear;   /* Rear index of the Queue */
   char *end;
 
-  size_t size;     /* Size of the Queue */
-  size_t capacity; /* Capacity of the Queue */
-  size_t esize;    /* Size of a single element in the Queue */
+  size_t num_items; /* Number of items in the Queue */
+  size_t capacity;  /* Capacity of the Queue */
+  size_t esize;     /* Size of a single element in the Queue */
 };
 
 queue *queue_create(size_t capacity, size_t elemsize) {
@@ -29,12 +29,14 @@ queue *queue_create(size_t capacity, size_t elemsize) {
     yu_free(q);
     return NULL;
   }
+
   q->capacity = capacity;
   q->esize = elemsize;
   q->end = (char *)q->buffer + capacity * elemsize;
-  q->size = 0;
+  q->num_items = 0;
   q->front = q->buffer;
   q->rear = q->buffer;
+
   return q;
 }
 
@@ -46,7 +48,7 @@ void queue_destroy(queue *q) {
 }
 
 static bool queue_resize(queue *q, size_t newsize) {
-  assert(newsize > q->size);
+  assert(newsize > q->num_items);
 
   char *buffer;
   size_t bufsize = newsize * q->esize;
@@ -66,10 +68,11 @@ static bool queue_resize(queue *q, size_t newsize) {
   yu_free(q->buffer);
 
   q->front = buffer;
-  q->rear = buffer + q->esize * q->size;
+  q->rear = buffer + q->esize * q->num_items;
   q->end = buffer + bufsize;
   q->buffer = buffer;
   q->capacity = newsize;
+
   return true;
 }
 
@@ -85,7 +88,7 @@ void queue_push(queue *q, const void *elem) {
   }
   memcpy(q->rear, elem, q->esize);
   q->rear += q->esize;
-  q->size++;
+  q->num_items++;
 }
 
 void queue_pop(queue *q) {
@@ -94,11 +97,12 @@ void queue_pop(queue *q) {
   if (queue_empty(q)) {
     return;
   }
+
   q->front += q->esize;
   if (q->front == q->end) {
     q->front = q->buffer;
   }
-  q->size--;
+  q->num_items--;
 }
 
 void *queue_front(queue *q) {
@@ -107,6 +111,7 @@ void *queue_front(queue *q) {
   if (queue_empty(q)) {
     return NULL;
   }
+
   return q->front;
 }
 
@@ -116,22 +121,23 @@ void *queue_back(queue *q) {
   if (queue_empty(q)) {
     return NULL;
   }
+
   return q->rear - q->esize;
 }
 
 bool queue_empty(queue *q) {
   assert(q != NULL);
-  return !q->size;
+  return !q->num_items;
 }
 
 bool queue_full(queue *q) {
   assert(q != NULL);
-  return q->capacity == q->size;
+  return q->capacity == q->num_items;
 }
 
 size_t queue_size(queue *q) {
   assert(q != NULL);
-  return q->size;
+  return q->num_items;
 }
 
 size_t queue_esize(queue *q) {

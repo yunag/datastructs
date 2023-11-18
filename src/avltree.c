@@ -85,6 +85,7 @@ static struct avl_node *rebalance(struct avl_root *root,
       node->right = avl_right_rotate(node->right);
     }
     avl_change_child(parent, node, new = avl_left_rotate(node), root);
+
   } else {
     node->height = avl_height(node);
   }
@@ -113,21 +114,7 @@ void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp) {
 
   avl->cmp = cmp;
   avl->root.avl_node = NULL;
-  avl->size = 0;
-}
-
-void avl_uninit(avl_tree *avl, destroy_avl_node_fun destroy_node) {
-  if (!avl || !destroy_node) {
-    return;
-  }
-
-  struct avl_node *node = avl_first_postorder(&avl->root);
-  while (node) {
-    struct avl_node *temp = node;
-    node = avl_next_postorder(node);
-
-    destroy_node(temp);
-  }
+  avl->num_items = 0;
 }
 
 void avl_replace_node(struct avl_node *victim, struct avl_node *new,
@@ -141,6 +128,7 @@ void avl_replace_node(struct avl_node *victim, struct avl_node *new,
   if (victim->right) {
     victim->right->parent = new;
   }
+
   avl_change_child(parent, victim, new, root);
 }
 
@@ -163,7 +151,8 @@ struct avl_node *avl_remove_node(struct avl_root *root,
     node = *link;
     *link = (*link)->right;
 
-    new = node->parent == victim ? node : node->parent;
+    new = node->parent != victim ? node->parent : node;
+
     avl_replace_node(victim, node, root);
   }
 
@@ -191,7 +180,7 @@ struct avl_node *avl_remove(avl_tree *avl, const struct avl_node *query) {
       removed = *link;
 
       node = avl_remove_node(&avl->root, link);
-      avl->size--;
+      avl->num_items--;
       break;
     }
   }
@@ -219,7 +208,7 @@ struct avl_node *avl_insert(avl_tree *avl, struct avl_node *node) {
     }
   }
 
-  avl->size++;
+  avl->num_items++;
   avl_link_node(node, parent, link);
   avl_restore_properties(&avl->root, parent);
 
@@ -261,6 +250,7 @@ struct avl_node *avl_first_postorder(const struct avl_root *root) {
   if (!root->avl_node) {
     return NULL;
   }
+
   return avl_left_deepest_node(root->avl_node);
 }
 
@@ -284,9 +274,11 @@ struct avl_node *avl_first(const struct avl_root *root) {
   if (!node) {
     return NULL;
   }
+
   while (node->left) {
     node = node->left;
   }
+
   return node;
 }
 
@@ -297,9 +289,11 @@ struct avl_node *avl_last(const struct avl_root *root) {
   if (!node) {
     return NULL;
   }
+
   while (node->right) {
     node = node->right;
   }
+
   return node;
 }
 
@@ -318,6 +312,7 @@ struct avl_node *avl_next(const struct avl_node *node) {
   while ((parent = node->parent) && node == parent->right) {
     node = parent;
   }
+
   return parent;
 }
 
@@ -336,5 +331,6 @@ struct avl_node *avl_prev(const struct avl_node *node) {
   while ((parent = node->parent) && node == parent->left) {
     node = parent;
   }
+
   return parent;
 }

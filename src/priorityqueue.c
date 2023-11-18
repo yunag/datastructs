@@ -20,21 +20,22 @@ struct priority_queue {
   char *heap; /* Node storage buffer */
   char *last;
 
-  compare_fun cmp; /* Function for comparing two nodes */
-  size_t size;     /* Size of the Priority Queue */
-  size_t capacity; /* Capacity of the Priority Queue */
-  size_t esize;    /* Size of a single element in the Priority Queue*/
+  compare_fun cmp;  /* Function for comparing two nodes */
+  size_t num_items; /* Size of the Priority Queue */
+  size_t capacity;  /* Capacity of the Priority Queue */
+  size_t esize;     /* Size of a single element in the Priority Queue*/
 };
 
 static bool pq_resize(priority_queue *pq, size_t newsize) {
-  assert(newsize > pq->size);
+  assert(newsize > pq->num_items);
 
   char *tmp = yu_realloc(pq->heap, pq->esize * newsize);
   if (!tmp) {
     return false;
   }
+
   pq->heap = tmp;
-  pq->last = tmp + pq->esize * pq->size;
+  pq->last = tmp + pq->esize * pq->num_items;
   pq->capacity = newsize;
   return true;
 }
@@ -59,8 +60,8 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
   pq->capacity = capacity;
   pq->esize = esize;
   pq->cmp = cmp;
-  pq->size = size;
-  pq->last = pq->heap + pq->size * pq->esize;
+  pq->num_items = size;
+  pq->last = pq->heap + pq->num_items * pq->esize;
   return pq;
 }
 
@@ -136,11 +137,11 @@ void pq_push(priority_queue *pq, const void *elem) {
   assert(pq != NULL);
   assert(elem != NULL);
 
-  if (pq->size == pq->capacity && !pq_resize(pq, pq->capacity * 2)) {
+  if (pq->num_items == pq->capacity && !pq_resize(pq, pq->capacity * 2)) {
     return;
   }
 
-  size_t cur = pq->size;
+  size_t cur = pq->num_items;
   size_t par;
 
   memcpy(pq->last, elem, pq->esize);
@@ -149,7 +150,7 @@ void pq_push(priority_queue *pq, const void *elem) {
     YU_BYTE_SWAP(HEAP_AT(par), HEAP_AT(cur), pq->esize);
     cur = par;
   }
-  pq->size++;
+  pq->num_items++;
   pq->last += pq->esize;
 }
 
@@ -159,7 +160,7 @@ void pq_pop(priority_queue *pq) {
   if (pq_empty(pq)) {
     return;
   }
-  pq->size--;
+  pq->num_items--;
 
   /* Move last element to the top */
   memcpy(pq->heap, pq->last -= pq->esize, pq->esize);
@@ -168,7 +169,7 @@ void pq_pop(priority_queue *pq) {
 
 bool pq_empty(priority_queue *pq) {
   assert(pq != NULL);
-  return !pq->size;
+  return !pq->num_items;
 }
 
 const void *pq_top(priority_queue *pq) {
@@ -182,7 +183,7 @@ const void *pq_top(priority_queue *pq) {
 
 size_t pq_size(priority_queue *pq) {
   assert(pq != NULL);
-  return pq->size;
+  return pq->num_items;
 }
 
 size_t pq_esize(priority_queue *pq) {

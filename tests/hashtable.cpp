@@ -11,19 +11,21 @@
 #include <unordered_map>
 #include <utility>
 
+typedef void (*destroy_entries)(hash_table *ht);
+
 class HashTableTest : public ::testing::Test {
 protected:
   void SetUp() override {}
-  void TearDown() override { htable_destroy(ht_, destroy_entry_); }
+  void TearDown() override { htable_destroy(ht_, destroy_entries_); }
 
   void SetHashTable(hash_entry_fun hash, lookup_ht_fun lookup,
-                    destroy_ht_fun destroy = nullptr, size_t size = 1) {
-    destroy_entry_ = destroy;
+                    destroy_entries destroy, size_t size = 1) {
+    destroy_entries_ = destroy;
     ht_ = htable_create(size, hash, lookup);
     ASSERT_NE(ht_, nullptr);
   }
 
-  destroy_ht_fun destroy_entry_ = nullptr;
+  destroy_entries destroy_entries_ = nullptr;
   hash_table *ht_ = nullptr;
 };
 
@@ -62,18 +64,16 @@ struct hash_entry **lookup_ht_key_value(const struct hash_entry *query,
   return link;
 }
 
-void destroy_ht_key_value(hash_entry *entry) {
-  ht_key_value *kv = ht_entry(entry, ht_key_value, he);
-  delete kv;
+void destroy_kv_table(hash_table *ht) {
+  ht_key_value *cur, *n;
+  HTABLE_FOR_EACH_TEMP(ht, cur, n, he) { delete cur; }
 }
 
 ht_key_value *find_kv(hash_table *htable, int key) {
   ht_key_value kv = {.key = key};
   struct hash_entry *entry = htable_lookup(htable, &kv.he);
-  if (entry) {
-    return ht_entry(entry, ht_key_value, he);
-  }
-  return NULL;
+
+  return ht_entry_safe(entry, ht_key_value, he);
 }
 
 bool insert_kv(hash_table *htable, int key, int val) {
@@ -82,9 +82,11 @@ bool insert_kv(hash_table *htable, int key, int val) {
     kv->val = val;
     return true;
   }
+
   kv = new ht_key_value;
   kv->key = key;
   kv->val = val;
+
   if (!htable_insert(htable, &kv->he)) {
     delete kv;
     return false;
@@ -134,15 +136,17 @@ struct hash_entry **lookup_ht_str_entry(const struct hash_entry *query,
   return link;
 }
 
-void destroy_ht_str_entry(hash_entry *entry) {
-  ht_str_entry *kv = ht_entry(entry, ht_str_entry, he);
-  delete kv;
+void destroy_str_table(hash_table *ht) {
+  ht_str_entry *cur, *n;
+  HTABLE_FOR_EACH_TEMP(ht, cur, n, he) { delete cur; }
 }
 
 bool insert_str(hash_table *htable, const char *str, int val) {
   struct hash_entry *replaced;
 
   ht_str_entry *kv = new ht_str_entry;
+  assert(strlen(str) < sizeof(kv->key));
+
   strcpy(kv->key, str);
   kv->val = val;
 
@@ -179,14 +183,11 @@ ht_str_entry *find_str(hash_table *htable, const char *str) {
   strcpy(kv.key, str);
   struct hash_entry *entry = htable_lookup(htable, &kv.he);
 
-  if (entry) {
-    return ht_entry(entry, ht_str_entry, he);
-  }
-  return NULL;
+  return ht_entry_safe(entry, ht_str_entry, he);
 }
 
 TEST_F(HashTableTest, RemoveNotExistent) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
 
   remove_kv(ht_, 5);
 
@@ -198,7 +199,7 @@ TEST_F(HashTableTest, RemoveNotExistent) {
 }
 
 TEST_F(HashTableTest, STLTable) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
 
   enum class Action {
     Insert,
@@ -283,7 +284,7 @@ TEST_F(HashTableTest, STLTable) {
 }
 
 TEST_F(HashTableTest, Case1) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
   std::unordered_map<int, int> stl_map;
   std::vector<std::pair<int, int>> kvalues = {
       {8, 9},
@@ -298,17 +299,17 @@ TEST_F(HashTableTest, Case1) {
     stl_map[kv.first] = kv.second;
   }
 
+  ht_key_value *kv;
+
   cycles = 0;
-  HTABLE_FOR_EACH(ht_, entry) {
-    ht_key_value *kv = ht_entry(entry, ht_key_value, he);
+  HTABLE_FOR_EACH(ht_, kv, he) {
     cycles++;
     ASSERT_EQ(kv->val, stl_map[kv->key]);
   }
   ASSERT_EQ(cycles, 2);
 
   cycles = 0;
-  HTABLE_FOR_EACH(ht_, entry) {
-    ht_key_value *kv = ht_entry(entry, ht_key_value, he);
+  HTABLE_FOR_EACH(ht_, kv, he) {
     cycles++;
     ASSERT_EQ(kv->val, stl_map[kv->key]);
     if (cycles == 1) {
@@ -319,7 +320,7 @@ TEST_F(HashTableTest, Case1) {
 }
 
 TEST_F(HashTableTest, SortTable) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_ht_key_value);
+  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
   std::vector<int> values = {5, 7, 1,   8, 2, 227, 80, 117, 2000, -5, -7, 9,
                              3, 5, 100, 8, 9, 10,  22, 2,   1,    5,  7,  9};
   for (int val : values) {
@@ -329,10 +330,13 @@ TEST_F(HashTableTest, SortTable) {
   /* Sort ascending */
   htable_sort(ht_, cmp_ht_key_value);
 
+  struct ht_key_value *kv;
+  HTABLE_FOR_EACH(ht_, kv, he) { kv->key = 5; }
+
   size_t num_iters = 0;
   int val = INT_MIN;
-  HTABLE_FOR_EACH(ht_, entry) {
-    ht_key_value *kv = ht_entry(entry, ht_key_value, he);
+
+  HTABLE_FOR_EACH(ht_, kv, he) {
     ASSERT_GE(kv->key, val);
 
     num_iters++;
@@ -342,7 +346,7 @@ TEST_F(HashTableTest, SortTable) {
 }
 
 TEST_F(HashTableTest, Strings) {
-  SetHashTable(hash_ht_str_entry, lookup_ht_str_entry, destroy_ht_str_entry);
+  SetHashTable(hash_ht_str_entry, lookup_ht_str_entry, destroy_str_table);
 
   std::vector<std::pair<const char *, int>> kvalues = {
       {"Jacob", 9},   {"Banana", 10}, {"Banana", 25},

@@ -9,6 +9,8 @@
 #include <climits>
 #include <unordered_set>
 
+typedef void (*destroy_tree_fun)(struct avl_root *);
+
 struct kv_node {
   kv_node() {}
   kv_node(int _key, int _val) : key(_key), val(_val) {}
@@ -18,36 +20,28 @@ struct kv_node {
   struct avl_node node;
 };
 
-static inline int bheight(struct avl_node *node) {
-  return !node ? 0 : node->height;
-}
-
-static inline int deviation(struct avl_node *node) {
-  return bheight(node->left) - bheight(node->right);
-}
-
-static inline bool balanced(struct avl_node *node) {
-  return abs(deviation(node)) <= 1;
-}
-
-static bool valid_avl_rec(avl_node *node) {
-  if (!node) {
-    return true;
+int valid_avl_rec(avl_node *node, bool &is_valid) {
+  if (!node || !is_valid) {
+    return 0;
   }
-  if (!balanced(node)) {
-    return false;
-  }
-  return valid_avl_rec(node->left) && valid_avl_rec(node->right);
+  int lheight = valid_avl_rec(node->left, is_valid);
+  int rheight = valid_avl_rec(node->right, is_valid);
+  is_valid &= abs(lheight - rheight) <= 1;
+  size_t height = 1 + std::max(lheight, rheight);
+  EXPECT_EQ(height, node->height);
+  return height;
 }
 
-static bool valid_avl(avl_tree *avl) {
-  return valid_avl_rec(avl->root.avl_node);
+bool valid_avl(avl_tree *avl) {
+  bool is_valid = true;
+  valid_avl_rec(avl->root.avl_node, is_valid);
+  return is_valid;
 }
 
-static bool valid_bst(avl_tree *avl) {
+bool valid_bst(avl_tree *avl) {
   int prev = INT_MIN;
-  AVL_FOR_EACH(&avl->root, node) {
-    kv_node *kv = avl_entry(node, kv_node, node);
+  kv_node *kv;
+  AVL_FOR_EACH(&avl->root, kv, node) {
     if (kv->key < prev) {
       return false;
     }
@@ -57,36 +51,38 @@ static bool valid_bst(avl_tree *avl) {
 }
 
 int cmp_kv_node(const avl_node *a, const avl_node *b) {
-  struct kv_node *kva = avl_entry(a, struct kv_node, node);
-  struct kv_node *kvb = avl_entry(b, struct kv_node, node);
+  kv_node *kva = avl_entry(a, struct kv_node, node);
+  kv_node *kvb = avl_entry(b, struct kv_node, node);
   return yu_cmp_i32(&kva->key, &kvb->key);
 }
 
-void destroy_kv_node(avl_node *a) {
-  struct kv_node *kv = avl_entry(a, struct kv_node, node);
-  delete kv;
+void destroy_kv_tree(struct avl_root *root) {
+  kv_node *cur, *n;
+  AVL_POSTORDER_FOR_EACH(root, cur, n, node) { delete cur; }
 }
 
 class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
   void TearDown() override {
-    avl_uninit(avl_, destroy_node_);
+    destroy_(&avl_->root);
     delete avl_;
   }
 
-  void setAVL(destroy_avl_node_fun destroy = destroy_kv_node) {
+  void setAVL(destroy_tree_fun destroy) {
+    destroy_ = destroy;
+
     avl_ = new avl_tree;
     avl_init(avl_, cmp_kv_node);
     ASSERT_NE(avl_, nullptr);
   }
 
-  destroy_avl_node_fun destroy_node_ = nullptr;
+  destroy_tree_fun destroy_;
   avl_tree *avl_ = nullptr;
 };
 
 TEST_F(BSTTest, STLSet) {
-  setAVL();
+  setAVL(destroy_kv_tree);
 
   enum class Action {
     Insert,
@@ -104,7 +100,7 @@ TEST_F(BSTTest, STLSet) {
     command = static_cast<Action>(Helper::rand_inrange(
         static_cast<int>(Action::Insert), static_cast<int>(Action::Find)));
 
-    ASSERT_EQ(stl.size(), avl_->size);
+    ASSERT_EQ(stl.size(), avl_->num_items);
     ASSERT_TRUE(valid_avl(avl_));
     ASSERT_TRUE(valid_bst(avl_));
 
@@ -162,7 +158,7 @@ TEST_F(BSTTest, STLSet) {
 }
 
 TEST_F(BSTTest, Case1) {
-  setAVL();
+  setAVL(destroy_kv_tree);
 
   std::vector<int> nums = {
       9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
@@ -176,18 +172,19 @@ TEST_F(BSTTest, Case1) {
     avl_insert(avl_, &toinsert->node);
   }
 
+  kv_node *kv;
+
   cycles = 0;
-  AVL_FOR_EACH(&avl_->root, node) {
-    EXPECT_EQ(avl_entry(node, struct kv_node, node)->key, sorted_nums[cycles])
-        << "Cycles is " << cycles << '\n';
+  AVL_FOR_EACH(&avl_->root, kv, node) {
+    EXPECT_EQ(kv->key, sorted_nums[cycles]) << "Cycles is " << cycles << '\n';
     cycles++;
   }
 
   ASSERT_EQ(cycles, nums.size());
 
   cycles = 0;
-  AVL_FOR_EACH(&avl_->root, node) {
-    EXPECT_EQ(avl_entry(node, struct kv_node, node)->key, sorted_nums[cycles]);
+  AVL_FOR_EACH(&avl_->root, kv, node) {
+    EXPECT_EQ(kv->key, sorted_nums[cycles]);
     cycles++;
     if (cycles == 5) {
       break;
@@ -198,7 +195,7 @@ TEST_F(BSTTest, Case1) {
 }
 
 TEST_F(BSTTest, Case2) {
-  setAVL();
+  setAVL(destroy_kv_tree);
   kv_node query;
   std::vector<int> nums = {4, 1, 5, 0, 2, 6};
   for (int num : nums) {
@@ -212,7 +209,7 @@ TEST_F(BSTTest, Case2) {
 }
 
 TEST_F(BSTTest, Case3) {
-  setAVL();
+  setAVL(destroy_kv_tree);
 
   kv_node query;
   std::vector<int> nums = {4, 2, 5, 1, 3, 0};
@@ -229,7 +226,7 @@ TEST_F(BSTTest, Case3) {
 }
 
 TEST_F(BSTTest, InsertOnly_ValidAvl) {
-  setAVL();
+  setAVL(destroy_kv_tree);
 
   size_t num_inserts = 1000;
   for (size_t i = 0; i < num_inserts; ++i) {
