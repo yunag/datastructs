@@ -247,7 +247,7 @@ bool htable_delete(hash_table *htable, struct hash_entry *hentry) {
   struct hash_entry **link = &bucket->entry;
 
   while (*link && *link != hentry) {
-    link = &(*link)->ht_next;
+    link = &(*link)->next;
   }
 
   if (*link) {
