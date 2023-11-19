@@ -32,8 +32,9 @@ struct hash_table {
   hash_entry_fun hash;
   lookup_ht_fun lookup;
 
-  size_t ideal_num_items; /* Size of the hash table should not be greater than
-                        this value */
+  /* Number of items in the hash table should not be
+   * greater than this value */
+  size_t ideal_num_items;
 
   size_t num_items;   /* Number of items in the table */
   size_t num_buckets; /* Capacity of the table */

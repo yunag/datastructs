@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <map>
 #include <unordered_set>
 
 typedef void (*destroy_tree_fun)(struct avl_root *);
@@ -65,7 +66,9 @@ class BSTTest : public ::testing::Test {
 protected:
   void SetUp() override {}
   void TearDown() override {
-    destroy_(&avl_->root);
+    if (destroy_) {
+      destroy_(&avl_->root);
+    }
     delete avl_;
   }
 
@@ -225,16 +228,42 @@ TEST_F(BSTTest, Case3) {
   }
 }
 
+void avl_insert_kv(avl_tree *avl, int key, int val) {
+  struct avl_node **link = &avl->root.avl_node;
+  struct avl_node *parent = NULL;
+  kv_node *kv;
+
+  while (*link) {
+    parent = *link;
+
+    kv = avl_entry(parent, kv_node, node);
+
+    if (key < kv->key) {
+      link = &parent->left;
+    } else if (key > kv->key) {
+      link = &parent->right;
+    } else {
+      kv->val = val;
+      return;
+    }
+  }
+
+  kv = new kv_node;
+  kv->key = key;
+  kv->val = val;
+
+  avl->num_items++;
+  avl_link_node(&kv->node, parent, link);
+  avl_restore_properties(&avl->root, parent);
+}
+
 TEST_F(BSTTest, InsertOnly_ValidAvl) {
   setAVL(destroy_kv_tree);
 
   size_t num_inserts = 1000;
   for (size_t i = 0; i < num_inserts; ++i) {
     int num = Helper::rand_inrange(-2000000, 2000000);
-    kv_node *node = new kv_node(num, 0);
-    if (avl_insert(avl_, &node->node)) {
-      delete node;
-    }
+    avl_insert_kv(avl_, num, 0);
 
     ASSERT_TRUE(valid_avl(avl_)) << "It is not a valid AVL Tree";
     ASSERT_TRUE(valid_bst(avl_)) << "It is not a valid BST";

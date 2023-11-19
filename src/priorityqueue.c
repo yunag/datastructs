@@ -74,7 +74,10 @@ priority_queue *pq_create_from_heap(const void *heap, size_t count,
   assert(heap != NULL);
 
   priority_queue *pq = pq_init(count, count, elemsize, cmp);
-  memcpy(pq->heap, heap, count * elemsize);
+  if (pq) {
+    memcpy(pq->heap, heap, count * elemsize);
+  }
+
   return pq;
 }
 
@@ -83,8 +86,11 @@ priority_queue *pq_create_from_arr(const void *base, size_t count,
   assert(base != NULL);
 
   priority_queue *pq = pq_init(count, count, elemsize, cmp);
-  memcpy(pq->heap, base, count * elemsize);
-  heapify(pq->heap, count, elemsize, cmp);
+  if (pq) {
+    memcpy(pq->heap, base, count * elemsize);
+    heapify(pq->heap, count, elemsize, cmp);
+  }
+
   return pq;
 }
 
@@ -145,9 +151,17 @@ void pq_push(priority_queue *pq, const void *elem) {
   size_t par;
 
   memcpy(pq->last, elem, pq->esize);
-  while (HAS_PARENT(cur) &&
-         pq->cmp(HEAP_AT(cur), HEAP_AT(par = PARENT(cur))) < 0) {
-    YU_BYTE_SWAP(HEAP_AT(par), HEAP_AT(cur), pq->esize);
+  while (HAS_PARENT(cur)) {
+    par = PARENT(cur);
+
+    void *child = HEAP_AT(cur);
+    void *parent = HEAP_AT(par);
+
+    if (pq->cmp(parent, child) < 0) {
+      break;
+    }
+
+    YU_BYTE_SWAP(child, parent, pq->esize);
     cur = par;
   }
   pq->num_items++;
