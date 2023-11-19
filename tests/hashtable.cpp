@@ -18,10 +18,10 @@ protected:
   void SetUp() override {}
   void TearDown() override { htable_destroy(ht_, destroy_entries_); }
 
-  void SetHashTable(hash_entry_fun hash, lookup_ht_fun lookup,
+  void SetHashTable(hash_entry_fun hash, equal_ht_fun equal,
                     destroy_entries destroy, size_t size = 1) {
     destroy_entries_ = destroy;
-    ht_ = htable_create(size, hash, lookup);
+    ht_ = htable_create(size, hash, equal);
     ASSERT_NE(ht_, nullptr);
   }
 
@@ -40,6 +40,12 @@ uint64_t hash_ht_key_value(const hash_entry *a) {
   return yu_hash_i32(kva->key);
 }
 
+bool equal_ht_key_value(const hash_entry *a, const hash_entry *b) {
+  ht_key_value *kva = ht_entry(a, ht_key_value, he);
+  ht_key_value *kvb = ht_entry(b, ht_key_value, he);
+  return kva->key == kvb->key;
+}
+
 int cmp_ht_key_value(const hash_entry *a, const hash_entry *b) {
   ht_key_value *kva = ht_entry(a, ht_key_value, he);
   ht_key_value *kvb = ht_entry(b, ht_key_value, he);
@@ -50,18 +56,6 @@ int cmp_ht_key_value(const hash_entry *a, const hash_entry *b) {
     return -1;
   }
   return 0;
-}
-
-struct hash_entry **lookup_ht_key_value(const struct hash_entry *query,
-                                        struct hash_bucket *bucket) {
-  ht_key_value *kv_query = ht_entry(query, ht_key_value, he);
-  HTABLE_LOOKUP_ITERATE(entry, link, bucket) {
-    ht_key_value *kv = ht_entry(entry, ht_key_value, he);
-    if (entry->hashv == query->hashv && kv->key == kv_query->key) {
-      return link;
-    }
-  }
-  return link;
 }
 
 void destroy_kv_table(hash_table *ht) {
@@ -107,33 +101,21 @@ bool remove_kv(hash_table *htable, int key) {
   return false;
 }
 
-typedef struct ht_str_entry {
+struct ht_str_entry {
   char key[96];
   int val;
   struct hash_entry he;
-} ht_str_entry;
+};
 
 uint64_t hash_ht_str_entry(const hash_entry *a) {
   ht_str_entry *kva = ht_entry(a, ht_str_entry, he);
   return yu_hash_str(kva->key);
 }
 
-int cmp_ht_str_entry(const hash_entry *a, const hash_entry *b) {
+bool equal_ht_str_entry(const hash_entry *a, const hash_entry *b) {
   ht_str_entry *kva = ht_entry(a, ht_str_entry, he);
   ht_str_entry *kvb = ht_entry(b, ht_str_entry, he);
-  return strcmp(kva->key, kvb->key);
-}
-
-struct hash_entry **lookup_ht_str_entry(const struct hash_entry *query,
-                                        struct hash_bucket *bucket) {
-  ht_str_entry *query_str = ht_entry(query, ht_str_entry, he);
-  HTABLE_LOOKUP_ITERATE(entry, link, bucket) {
-    ht_str_entry *str = ht_entry(entry, ht_str_entry, he);
-    if (entry->hashv == query->hashv && strcmp(str->key, query_str->key) == 0) {
-      return link;
-    }
-  }
-  return link;
+  return strcmp(kva->key, kvb->key) == 0;
 }
 
 void destroy_str_table(hash_table *ht) {
@@ -187,7 +169,7 @@ ht_str_entry *find_str(hash_table *htable, const char *str) {
 }
 
 TEST_F(HashTableTest, RemoveNotExistent) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
+  SetHashTable(hash_ht_key_value, equal_ht_key_value, destroy_kv_table);
 
   remove_kv(ht_, 5);
 
@@ -199,7 +181,7 @@ TEST_F(HashTableTest, RemoveNotExistent) {
 }
 
 TEST_F(HashTableTest, STLTable) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
+  SetHashTable(hash_ht_key_value, equal_ht_key_value, destroy_kv_table);
 
   enum class Action {
     Insert,
@@ -284,7 +266,7 @@ TEST_F(HashTableTest, STLTable) {
 }
 
 TEST_F(HashTableTest, Case1) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
+  SetHashTable(hash_ht_key_value, equal_ht_key_value, destroy_kv_table);
   std::unordered_map<int, int> stl_map;
   std::vector<std::pair<int, int>> kvalues = {
       {8, 9},
@@ -320,7 +302,7 @@ TEST_F(HashTableTest, Case1) {
 }
 
 TEST_F(HashTableTest, SortTable) {
-  SetHashTable(hash_ht_key_value, lookup_ht_key_value, destroy_kv_table);
+  SetHashTable(hash_ht_key_value, equal_ht_key_value, destroy_kv_table);
   std::vector<int> values = {5, 7, 1,   8, 2, 227, 80, 117, 2000, -5, -7, 9,
                              3, 5, 100, 8, 9, 10,  22, 2,   1,    5,  7,  9};
   for (int val : values) {
@@ -346,7 +328,7 @@ TEST_F(HashTableTest, SortTable) {
 }
 
 TEST_F(HashTableTest, Strings) {
-  SetHashTable(hash_ht_str_entry, lookup_ht_str_entry, destroy_str_table);
+  SetHashTable(hash_ht_str_entry, equal_ht_str_entry, destroy_str_table);
 
   std::vector<std::pair<const char *, int>> kvalues = {
       {"Jacob", 9},   {"Banana", 10}, {"Banana", 25},

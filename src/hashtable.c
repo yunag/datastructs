@@ -30,7 +30,7 @@ struct hash_table {
   struct hash_entry head;      /* Dummy head of `global` linked list */
 
   hash_entry_fun hash;
-  lookup_ht_fun lookup;
+  equal_ht_fun equal;
 
   /* Number of items in the hash table should not be
    * greater than this value */
@@ -67,22 +67,8 @@ bool htable_rehash(hash_table *htable, size_t newsize) {
   return true;
 }
 
-static void htable_replace_entry(struct hash_entry **victim,
-                                 struct hash_entry *new) {
-  struct hash_entry *entry = *victim;
-
-  new->ht_prev = entry->ht_prev;
-  new->ht_next = entry->ht_next;
-  new->next = entry->next;
-
-  *victim = new;
-
-  new->ht_prev->ht_next = new;
-  new->ht_next->ht_prev = new;
-}
-
 hash_table *htable_create(size_t capacity, hash_entry_fun hash,
-                          lookup_ht_fun lookup) {
+                          equal_ht_fun equal) {
   assert(capacity > 0);
   assert(hash != NULL);
   assert(lookup != NULL);
@@ -98,7 +84,7 @@ hash_table *htable_create(size_t capacity, hash_entry_fun hash,
     return NULL;
   }
 
-  htable->lookup = lookup;
+  htable->equal = equal;
   htable->hash = hash;
   htable->head.ht_next = htable->head.ht_prev = &htable->head;
 
@@ -141,6 +127,37 @@ static void htable_link_entry(struct hash_entry *tail,
   bucket->entry = hentry;
 }
 
+static void htable_replace_entry(struct hash_entry **victim,
+                                 struct hash_entry *new) {
+  struct hash_entry *entry = *victim;
+
+  new->ht_prev = entry->ht_prev;
+  new->ht_next = entry->ht_next;
+  new->next = entry->next;
+
+  *victim = new;
+
+  new->ht_prev->ht_next = new;
+  new->ht_next->ht_prev = new;
+}
+
+static struct hash_entry **htable_lookup_bucket(hash_table *htable,
+                                                struct hash_bucket *bucket,
+                                                struct hash_entry *query) {
+  struct hash_entry **link = &bucket->entry;
+
+  while (*link) {
+    struct hash_entry *entry = *link;
+    if (entry->hashv == query->hashv && htable->equal(entry, query)) {
+      break;
+    }
+
+    link = &entry->next;
+  }
+
+  return link;
+}
+
 bool htable_insert(hash_table *htable, struct hash_entry *hentry) {
   assert(htable != NULL);
   assert(hentry != NULL);
@@ -172,7 +189,7 @@ bool htable_replace(hash_table *htable, struct hash_entry *hentry,
 
   struct hash_bucket *bucket = HT_BUCKET(htable, hentry);
   struct hash_entry *tail = HT_TAIL(htable);
-  struct hash_entry **link = htable->lookup(hentry, bucket);
+  struct hash_entry **link = htable_lookup_bucket(htable, bucket, hentry);
 
   if (*link) {
     *replaced = *link;
@@ -193,7 +210,7 @@ struct hash_entry *htable_lookup(hash_table *htable, struct hash_entry *query) {
 
   struct hash_bucket *bucket = HT_BUCKET(htable, query);
 
-  return *htable->lookup(query, bucket);
+  return *htable_lookup_bucket(htable, bucket, query);
 }
 
 static void htable_remove_link(struct hash_entry **link) {
@@ -211,7 +228,7 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query) {
   assert(query != NULL);
 
   struct hash_bucket *bucket = HT_BUCKET(htable, query);
-  struct hash_entry **link = htable->lookup(query, bucket);
+  struct hash_entry **link = htable_lookup_bucket(htable, bucket, query);
   struct hash_entry *entry = *link;
 
   if (*link) {

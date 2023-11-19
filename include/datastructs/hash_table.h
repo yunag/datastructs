@@ -34,13 +34,16 @@ struct hash_bucket {
 };
 
 typedef void (*destroy_table_fun)(hash_table *ht);
+typedef bool (*equal_ht_fun)(const struct hash_entry *,
+                             const struct hash_entry *);
 typedef int (*compare_ht_fun)(const struct hash_entry *,
                               const struct hash_entry *);
 typedef struct hash_entry **(*lookup_ht_fun)(const struct hash_entry *,
                                              struct hash_bucket *);
 typedef size_t (*hash_entry_fun)(const struct hash_entry *);
+
 hash_table *htable_create(size_t initial_capacity, hash_entry_fun hash,
-                          lookup_ht_fun lookup);
+                          equal_ht_fun equal);
 void htable_destroy(hash_table *htable, destroy_table_fun destroy);
 bool htable_rehash(hash_table *htable, size_t newsize);
 bool htable_insert(hash_table *htable, struct hash_entry *hentry);
