@@ -36,8 +36,8 @@ struct hash_bucket {
 typedef void (*destroy_table_fun)(hash_table *ht);
 typedef bool (*equal_ht_fun)(const struct hash_entry *,
                              const struct hash_entry *);
-typedef int (*compare_ht_fun)(const struct hash_entry *,
-                              const struct hash_entry *);
+typedef bool (*less_ht_fun)(const struct hash_entry *,
+                            const struct hash_entry *);
 typedef struct hash_entry **(*lookup_ht_fun)(const struct hash_entry *,
                                              struct hash_bucket *);
 typedef size_t (*hash_entry_fun)(const struct hash_entry *);
@@ -52,7 +52,7 @@ bool htable_replace(hash_table *htable, struct hash_entry *hentry,
 struct hash_entry *htable_lookup(hash_table *htable, struct hash_entry *query);
 struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query);
 bool htable_delete(hash_table *htable, struct hash_entry *hentry);
-void htable_sort(hash_table *htable, compare_ht_fun cmp);
+void htable_sort(hash_table *htable, less_ht_fun less);
 size_t htable_size(hash_table *htable);
 
 struct hash_entry *htable_last(hash_table *htable);
@@ -76,11 +76,6 @@ struct hash_entry *htable_prev(const struct hash_entry *entry);
 #define HTABLE_FOR_EACH_ENTRY(htable, entry)                                   \
   for (struct hash_entry *entry = htable_first(htable); entry;                 \
        entry = htable_next(entry))
-
-#define HTABLE_LOOKUP_ITERATE(entry, link, bucket)                             \
-  struct hash_entry **link = &((bucket)->entry);                               \
-  for (const struct hash_entry *entry = *link; entry;                          \
-       link = &(*link)->next, entry = *link)
 
 #ifdef __cplusplus
 }

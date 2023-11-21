@@ -46,16 +46,10 @@ bool equal_ht_key_value(const hash_entry *a, const hash_entry *b) {
   return kva->key == kvb->key;
 }
 
-int cmp_ht_key_value(const hash_entry *a, const hash_entry *b) {
+bool less_ht_key_value(const hash_entry *a, const hash_entry *b) {
   ht_key_value *kva = ht_entry(a, ht_key_value, he);
   ht_key_value *kvb = ht_entry(b, ht_key_value, he);
-  if (kva->key > kvb->key) {
-    return 1;
-  }
-  if (kva->key < kvb->key) {
-    return -1;
-  }
-  return 0;
+  return kva->key < kvb->key;
 }
 
 void destroy_kv_table(hash_table *ht) {
@@ -303,6 +297,7 @@ TEST_F(HashTableTest, Case1) {
 
 TEST_F(HashTableTest, SortTable) {
   SetHashTable(hash_ht_key_value, equal_ht_key_value, destroy_kv_table);
+
   std::vector<int> values = {5, 7, 1,   8, 2, 227, 80, 117, 2000, -5, -7, 9,
                              3, 5, 100, 8, 9, 10,  22, 2,   1,    5,  7,  9};
   for (int val : values) {
@@ -310,10 +305,9 @@ TEST_F(HashTableTest, SortTable) {
   }
 
   /* Sort ascending */
-  htable_sort(ht_, cmp_ht_key_value);
+  htable_sort(ht_, less_ht_key_value);
 
   struct ht_key_value *kv;
-  HTABLE_FOR_EACH(ht_, kv, he) { kv->key = 5; }
 
   size_t num_iters = 0;
   int val = INT_MIN;

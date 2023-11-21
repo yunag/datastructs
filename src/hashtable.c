@@ -71,7 +71,7 @@ hash_table *htable_create(size_t capacity, hash_entry_fun hash,
                           equal_ht_fun equal) {
   assert(capacity > 0);
   assert(hash != NULL);
-  assert(lookup != NULL);
+  assert(equal != NULL);
 
   hash_table *htable = yu_malloc(sizeof(*htable));
   if (!htable) {
@@ -296,9 +296,9 @@ struct hash_entry *htable_prev(const struct hash_entry *entry) {
 }
 
 /* Simon Tatham's algorithm */
-void htable_sort(hash_table *htable, compare_ht_fun cmp) {
+void htable_sort(hash_table *htable, less_ht_fun less) {
   assert(htable != NULL);
-  assert(cmp != NULL);
+  assert(less != NULL);
 
   struct hash_entry *p, *q, *e;
   struct hash_entry *head = HT_HEAD(htable);
@@ -330,7 +330,7 @@ void htable_sort(hash_table *htable, compare_ht_fun cmp) {
           e = p;
           p = p->ht_next;
           psize--;
-        } else if (cmp(p, q) < 0) {
+        } else if (less(p, q)) {
           e = p;
           p = p->ht_next;
           psize--;
