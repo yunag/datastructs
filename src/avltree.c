@@ -64,8 +64,8 @@ static void avl_change_child(struct avl_node *parent, struct avl_node *old,
   }
 }
 
-static struct avl_node *rebalance(struct avl_root *root,
-                                  struct avl_node *node) {
+static struct avl_node *avl_rebalance(struct avl_root *root,
+                                      struct avl_node *node) {
   struct avl_node *parent = node->parent;
   struct avl_node *new = node;
 
@@ -104,7 +104,7 @@ void avl_link_node(struct avl_node *node, struct avl_node *parent,
 
 void avl_restore_properties(struct avl_root *root, struct avl_node *node) {
   while (node) {
-    node = rebalance(root, node);
+    node = avl_rebalance(root, node);
   }
 }
 

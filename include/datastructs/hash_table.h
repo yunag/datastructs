@@ -1,9 +1,10 @@
 #ifndef YU_HASH_TABLE_H
 #define YU_HASH_TABLE_H
 
-#include <datastructs/macros.h>
-#include <datastructs/types.h>
+#include "datastructs/macros.h"
+
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +43,7 @@ typedef struct hash_entry **(*lookup_ht_fun)(const struct hash_entry *,
                                              struct hash_bucket *);
 typedef size_t (*hash_entry_fun)(const struct hash_entry *);
 
-hash_table *htable_create(size_t initial_capacity, hash_entry_fun hash,
+hash_table *htable_create(size_t initial_num_buckets, hash_entry_fun hash,
                           equal_ht_fun equal);
 void htable_destroy(hash_table *htable, destroy_table_fun destroy);
 bool htable_rehash(hash_table *htable, size_t newsize);

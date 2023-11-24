@@ -1,7 +1,7 @@
 #include "datastructs/functions.h"
+#include "datastructs/memory.h"
 
 #include <stdbool.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define FNV_PRIME 0x100000001b3
@@ -26,17 +26,8 @@
     }                                                                          \
     return 0;                                                                  \
   }
-#define FNDUPDEF(type, postfix)                                                \
-  type *yu_dup_##postfix(type value) {                                         \
-    type *val = malloc(sizeof(type));                                          \
-    if (val) {                                                                 \
-      *val = value;                                                            \
-    }                                                                          \
-    return val;                                                                \
-  }
 
 #define TYPED_FUNCTIONS(Type, postfix)                                         \
-  FNDUPDEF(Type, postfix)                                                      \
   FNHASHDEF(Type, postfix)                                                     \
   FNCMPDEF(Type, postfix)
 
@@ -52,7 +43,7 @@ TYPED_FUNCTIONS(double, double)
 TYPED_FUNCTIONS(float, float)
 TYPED_FUNCTIONS(void *, ptr)
 
-uint64_t yu_hash_str(const void *str) {
+uint64_t yu_hash_str(const char *str) {
   const unsigned char *bytes = (const unsigned char *)str;
   uint64_t hashv = FNV_OFFSET;
   while (*bytes) {
@@ -62,11 +53,11 @@ uint64_t yu_hash_str(const void *str) {
   return hashv;
 }
 
-int yu_cmp_str(const void *a, const void *b) { return strcmp(a, b); }
+int yu_cmp_str(const char *a, const char *b) { return strcmp(a, b); }
 
 char *yu_dup_str(const char *s) {
   size_t slen = strlen(s);
-  char *str = malloc(slen + 1);
+  char *str = yu_malloc(slen + 1);
   if (str) {
     memcpy(str, s, slen + 1);
   }

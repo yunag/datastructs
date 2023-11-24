@@ -37,7 +37,7 @@ struct hash_table {
   size_t ideal_num_items;
 
   size_t num_items;   /* Number of items in the table */
-  size_t num_buckets; /* Capacity of the table */
+  size_t num_buckets; /* Number of buckets in the table */
 };
 
 bool htable_rehash(hash_table *htable, size_t newsize) {
@@ -67,9 +67,9 @@ bool htable_rehash(hash_table *htable, size_t newsize) {
   return true;
 }
 
-hash_table *htable_create(size_t capacity, hash_entry_fun hash,
+hash_table *htable_create(size_t num_buckets, hash_entry_fun hash,
                           equal_ht_fun equal) {
-  assert(capacity > 0);
+  assert(num_buckets > 0);
   assert(hash != NULL);
   assert(equal != NULL);
 
@@ -78,7 +78,7 @@ hash_table *htable_create(size_t capacity, hash_entry_fun hash,
     return NULL;
   }
 
-  htable->buckets = yu_calloc(capacity, sizeof(*htable->buckets));
+  htable->buckets = yu_calloc(num_buckets, sizeof(*htable->buckets));
   if (!htable->buckets) {
     yu_free(htable);
     return NULL;
@@ -91,8 +91,8 @@ hash_table *htable_create(size_t capacity, hash_entry_fun hash,
   htable->head.next = DUMMY_PTR;
 
   htable->num_items = 0;
-  htable->ideal_num_items = capacity * IDEAL_LOAD_FACTOR + 1;
-  htable->num_buckets = capacity;
+  htable->ideal_num_items = num_buckets * IDEAL_LOAD_FACTOR + 1;
+  htable->num_buckets = num_buckets;
 
   return htable;
 }

@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <climits>
-#include <map>
 #include <unordered_set>
 
 typedef void (*destroy_tree_fun)(struct avl_root *);
@@ -25,6 +24,7 @@ int valid_avl_rec(avl_node *node, bool &is_valid) {
   if (!node || !is_valid) {
     return 0;
   }
+
   int lheight = valid_avl_rec(node->left, is_valid);
   int rheight = valid_avl_rec(node->right, is_valid);
   is_valid &= abs(lheight - rheight) <= 1;
@@ -199,6 +199,7 @@ TEST_F(BSTTest, Case1) {
 
 TEST_F(BSTTest, Case2) {
   setAVL(destroy_kv_tree);
+
   kv_node query;
   std::vector<int> nums = {4, 1, 5, 0, 2, 6};
   for (int num : nums) {

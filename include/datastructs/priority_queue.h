@@ -1,8 +1,8 @@
 #ifndef YU_PRIORITY_QUEUE_H
 #define YU_PRIORITY_QUEUE_H
 
-#include "types.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -2,7 +2,9 @@
 #define YU_AVL_TREE_H
 
 #include "datastructs/macros.h"
+
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
