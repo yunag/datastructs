@@ -20,7 +20,7 @@ struct priority_queue {
   char *heap; /* Node storage buffer */
   char *last;
 
-  compare_fun cmp;  /* Function for comparing two nodes */
+  pq_less_fun less; /* Function for comparing two nodes */
   size_t num_items; /* Size of the Priority Queue */
   size_t capacity;  /* Capacity of the Priority Queue */
   size_t esize;     /* Size of a single element in the Priority Queue*/
@@ -41,10 +41,10 @@ static bool pq_resize(priority_queue *pq, size_t newsize) {
 }
 
 static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
-                               compare_fun cmp) {
+                               pq_less_fun less) {
   assert(capacity > 0);
   assert(esize > 0);
-  assert(cmp != NULL);
+  assert(less != NULL);
 
   priority_queue *pq = yu_malloc(sizeof(*pq));
   if (!pq) {
@@ -59,21 +59,21 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
 
   pq->capacity = capacity;
   pq->esize = esize;
-  pq->cmp = cmp;
+  pq->less = less;
   pq->num_items = size;
   pq->last = pq->heap + pq->num_items * pq->esize;
   return pq;
 }
 
-priority_queue *pq_create(size_t capacity, size_t elemsize, compare_fun cmp) {
-  return pq_init(0, capacity, elemsize, cmp);
+priority_queue *pq_create(size_t capacity, size_t elemsize, pq_less_fun less) {
+  return pq_init(0, capacity, elemsize, less);
 }
 
 priority_queue *pq_create_from_heap(const void *heap, size_t count,
-                                    size_t elemsize, compare_fun cmp) {
+                                    size_t elemsize, pq_less_fun less) {
   assert(heap != NULL);
 
-  priority_queue *pq = pq_init(count, count, elemsize, cmp);
+  priority_queue *pq = pq_init(count, count, elemsize, less);
   if (pq) {
     memcpy(pq->heap, heap, count * elemsize);
   }
@@ -82,13 +82,13 @@ priority_queue *pq_create_from_heap(const void *heap, size_t count,
 }
 
 priority_queue *pq_create_from_arr(const void *base, size_t count,
-                                   size_t elemsize, compare_fun cmp) {
+                                   size_t elemsize, pq_less_fun less) {
   assert(base != NULL);
 
-  priority_queue *pq = pq_init(count, count, elemsize, cmp);
+  priority_queue *pq = pq_init(count, count, elemsize, less);
   if (pq) {
     memcpy(pq->heap, base, count * elemsize);
-    heapify(pq->heap, count, elemsize, cmp);
+    pq_heapify(pq->heap, count, elemsize, less);
   }
 
   return pq;
@@ -102,15 +102,15 @@ void pq_destroy(priority_queue *pq) {
 }
 
 static void heapify_down(char *heap, char *last, char *node, size_t size,
-                         compare_fun cmp) {
+                         pq_less_fun less) {
   char *cur = node;
   char *lch, *rch;
   while ((lch = LCHILD(cur)) < last) {
-    if ((rch = RCHILD(lch)) < last && cmp(rch, lch) < 0) {
+    if ((rch = RCHILD(lch)) < last && less(rch, lch)) {
       lch = rch;
     }
 
-    if (cmp(cur, lch) < 0) {
+    if (less(cur, lch)) {
       break;
     }
     YU_BYTE_SWAP(lch, cur, size);
@@ -118,16 +118,16 @@ static void heapify_down(char *heap, char *last, char *node, size_t size,
   }
 }
 
-void heapify(void *base, size_t count, size_t size, compare_fun cmp) {
+void pq_heapify(void *base, size_t count, size_t size, pq_less_fun less) {
   assert(base != NULL);
-  assert(cmp != NULL);
+  assert(less != NULL);
 
   char *base_ptr = base;
   char *end = base_ptr + size * count;
 
   for (char *node = base_ptr + ((count >> 1) - 1) * size; node >= base_ptr;
        node -= size) {
-    heapify_down(base, end, node, size, cmp);
+    heapify_down(base, end, node, size, less);
   }
 }
 
@@ -136,7 +136,7 @@ void pq_pushpop(priority_queue *pq, const void *elem) {
   assert(elem != NULL);
 
   memcpy(pq->heap, elem, pq->esize);
-  heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->cmp);
+  heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->less);
 }
 
 void pq_push(priority_queue *pq, const void *elem) {
@@ -157,7 +157,7 @@ void pq_push(priority_queue *pq, const void *elem) {
     void *child = HEAP_AT(cur);
     void *parent = HEAP_AT(par);
 
-    if (pq->cmp(parent, child) < 0) {
+    if (pq->less(parent, child)) {
       break;
     }
 
@@ -178,7 +178,7 @@ void pq_pop(priority_queue *pq) {
 
   /* Move last element to the top */
   memcpy(pq->heap, pq->last -= pq->esize, pq->esize);
-  heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->cmp);
+  heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->less);
 }
 
 bool pq_empty(priority_queue *pq) {

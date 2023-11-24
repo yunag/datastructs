@@ -4,10 +4,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
-static const int threshold = 1;
-
 static inline int avl_node_height(struct avl_node *node) {
-  return !node ? 0 : node->height;
+  return node ? node->height : 0;
 }
 
 static inline int avl_deviation(struct avl_node *node) {
@@ -72,14 +70,14 @@ static struct avl_node *avl_rebalance(struct avl_root *root,
   size_t height = node->height;
   int balance = avl_deviation(node);
 
-  if (balance > threshold) {
+  if (balance > 1) {
     /* left-right heavy? */
     if (avl_deviation(node->left) < 0) {
       node->left = avl_left_rotate(node->left);
     }
     avl_change_child(parent, node, new = avl_right_rotate(node), root);
 
-  } else if (balance < -threshold) {
+  } else if (balance < -1) {
     /* right-left heavy? */
     if (avl_deviation(node->right) > 0) {
       node->right = avl_right_rotate(node->right);

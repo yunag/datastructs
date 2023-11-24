@@ -5,25 +5,19 @@
 
 #include "helper.h"
 
+#include <algorithm>
 #include <climits>
+#include <iterator>
 #include <stdlib.h>
 
 #include <queue>
 
-template <typename T> int cmp_great(const void *pa, const void *pb) {
-  T a = *(T *)pa;
-  T b = *(T *)pb;
-  if (a > b) {
-    return 1;
-  }
-  if (a < b) {
-    return -1;
-  }
-  return 0;
+template <typename T> bool cmp_great(const void *pa, const void *pb) {
+  return *(T *)pa < *(T *)pb;
 }
 
-template <typename T> int cmp_less(const void *pa, const void *pb) {
-  return -cmp_great<T>(pa, pb);
+template <typename T> bool cmp_less(const void *pa, const void *pb) {
+  return !cmp_great<T>(pa, pb);
 }
 
 class PriorityQueueTest : public ::testing::Test {
@@ -32,8 +26,8 @@ protected:
   void TearDown() override { pq_destroy(pq_); }
 
   template <typename T>
-  void SetPQueue(size_t size = 1, compare_fun cmp = cmp_great<T>) {
-    pq_ = pq_create(size, sizeof(T), cmp);
+  void SetPQueue(size_t size = 1, pq_less_fun less = cmp_great<T>) {
+    pq_ = pq_create(size, sizeof(T), less);
     ASSERT_NE(pq_, nullptr);
   }
 
@@ -71,7 +65,7 @@ TEST_F(PriorityQueueTest, PushResize) {
 
 TEST_F(PriorityQueueTest, Greater) {
   SetPQueue<int>();
-  const size_t num_cases = 400;
+  constexpr size_t num_cases = 400;
   int nums[num_cases];
 
   for (size_t i = 0; i < num_cases; ++i) {
@@ -79,10 +73,12 @@ TEST_F(PriorityQueueTest, Greater) {
     nums[i] = val;
     pq_push(pq_, &val);
   }
-  qsort(nums, num_cases, sizeof(*nums), cmp_great<int>);
+  std::sort(std::begin(nums), std::end(nums));
 
   for (size_t i = 0; i < num_cases; ++i) {
-    ASSERT_EQ(nums[i], PQ_TOP(pq_, int));
+    int popv;
+    PQ_TOP(pq_, popv);
+    ASSERT_EQ(nums[i], popv);
     pq_pop(pq_);
     ASSERT_EQ(pq_size(pq_), num_cases - i - 1);
   }
@@ -92,6 +88,7 @@ TEST_F(PriorityQueueTest, Greater) {
 
 TEST_F(PriorityQueueTest, Lesser) {
   SetPQueue<double>(1, cmp_less<double>);
+
   const size_t num_cases = 400;
   double nums[num_cases];
 
@@ -100,10 +97,12 @@ TEST_F(PriorityQueueTest, Lesser) {
     nums[i] = val;
     pq_push(pq_, &val);
   }
-  qsort(nums, num_cases, sizeof(*nums), cmp_less<double>);
+  std::sort(std::rbegin(nums), std::rend(nums));
 
   for (size_t i = 0; i < num_cases; ++i) {
-    ASSERT_EQ(nums[i], PQ_TOP(pq_, double));
+    double popv;
+    PQ_TOP(pq_, popv);
+    ASSERT_EQ(nums[i], popv);
     pq_pop(pq_);
     ASSERT_EQ(pq_size(pq_), num_cases - i - 1);
   }
@@ -112,6 +111,8 @@ TEST_F(PriorityQueueTest, Lesser) {
 
 template <typename PriorityQueueType>
 void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
+  double topv;
+
   enum class Action {
     Push,
     Pop,
@@ -133,19 +134,22 @@ void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
       double val = Helper::rand_inrange(INT_MIN, INT_MAX);
       pq.push(val);
       pq_push(pq_, &val);
-      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
+      PQ_TOP(pq_, topv);
+      ASSERT_EQ(pq.top(), topv);
       break;
     }
 
     case Action::Pop: {
-      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
+      PQ_TOP(pq_, topv);
+      ASSERT_EQ(pq.top(), topv);
       pq.pop();
       pq_pop(pq_);
       break;
     }
 
     case Action::Top: {
-      ASSERT_EQ(pq.top(), PQ_TOP(pq_, double));
+      PQ_TOP(pq_, topv);
+      ASSERT_EQ(pq.top(), topv);
       break;
     }
     }
@@ -166,39 +170,54 @@ TEST_F(PriorityQueueTest, STLPQueueGreater) {
 
 TEST_F(PriorityQueueTest, Case1) {
   SetPQueue<double>();
+  double topv;
+  double pushv;
 
-  PQ_PUSH(pq_, 5.0);
-  EXPECT_EQ(PQ_TOP(pq_, double), 5.0);
+  pushv = 5.0;
+  pq_push(pq_, &pushv);
+  PQ_TOP(pq_, topv);
+  EXPECT_EQ(topv, 5.0);
   EXPECT_FALSE(pq_empty(pq_));
 
-  PQ_PUSH(pq_, 7.0);
-  EXPECT_EQ(PQ_TOP(pq_, double), 5.0);
+  pushv = 7.0;
+  pq_push(pq_, &pushv);
+  PQ_TOP(pq_, topv);
+  EXPECT_EQ(topv, 5.0);
 
   pq_pop(pq_);
-  EXPECT_EQ(PQ_TOP(pq_, double), 7);
+  PQ_TOP(pq_, topv);
+  EXPECT_EQ(topv, 7);
 
   pq_pop(pq_);
   EXPECT_TRUE(pq_empty(pq_));
 
-  PQ_PUSH(pq_, 120.0);
-  EXPECT_EQ(PQ_TOP(pq_, double), 120);
+  pushv = 120.0;
+  pq_push(pq_, &pushv);
+  PQ_TOP(pq_, topv);
+  EXPECT_EQ(topv, 120);
   EXPECT_EQ(pq_size(pq_), 1);
 
-  PQ_PUSH(pq_, 79.0);
-  EXPECT_EQ(PQ_TOP(pq_, double), 79);
+  pushv = 79.0;
+  pq_push(pq_, &pushv);
+  PQ_TOP(pq_, topv);
+  EXPECT_EQ(topv, 79);
   EXPECT_EQ(pq_size(pq_), 2);
 }
 
 TEST(PriorityQueue, Case2) {
   int nums[] = {1, 4, 3, 2, 8, 7, 9, 6, 5, 0};
   int nums_size = YU_ARRAYSIZE(nums);
+
+  int topv;
+
   priority_queue *pq =
       pq_create_from_arr(nums, nums_size, sizeof(*nums), cmp_great<int>);
   EXPECT_FALSE(pq_empty(pq));
   EXPECT_EQ(pq_size(pq), nums_size);
 
   for (int i = 0; i < nums_size; ++i) {
-    EXPECT_EQ(i, PQ_TOP(pq, int));
+    PQ_TOP(pq, topv);
+    EXPECT_EQ(i, topv);
     pq_pop(pq);
   }
   pq_destroy(pq);
