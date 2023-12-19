@@ -17,7 +17,7 @@ size_t yu_hash_bern(const void *key, size_t size) {
 }
 
 size_t yu_hash_fnv1a(const void *key, size_t size) {
-  const unsigned char *bytes = (const unsigned char *)&key;
+  const unsigned char *bytes = key;
   size_t hashv = FNV_OFFSET;
   for (size_t i = 0; i < size; ++i) {
     hashv ^= bytes[i];
