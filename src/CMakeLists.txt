@@ -1,6 +1,5 @@
 add_library(${PROJECT_NAME} STATIC
   hashtable.c
-  trie.c
   priorityqueue.c
   queue.c
   avltree.c
