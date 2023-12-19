@@ -34,6 +34,7 @@ public:
     KeyValue *cur, *n;
 
     htable_for_each_temp(ht_, cur, n, hh) { delete cur; }
+    htable_destroy(ht_, nullptr);
   }
 
   void insert(int key, int val = 0) {

@@ -4,7 +4,7 @@ name: CMake on multiple platforms
 
 on:
   push:
-    branches: ["master"]
+    branches: ["master", "fix_test_leak"]
   pull_request:
     branches: ["master"]
 

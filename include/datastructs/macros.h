@@ -10,9 +10,6 @@
     defined(__chibicc__)
   /* chibicc supports __typeof__ but not __typeof */
   #define yu_typeof(x) __typeof__(x)
-#else
-  #warning                                                                     \
-      "Compiler doesn't supports `typeof` - yu_typeof macro will not be defined"
 #endif
 
 #define YU_BYTE_SWAP(a, b, size)                                               \

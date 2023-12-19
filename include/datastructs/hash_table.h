@@ -1,7 +1,7 @@
 #ifndef YU_HASH_TABLE_H
 #define YU_HASH_TABLE_H
 
-#include "datastructs/macros.h"
+#include "macros.h"
 
 #include <stdbool.h>
 #include <stddef.h>

@@ -1,6 +1,8 @@
 #ifndef YU_QUEUE_H
 #define YU_QUEUE_H
 
+#include "macros.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 

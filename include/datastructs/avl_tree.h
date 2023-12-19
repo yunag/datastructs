@@ -1,7 +1,7 @@
 #ifndef YU_AVL_TREE_H
 #define YU_AVL_TREE_H
 
-#include "datastructs/macros.h"
+#include "macros.h"
 
 #include <stdbool.h>
 #include <stddef.h>
