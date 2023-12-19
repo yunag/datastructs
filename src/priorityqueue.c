@@ -9,8 +9,8 @@
 #define HEAP_AT(node) (pq->heap + pq->esize * (node))
 #define PARENT(child) ((child - 1) >> 1)
 
-#define LCHILD(parent) (heap + (((node)-heap) << 1) + size)
-#define RCHILD(lchild) ((lchild) + size)
+#define LCHILD(parent) (heap + (((parent)-heap) << 1) + size)
+#define RCHILD(lchild) (lchild + size)
 
 #define HAS_PARENT(child) ((child) > 0)
 
