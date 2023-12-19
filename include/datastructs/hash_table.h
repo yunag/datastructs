@@ -30,32 +30,38 @@ struct hash_bucket {
   struct hash_entry *entry;
 };
 
-typedef void (*destroy_table_fun)(hash_table *ht);
-typedef bool (*equal_ht_fun)(const struct hash_entry *,
+typedef void (*ht_destroy_fun)(hash_table *);
+typedef bool (*ht_equal_fun)(const struct hash_entry *,
                              const struct hash_entry *);
-typedef bool (*less_ht_fun)(const struct hash_entry *,
+typedef bool (*ht_less_fun)(const struct hash_entry *,
                             const struct hash_entry *);
-typedef struct hash_entry **(*lookup_ht_fun)(const struct hash_entry *,
-                                             struct hash_bucket *);
-typedef size_t (*hash_entry_fun)(const struct hash_entry *);
+typedef size_t (*ht_hash_fun)(const struct hash_entry *);
 
-hash_table *htable_create(size_t initial_num_buckets, hash_entry_fun hash,
-                          equal_ht_fun equal);
-void htable_destroy(hash_table *htable, destroy_table_fun destroy);
+hash_table *htable_create(size_t initial_num_buckets, ht_hash_fun hash,
+                          ht_equal_fun equal);
+void htable_destroy(hash_table *htable, ht_destroy_fun destroy);
 bool htable_rehash(hash_table *htable, size_t newsize);
-bool htable_insert(hash_table *htable, struct hash_entry *hentry);
-bool htable_replace(hash_table *htable, struct hash_entry *hentry,
+bool htable_insert(hash_table *htable, struct hash_entry *entry);
+bool htable_replace(hash_table *htable, struct hash_entry *entry,
                     struct hash_entry **replaced);
 struct hash_entry *htable_lookup(hash_table *htable, struct hash_entry *query);
 struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query);
-bool htable_erase(hash_table *htable, struct hash_entry *hentry);
-void htable_sort(hash_table *htable, less_ht_fun less);
+bool htable_erase(hash_table *htable, struct hash_entry *entry);
+void htable_sort(hash_table *htable, ht_less_fun less);
 size_t htable_size(hash_table *htable);
 
 struct hash_entry *htable_last(hash_table *htable);
 struct hash_entry *htable_first(hash_table *htable);
 struct hash_entry *htable_next(const struct hash_entry *entry);
 struct hash_entry *htable_prev(const struct hash_entry *entry);
+
+#define ht_find(htable, query, field)                                          \
+  ht_entry_safe(htable_lookup(htable, &(query)->field), yu_typeof(*query),     \
+                field)
+
+#define ht_remove(htable, query, field)                                        \
+  ht_entry_safe(htable_remove(htable, &(query)->field), yu_typeof(*query),     \
+                field)
 
 #define ht_for_each(htable, cur, field)                                        \
   for (cur = ht_entry_safe(htable_first(htable), yu_typeof(*cur), field); cur; \
