@@ -1,4 +1,5 @@
 #include "datastructs/memory.h"
+#include "datastructs/macros.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -11,13 +12,20 @@ static struct yu_allocator g_allocator = {
     .user_data = NULL,
 };
 
-void *yu_default_allocate(size_t size, void *user_data) { return malloc(size); }
+void *yu_default_allocate(size_t size, void *user_data) {
+  YU_UNUSED(user_data);
+  return malloc(size);
+}
 
 void *yu_default_reallocate(void *block, size_t size, void *user_data) {
+  YU_UNUSED(user_data);
   return realloc(block, size);
 }
 
-void yu_default_deallocate(void *block, void *user_data) { free(block); }
+void yu_default_deallocate(void *block, void *user_data) {
+  YU_UNUSED(user_data);
+  free(block);
+}
 
 void yu_set_allocator(const yu_allocator *allocator) {
   g_allocator = *allocator;
