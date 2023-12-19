@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-uint64_t hash_bern(const void *key, size_t size);
+size_t yu_hash_bern(const void *key, size_t size);
+size_t yu_hash_fnv1a(const void *key, size_t size);
 
 #define FUNCTION_DECL(type, postfix)                                           \
   size_t yu_hash_##postfix(type key);                                          \
@@ -28,7 +29,6 @@ FUNCTION_DECL(void *, ptr)
 
 char *yu_dup_str(const char *str);
 size_t yu_hash_str(const char *str);
-int yu_cmp_str(const char *a, const char *b);
 
 #undef FUNCTION_DECL
 

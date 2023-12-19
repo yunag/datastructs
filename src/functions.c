@@ -6,16 +6,31 @@
 
 #define FNV_PRIME 0x100000001b3
 #define FNV_OFFSET 0xcbf29ce484222325UL
+
+size_t yu_hash_bern(const void *key, size_t size) {
+  const unsigned char *bytes = key;
+  size_t hash = 5381;
+  for (size_t i = 0; i < size; ++i) {
+    hash = (hash << 5) + hash + bytes[i];
+  }
+  return hash;
+}
+
+size_t yu_hash_fnv1a(const void *key, size_t size) {
+  const unsigned char *bytes = (const unsigned char *)&key;
+  size_t hashv = FNV_OFFSET;
+  for (size_t i = 0; i < size; ++i) {
+    hashv ^= bytes[i];
+    hashv *= FNV_PRIME;
+  }
+  return hashv;
+}
+
 #define FNHASHDEF(type, postfix)                                               \
   size_t yu_hash_##postfix(type key) {                                         \
-    const unsigned char *bytes = (const unsigned char *)&key;                  \
-    size_t hashv = FNV_OFFSET;                                                 \
-    for (size_t i = 0; i < sizeof(type); ++i) {                                \
-      hashv ^= bytes[i];                                                       \
-      hashv *= FNV_PRIME;                                                      \
-    }                                                                          \
-    return hashv;                                                              \
+    return yu_hash_fnv1a(&key, sizeof(key));                                   \
   }
+
 #define FNCMPDEF(type, postfix)                                                \
   int yu_cmp_##postfix(const void *a, const void *b) {                         \
     if (*(type *)a > *(type *)b) {                                             \
@@ -53,8 +68,6 @@ uint64_t yu_hash_str(const char *str) {
   return hashv;
 }
 
-int yu_cmp_str(const char *a, const char *b) { return strcmp(a, b); }
-
 char *yu_dup_str(const char *s) {
   size_t slen = strlen(s);
   char *str = yu_malloc(slen + 1);
@@ -62,13 +75,4 @@ char *yu_dup_str(const char *s) {
     memcpy(str, s, slen + 1);
   }
   return str;
-}
-
-uint64_t hash_bern(const void *key, size_t size) {
-  const unsigned char *bytes = key;
-  uint64_t hash = 5381;
-  for (size_t i = 0; i < size; ++i) {
-    hash = (hash << 5) + hash + bytes[i];
-  }
-  return hash;
 }
