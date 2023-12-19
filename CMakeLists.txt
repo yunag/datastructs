@@ -8,13 +8,9 @@ set(COMPILE_OPTS
   -pedantic 
   -Wall
   -Wextra 
-  -Wno-unused-label
-  -Wno-unused-function
-  -Wno-unused-parameter
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  list(APPEND COMPILE_OPTS -Wno-gnu-statement-expression)
   # Disable secure warnings
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
