@@ -115,8 +115,8 @@ void htable_destroy(hash_table *htable, destroy_table_fun destroy_table) {
 }
 
 static inline bool htable_expand_buckets(hash_table *htable) {
-  return htable->num_items >= htable->ideal_num_items &&
-         !htable_rehash(htable, htable->num_buckets * 2);
+  return htable->num_items < htable->ideal_num_items ||
+         htable_rehash(htable, htable->num_buckets * 2);
 }
 
 static void htable_link_entry(struct hash_entry *tail,
@@ -166,7 +166,7 @@ bool htable_insert(hash_table *htable, struct hash_entry *hentry) {
   assert(htable != NULL);
   assert(hentry != NULL);
 
-  if (htable_expand_buckets(htable)) {
+  if (!htable_expand_buckets(htable)) {
     return false;
   }
 
@@ -187,7 +187,7 @@ bool htable_replace(hash_table *htable, struct hash_entry *hentry,
 
   *replaced = NULL;
 
-  if (htable_expand_buckets(htable)) {
+  if (!htable_expand_buckets(htable)) {
     return false;
   }
 
