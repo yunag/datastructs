@@ -37,10 +37,7 @@ struct avl_tree {
 
 #define avl_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
 #define avl_entry_safe(ptr, type, member)                                      \
-  ({                                                                           \
-    __typeof__(ptr) _ptr = (ptr);                                              \
-    _ptr ? avl_entry(_ptr, type, member) : NULL;                               \
-  })
+  YU_CONTAINER_OF_SAFE(ptr, type, member)
 
 void avl_init(avl_tree *avl, compare_avl_nodes_fun cmp);
 
@@ -61,22 +58,17 @@ struct avl_node *avl_last(const struct avl_root *root);
 struct avl_node *avl_next(const struct avl_node *node);
 struct avl_node *avl_prev(const struct avl_node *node);
 
-#define AVL_FOR_EACH(root, cur, field)                                         \
-  for (cur = avl_entry_safe(avl_first(root), __typeof__(*cur), field); cur;    \
-       cur = avl_entry_safe(avl_next(&cur->field), __typeof__(*cur), field))
+#define avl_for_each(root, cur, field)                                         \
+  for (cur = avl_entry_safe(avl_first(root), yu_typeof(*cur), field); cur;     \
+       cur = avl_entry_safe(avl_next(&cur->field), yu_typeof(*cur), field))
 
-#define AVL_POSTORDER_FOR_EACH(root, cur, n, field)                            \
+#define avl_postorder_for_each(root, cur, n, field)                            \
   for (cur =                                                                   \
-           avl_entry_safe(avl_first_postorder(root), __typeof__(*cur), field); \
-       cur && ({                                                               \
-         n = avl_entry_safe(avl_next_postorder(&cur->field), __typeof__(*cur), \
-                            field);                                            \
-         1;                                                                    \
-       });                                                                     \
+           avl_entry_safe(avl_first_postorder(root), yu_typeof(*cur), field);  \
+       cur && ((n = avl_entry_safe(avl_next_postorder(&cur->field),            \
+                                   yu_typeof(*cur), field)) ||                 \
+               1);                                                             \
        cur = n)
-
-#define AVL_FOR_EACH_NODE(root, node)                                          \
-  for (struct avl_node *node = avl_first(root); node; node = avl_next(node))
 
 #ifdef __cplusplus
 }

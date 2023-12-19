@@ -1,8 +1,11 @@
 #include "datastructs/avl_tree.h"
-#include "datastructs/macros.h"
 
 #include <assert.h>
 #include <stdlib.h>
+
+static inline int avl_max(int lheight, int rheight) {
+  return lheight > rheight ? lheight : rheight;
+}
 
 static inline int avl_node_height(struct avl_node *node) {
   return node ? node->height : 0;
@@ -13,7 +16,7 @@ static inline int avl_deviation(struct avl_node *node) {
 }
 
 static inline int avl_height(struct avl_node *node) {
-  return 1 + YU_MAX(avl_node_height(node->left), avl_node_height(node->right));
+  return 1 + avl_max(avl_node_height(node->left), avl_node_height(node->right));
 }
 
 static struct avl_node *avl_left_rotate(struct avl_node *node) {

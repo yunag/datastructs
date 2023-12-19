@@ -54,7 +54,7 @@ bool less_ht_key_value(const hash_entry *a, const hash_entry *b) {
 
 void destroy_kv_table(hash_table *ht) {
   ht_key_value *cur, *n;
-  HTABLE_FOR_EACH_TEMP(ht, cur, n, he) { delete cur; }
+  ht_for_each_temp(ht, cur, n, he) { delete cur; }
 }
 
 ht_key_value *find_kv(hash_table *htable, int key) {
@@ -114,7 +114,7 @@ bool equal_ht_str_entry(const hash_entry *a, const hash_entry *b) {
 
 void destroy_str_table(hash_table *ht) {
   ht_str_entry *cur, *n;
-  HTABLE_FOR_EACH_TEMP(ht, cur, n, he) { delete cur; }
+  ht_for_each_temp(ht, cur, n, he) { delete cur; }
 }
 
 bool insert_str(hash_table *htable, const char *str, int val) {
@@ -278,14 +278,14 @@ TEST_F(HashTableTest, Case1) {
   ht_key_value *kv;
 
   cycles = 0;
-  HTABLE_FOR_EACH(ht_, kv, he) {
+  ht_for_each(ht_, kv, he) {
     cycles++;
     ASSERT_EQ(kv->val, stl_map[kv->key]);
   }
   ASSERT_EQ(cycles, 2);
 
   cycles = 0;
-  HTABLE_FOR_EACH(ht_, kv, he) {
+  ht_for_each(ht_, kv, he) {
     cycles++;
     ASSERT_EQ(kv->val, stl_map[kv->key]);
     if (cycles == 1) {
@@ -312,7 +312,7 @@ TEST_F(HashTableTest, SortTable) {
   size_t num_iters = 0;
   int val = INT_MIN;
 
-  HTABLE_FOR_EACH(ht_, kv, he) {
+  ht_for_each(ht_, kv, he) {
     ASSERT_GE(kv->key, val);
 
     num_iters++;

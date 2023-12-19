@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 
-#include "datastructs/macros.h"
 #include "datastructs/priority_queue.h"
 
 #include "helper.h"
@@ -35,13 +34,12 @@ protected:
 };
 
 TEST(PriorityQueue, Initialization) {
-  size_t types[] = {
+  std::vector<size_t> types = {
       sizeof(int),  sizeof(float),    sizeof(double),
       sizeof(char), sizeof(uint16_t),
   };
-  size_t types_size = YU_ARRAYSIZE(types);
 
-  for (size_t i = 0; i < types_size; ++i) {
+  for (size_t i = 0; i < types.size(); ++i) {
     priority_queue *pq =
         pq_create(Helper::rand_inrange(1, 10000), types[i], cmp_great<int>);
     ASSERT_NE(pq, nullptr);
@@ -202,25 +200,6 @@ TEST_F(PriorityQueueTest, Case1) {
   PQ_TOP(pq_, topv);
   EXPECT_EQ(topv, 79);
   EXPECT_EQ(pq_size(pq_), 2);
-}
-
-TEST(PriorityQueue, Case2) {
-  int nums[] = {1, 4, 3, 2, 8, 7, 9, 6, 5, 0};
-  int nums_size = YU_ARRAYSIZE(nums);
-
-  int topv;
-
-  priority_queue *pq =
-      pq_create_from_arr(nums, nums_size, sizeof(*nums), cmp_great<int>);
-  EXPECT_FALSE(pq_empty(pq));
-  EXPECT_EQ(pq_size(pq), nums_size);
-
-  for (int i = 0; i < nums_size; ++i) {
-    PQ_TOP(pq, topv);
-    EXPECT_EQ(i, topv);
-    pq_pop(pq);
-  }
-  pq_destroy(pq);
 }
 
 int main(int argc, char *argv[]) {

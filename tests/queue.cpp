@@ -22,13 +22,12 @@ protected:
 };
 
 TEST(Queue, Initialization) {
-  size_t types[] = {
+  std::vector<size_t> types = {
       sizeof(int),  sizeof(float),    sizeof(double),
       sizeof(char), sizeof(uint16_t),
   };
-  size_t types_size = YU_ARRAYSIZE(types);
 
-  for (size_t i = 0; i < types_size; ++i) {
+  for (size_t i = 0; i < types.size(); ++i) {
     queue *q = queue_create(Helper::rand_inrange(1, 20000), types[i]);
     ASSERT_NE(q, nullptr);
     ASSERT_TRUE(queue_empty(q));

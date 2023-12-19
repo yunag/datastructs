@@ -8,13 +8,6 @@
 /* Should be arranged from 0.5 to 0.8 */
 #define IDEAL_LOAD_FACTOR 0.7
 
-#define HT_BUCKET_BY_HASHV(htable, key)                                        \
-  (&(htable)->buckets[(key)->hashv % (htable)->num_buckets])
-
-#define HT_BUCKET(htable, key)                                                 \
-  (&(htable)->buckets[((key)->hashv = (htable)->hash(key)) %                   \
-                      (htable)->num_buckets])
-
 #define HT_HEAD(htable) ((htable)->head.ht_next)
 #define HT_TAIL(htable) ((htable)->head.ht_prev)
 
@@ -40,6 +33,17 @@ struct hash_table {
   size_t num_buckets; /* Number of buckets in the table */
 };
 
+struct hash_bucket *htable_bucket_by_hashv(hash_table *htable, size_t hashv) {
+  return &htable->buckets[hashv % htable->num_buckets];
+}
+
+struct hash_bucket *htable_bucket(hash_table *htable,
+                                  struct hash_entry *entry) {
+  entry->hashv = htable->hash(entry);
+
+  return htable_bucket_by_hashv(htable, entry->hashv);
+}
+
 bool htable_rehash(hash_table *htable, size_t newsize) {
   assert(htable != NULL);
 
@@ -56,7 +60,7 @@ bool htable_rehash(hash_table *htable, size_t newsize) {
 
   struct hash_entry *entry = HT_HEAD(htable);
   while (entry != &htable->head) {
-    struct hash_bucket *bucket = HT_BUCKET_BY_HASHV(htable, entry);
+    struct hash_bucket *bucket = htable_bucket_by_hashv(htable, entry->hashv);
 
     entry->next = bucket->entry;
     bucket->entry = entry;
@@ -141,9 +145,9 @@ static void htable_replace_entry(struct hash_entry **victim,
   new->ht_next->ht_prev = new;
 }
 
-static struct hash_entry **htable_lookup_bucket(hash_table *htable,
-                                                struct hash_bucket *bucket,
-                                                struct hash_entry *query) {
+static struct hash_entry **htable_lookup_in_bucket(hash_table *htable,
+                                                   struct hash_bucket *bucket,
+                                                   struct hash_entry *query) {
   struct hash_entry **link = &bucket->entry;
 
   while (*link) {
@@ -166,7 +170,7 @@ bool htable_insert(hash_table *htable, struct hash_entry *hentry) {
     return false;
   }
 
-  struct hash_bucket *bucket = HT_BUCKET(htable, hentry);
+  struct hash_bucket *bucket = htable_bucket(htable, hentry);
   struct hash_entry *tail = HT_TAIL(htable);
 
   htable_link_entry(tail, hentry, bucket);
@@ -187,9 +191,9 @@ bool htable_replace(hash_table *htable, struct hash_entry *hentry,
     return false;
   }
 
-  struct hash_bucket *bucket = HT_BUCKET(htable, hentry);
+  struct hash_bucket *bucket = htable_bucket(htable, hentry);
+  struct hash_entry **link = htable_lookup_in_bucket(htable, bucket, hentry);
   struct hash_entry *tail = HT_TAIL(htable);
-  struct hash_entry **link = htable_lookup_bucket(htable, bucket, hentry);
 
   if (*link) {
     *replaced = *link;
@@ -208,15 +212,13 @@ struct hash_entry *htable_lookup(hash_table *htable, struct hash_entry *query) {
   assert(htable != NULL);
   assert(query != NULL);
 
-  struct hash_bucket *bucket = HT_BUCKET(htable, query);
+  struct hash_bucket *bucket = htable_bucket(htable, query);
 
-  return *htable_lookup_bucket(htable, bucket, query);
+  return *htable_lookup_in_bucket(htable, bucket, query);
 }
 
 static void htable_remove_link(struct hash_entry **link) {
   struct hash_entry *entry = *link;
-
-  assert(entry != NULL);
 
   entry->ht_prev->ht_next = entry->ht_next;
   entry->ht_next->ht_prev = entry->ht_prev;
@@ -227,8 +229,9 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query) {
   assert(htable != NULL);
   assert(query != NULL);
 
-  struct hash_bucket *bucket = HT_BUCKET(htable, query);
-  struct hash_entry **link = htable_lookup_bucket(htable, bucket, query);
+  struct hash_bucket *bucket = htable_bucket(htable, query);
+  struct hash_entry **link = htable_lookup_in_bucket(htable, bucket, query);
+
   struct hash_entry *entry = *link;
 
   if (*link) {
@@ -239,14 +242,14 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query) {
   return entry;
 }
 
-bool htable_delete(hash_table *htable, struct hash_entry *hentry) {
+bool htable_erase(hash_table *htable, struct hash_entry *entry) {
   assert(htable != NULL);
-  assert(hentry != NULL);
+  assert(entry != NULL);
 
-  struct hash_bucket *bucket = HT_BUCKET_BY_HASHV(htable, hentry);
+  struct hash_bucket *bucket = htable_bucket_by_hashv(htable, entry->hashv);
   struct hash_entry **link = &bucket->entry;
 
-  while (*link && *link != hentry) {
+  while (*link && *link != entry) {
     link = &(*link)->next;
   }
 

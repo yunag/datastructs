@@ -16,9 +16,6 @@ set(TEST_COMPILE_OPTS
   -fno-common
   -Wall
   -Wextra 
-  -Wno-unused-label
-  -Wno-unused-function
-  -Wno-unused-parameter
 )
 
 if(UNIX OR APPLE)
