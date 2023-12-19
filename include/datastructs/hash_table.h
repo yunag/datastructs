@@ -10,9 +10,10 @@
 extern "C" {
 #endif
 
-#define ht_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
+#define htable_entry(ptr, type, member) YU_CONTAINER_OF(ptr, type, member)
 
-#define ht_entry_safe(ptr, type, member) YU_CONTAINER_OF_SAFE(ptr, type, member)
+#define htable_entry_safe(ptr, type, member)                                   \
+  YU_CONTAINER_OF_SAFE(ptr, type, member)
 
 typedef struct hash_table hash_table;
 
@@ -46,7 +47,7 @@ bool htable_replace(hash_table *htable, struct hash_entry *entry,
                     struct hash_entry **replaced);
 struct hash_entry *htable_lookup(hash_table *htable, struct hash_entry *query);
 struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query);
-bool htable_erase(hash_table *htable, struct hash_entry *entry);
+void htable_erase(hash_table *htable, struct hash_entry *entry);
 void htable_sort(hash_table *htable, ht_less_fun less);
 size_t htable_size(hash_table *htable);
 
@@ -55,22 +56,25 @@ struct hash_entry *htable_first(hash_table *htable);
 struct hash_entry *htable_next(const struct hash_entry *entry);
 struct hash_entry *htable_prev(const struct hash_entry *entry);
 
-#define ht_find(htable, query, field)                                          \
-  ht_entry_safe(htable_lookup(htable, &(query)->field), yu_typeof(*query),     \
-                field)
+#define htable_find(htable, query, field)                                      \
+  htable_entry_safe(htable_lookup(htable, &(query)->field), yu_typeof(*query), \
+                    field)
 
-#define ht_remove(htable, query, field)                                        \
-  ht_entry_safe(htable_remove(htable, &(query)->field), yu_typeof(*query),     \
-                field)
+#define htable_delete(htable, query, field)                                    \
+  htable_entry_safe(htable_remove(htable, &(query)->field), yu_typeof(*query), \
+                    field)
 
-#define ht_for_each(htable, cur, field)                                        \
-  for (cur = ht_entry_safe(htable_first(htable), yu_typeof(*cur), field); cur; \
-       cur = ht_entry_safe(htable_next(&cur->field), yu_typeof(*cur), field))
+#define htable_add(htable, entry, field) htable_insert(htable, &(entry)->field)
 
-#define ht_for_each_temp(htable, cur, n, field)                                \
-  for (cur = ht_entry_safe(htable_first(htable), yu_typeof(*cur), field);      \
-       cur && ((n = ht_entry_safe(htable_next(&cur->field), yu_typeof(*cur),   \
-                                  field)) ||                                   \
+#define htable_for_each(htable, cur, field)                                    \
+  for (cur = htable_entry_safe(htable_first(htable), yu_typeof(*cur), field);  \
+       cur; cur = htable_entry_safe(htable_next(&cur->field), yu_typeof(*cur), \
+                                    field))
+
+#define htable_for_each_temp(htable, cur, n, field)                            \
+  for (cur = htable_entry_safe(htable_first(htable), yu_typeof(*cur), field);  \
+       cur && ((n = htable_entry_safe(htable_next(&cur->field),                \
+                                      yu_typeof(*cur), field)) ||              \
                1);                                                             \
        cur = n)
 

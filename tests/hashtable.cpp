@@ -15,14 +15,14 @@ struct KeyValue {
 };
 
 bool equalKeyValue(const hash_entry *a, const hash_entry *b) {
-  KeyValue *firstKeyValue = ht_entry(a, KeyValue, hh);
-  KeyValue *secondKeyValue = ht_entry(b, KeyValue, hh);
+  KeyValue *firstKeyValue = htable_entry(a, KeyValue, hh);
+  KeyValue *secondKeyValue = htable_entry(b, KeyValue, hh);
 
   return firstKeyValue->key == secondKeyValue->key;
 }
 
 size_t hashKeyValueNode(const hash_entry *a) {
-  KeyValue *keyValue = ht_entry(a, KeyValue, hh);
+  KeyValue *keyValue = htable_entry(a, KeyValue, hh);
   return yu_hash_i32(keyValue->key);
 }
 
@@ -33,7 +33,7 @@ public:
   ~HashTable() {
     KeyValue *cur, *n;
 
-    ht_for_each_temp(ht_, cur, n, hh) { delete cur; }
+    htable_for_each_temp(ht_, cur, n, hh) { delete cur; }
   }
 
   void insert(int key, int val = 0) {
@@ -46,19 +46,19 @@ public:
     }
 
     KeyValue *keyValue = new KeyValue(key, val);
-    htable_insert(ht_, &keyValue->hh);
+    htable_add(ht_, keyValue, hh);
   }
 
   KeyValue *find(int key) {
     KeyValue query(key);
 
-    return ht_find(ht_, &query, hh);
+    return htable_find(ht_, &query, hh);
   }
 
   void remove(int key) {
     KeyValue query(key);
 
-    KeyValue *removeKeyValue = ht_remove(ht_, &query, hh);
+    KeyValue *removeKeyValue = htable_delete(ht_, &query, hh);
 
     delete removeKeyValue;
   }
@@ -184,7 +184,7 @@ TEST_F(HashTableTestFixture, ForEach_Default_ReturnsValidNumberOfIterations) {
 
   size_t numIters = 0;
 
-  ht_for_each(hashTable, keyValue, hh) { numIters++; }
+  htable_for_each(hashTable, keyValue, hh) { numIters++; }
 
   size_t hashTableSize = ht_.size();
 
@@ -202,7 +202,7 @@ TEST_F(HashTableTestFixture,
 
   size_t numIters = 0;
 
-  ht_for_each(hashTable, keyValue, hh) { numIters++; }
+  htable_for_each(hashTable, keyValue, hh) { numIters++; }
 
   size_t hashTableSize = ht_.size();
 

@@ -234,7 +234,7 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query) {
 
   struct hash_entry *entry = *link;
 
-  if (*link) {
+  if (entry) {
     htable_remove_link(link);
     htable->num_items--;
   }
@@ -242,25 +242,19 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query) {
   return entry;
 }
 
-bool htable_erase(hash_table *htable, struct hash_entry *entry) {
+void htable_erase(hash_table *htable, struct hash_entry *entry) {
   assert(htable != NULL);
   assert(entry != NULL);
 
   struct hash_bucket *bucket = htable_bucket_by_hashv(htable, entry->hashv);
   struct hash_entry **link = &bucket->entry;
 
-  while (*link && *link != entry) {
+  while (*link != entry) {
     link = &(*link)->next;
   }
 
-  if (*link) {
-    htable_remove_link(link);
-    htable->num_items--;
-
-    return true;
-  }
-
-  return false;
+  htable_remove_link(link);
+  htable->num_items--;
 }
 
 size_t htable_size(hash_table *htable) {
