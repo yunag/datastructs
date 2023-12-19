@@ -6,14 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define HEAP_AT(node) (((char *)pq->heap + pq->esize * (node)))
+#define HEAP_AT(node) (pq->heap + pq->esize * (node))
 #define PARENT(child) ((child - 1) >> 1)
 
-#define LEFT_CHILD(node, heap, size) (heap + (((node)-heap) << 1) + size)
-#define RIGHT_CHILD(node, heap, size) (heap + (((node)-heap + size) << 1))
+#define LCHILD(parent) (heap + (((node)-heap) << 1) + size)
+#define RCHILD(lchild) ((lchild) + size)
 
-#define LCHILD(parent) LEFT_CHILD(parent, heap, size)
-#define RCHILD(left_child) (left_child + size)
 #define HAS_PARENT(child) ((child) > 0)
 
 struct priority_queue {
@@ -21,6 +19,7 @@ struct priority_queue {
   char *last;
 
   pq_less_fun less; /* Function for comparing two nodes */
+
   size_t num_items; /* Size of the Priority Queue */
   size_t capacity;  /* Capacity of the Priority Queue */
   size_t esize;     /* Size of a single element in the Priority Queue*/
@@ -105,6 +104,7 @@ static void heapify_down(char *heap, char *last, char *node, size_t size,
                          pq_less_fun less) {
   char *cur = node;
   char *lch, *rch;
+
   while ((lch = LCHILD(cur)) < last) {
     if ((rch = RCHILD(lch)) < last && less(rch, lch)) {
       lch = rch;
@@ -113,6 +113,7 @@ static void heapify_down(char *heap, char *last, char *node, size_t size,
     if (less(cur, lch)) {
       break;
     }
+
     YU_BYTE_SWAP(lch, cur, size);
     cur = lch;
   }
