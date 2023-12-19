@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-cmake --build build && ctest build --verbose
+ctest --build build --test-dir build --verbose
