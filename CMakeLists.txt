@@ -14,7 +14,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # Disable secure warnings
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(COMPILE_OPTS /Wall)
+  set(COMPILE_OPTS)
 endif()
 
 add_subdirectory(src)

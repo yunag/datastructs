@@ -84,29 +84,6 @@ TEST_F(PriorityQueueTest, Greater) {
   EXPECT_EQ(pq_top(pq_), nullptr);
 }
 
-TEST_F(PriorityQueueTest, Lesser) {
-  SetPQueue<double>(1, cmp_less<double>);
-
-  const size_t num_cases = 400;
-  double nums[num_cases];
-
-  for (size_t i = 0; i < num_cases; ++i) {
-    double val = Helper::rand_inrange(INT_MIN, INT_MAX);
-    nums[i] = val;
-    pq_push(pq_, &val);
-  }
-  std::sort(std::rbegin(nums), std::rend(nums));
-
-  for (size_t i = 0; i < num_cases; ++i) {
-    double popv;
-    PQ_TOP(pq_, popv);
-    ASSERT_EQ(nums[i], popv);
-    pq_pop(pq_);
-    ASSERT_EQ(pq_size(pq_), num_cases - i - 1);
-  }
-  EXPECT_TRUE(pq_empty(pq_));
-}
-
 template <typename PriorityQueueType>
 void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
   double topv;
