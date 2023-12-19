@@ -23,14 +23,14 @@ size_t queue_esize(queue *queue);
 
 #define QUEUE_PUSH(queue, elem)                                                \
   do {                                                                         \
-    __typeof__(elem) __elem = (elem);                                          \
+    yu_typeof(elem) __elem = (elem);                                           \
     queue_push(queue, &__elem);                                                \
   } while (0)
 #define QUEUE_FRONT(queue, type) (*(type *)queue_front(queue))
 #define QUEUE_BACK(queue, type) (*(type *)queue_back(queue))
 #define QUEUE_POP(queue, return_value)                                         \
   do {                                                                         \
-    return_value = QUEUE_FRONT(Q, __typeof__(return_value));                   \
+    return_value = QUEUE_FRONT(Q, yu_typeof(return_value));                    \
     queue_pop(queue);                                                          \
   } while (0)
 

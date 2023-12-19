@@ -31,7 +31,7 @@ const void *pq_heap(priority_queue *pq);
 void pq_heapify(void *base, size_t count, size_t elemsize, pq_less_fun less);
 
 #define PQ_TOP(priority_queue, elem)                                           \
-  (elem = *(__typeof__(&elem))pq_top(priority_queue))
+  (elem = *(yu_typeof(&elem))pq_top(priority_queue))
 
 #define PQ_POP(priority_queue, elem)                                           \
   do {                                                                         \
