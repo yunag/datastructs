@@ -27,53 +27,61 @@ int cmpKeyValueNode(const avl_node *a, const avl_node *b) {
 
 class AVLTree {
 public:
-  AVLTree() { avl_init(&avl_, cmpKeyValueNode); }
+  AVLTree() {
+    avl_.avl_node = nullptr;
+    num_items = 0;
+  }
+
   ~AVLTree() {
     KeyValue *cur, *n;
 
-    avl_postorder_for_each(&avl_.root, cur, n, ah) { delete cur; }
+    avl_postorder_for_each(&avl_, cur, n, ah) { delete cur; }
   }
 
   void insert(int key, int val = 0) {
     KeyValue *keyValue = new KeyValue(key, val);
 
-    avl_node *node = avl_insert(&avl_, &keyValue->ah);
+    avl_node *node = avl_insert(&keyValue->ah, &avl_, cmpKeyValueNode);
     if (node) {
       delete keyValue;
       keyValue = avl_entry(node, KeyValue, ah);
       keyValue->val = val;
+    } else {
+      num_items++;
     }
   }
 
   KeyValue *find(int key) {
     KeyValue query(key);
 
-    avl_node *node = avl_find(&avl_, &query.ah);
+    avl_node *node = avl_find(&query.ah, &avl_, cmpKeyValueNode);
 
     return avl_entry_safe(node, KeyValue, ah);
   }
 
   void remove(int key) {
-    KeyValue query(key);
+    KeyValue *node = find(key);
 
-    avl_node *node = avl_remove(&avl_, &query.ah);
-
-    delete avl_entry_safe(node, KeyValue, ah);
+    if (node) {
+      num_items--;
+      avl_erase(&node->ah, &avl_);
+      delete node;
+    }
   }
 
   bool isValid() {
     bool isValid = true;
-    isValidAVL_rec(avl_.root.avl_node, isValid);
+    isValidAVL_rec(avl_.avl_node, isValid);
     return isValid;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const AVLTree &avl);
 
-  avl_node *first() { return avl_first(&avl_.root); }
-  avl_node *last() { return avl_last(&avl_.root); }
+  avl_node *first() { return avl_first(&avl_); }
+  avl_node *last() { return avl_last(&avl_); }
 
-  size_t size() { return avl_.num_items; }
-  avl_root *root() { return &avl_.root; }
+  size_t size() { return num_items; }
+  avl_root *root() { return &avl_; }
 
 private:
   int isValidAVL_rec(avl_node *node, bool &isValid,
@@ -81,7 +89,8 @@ private:
                      int right = std::numeric_limits<int>::max());
 
 private:
-  avl_tree avl_;
+  avl_root avl_;
+  size_t num_items;
 };
 
 void printAVL_impl(std::ostream &os, const std::string &prefix,
@@ -101,7 +110,7 @@ void printAVL_impl(std::ostream &os, const std::string &prefix,
 }
 
 std::ostream &operator<<(std::ostream &os, const AVLTree &avl) {
-  printAVL_impl(os, "", avl.avl_.root.avl_node, false);
+  printAVL_impl(os, "", avl.avl_.avl_node, false);
   return os;
 }
 
@@ -271,11 +280,11 @@ TEST_F(AVLTestFixture, Remove_TwoNodes_ReturnsValidAVL) {
 
   avl_.remove(0);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 
   avl_.remove(1);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 }
 
 TEST_F(AVLTestFixture, Remove_MultipleItems_ReturnsValidAVL) {
@@ -283,15 +292,15 @@ TEST_F(AVLTestFixture, Remove_MultipleItems_ReturnsValidAVL) {
 
   avl_.remove(1);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 
   avl_.remove(2);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 
   avl_.remove(3);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 }
 
 TEST_F(AVLTestFixture, Remove_MultipleItemsReversed_ReturnsValidAVL) {
@@ -299,15 +308,15 @@ TEST_F(AVLTestFixture, Remove_MultipleItemsReversed_ReturnsValidAVL) {
 
   avl_.remove(3);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 
   avl_.remove(2);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 
   avl_.remove(1);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 }
 
 TEST_F(AVLTestFixture, Remove_TwoItemsTriggersRebalance_ReturnsValidAVL) {
@@ -315,11 +324,11 @@ TEST_F(AVLTestFixture, Remove_TwoItemsTriggersRebalance_ReturnsValidAVL) {
 
   avl_.remove(8);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 
   avl_.remove(7);
   isValidAVL = avl_.isValid();
-  EXPECT_TRUE(isValidAVL);
+  ASSERT_TRUE(isValidAVL);
 }
 
 TEST_F(AVLTestFixture, ForEach_Default_ReturnsValidNumberOfIterations) {
