@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
+
 #include <vector>
+#include <climits>
 
 #include "datastructs/priority_queue.h"
 

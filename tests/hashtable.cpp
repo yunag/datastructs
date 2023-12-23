@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
+
 #include <vector>
+#include <climits>
 
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
