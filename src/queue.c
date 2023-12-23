@@ -5,7 +5,7 @@
 #include <string.h>
 
 struct queue {
-  void *buffer; /* Buffer for storing elements */
+  char *buffer; /* Buffer for storing elements */
   char *front;  /* Front index of the Queue */
   char *rear;   /* Rear index of the Queue */
   char *end;
@@ -30,12 +30,14 @@ queue *queue_create(size_t capacity, size_t elemsize) {
     return NULL;
   }
 
-  q->capacity = capacity;
-  q->esize = elemsize;
-  q->end = (char *)q->buffer + capacity * elemsize;
-  q->num_items = 0;
   q->front = q->buffer;
   q->rear = q->buffer;
+
+  q->end = q->buffer + capacity * elemsize;
+
+  q->num_items = 0;
+  q->capacity = capacity;
+  q->esize = elemsize;
 
   return q;
 }
@@ -62,14 +64,15 @@ static bool queue_resize(queue *q, size_t newsize) {
     memcpy(buffer, q->front, q->rear - q->front);
   } else {
     memcpy(buffer, q->front, q->end - q->front);
-    memcpy(buffer + (q->end - q->front), q->buffer,
-           q->rear - (char *)q->buffer);
+    memcpy(buffer + (q->end - q->front), q->buffer, q->rear - q->buffer);
   }
+
   yu_free(q->buffer);
 
   q->front = buffer;
   q->rear = buffer + q->esize * q->num_items;
   q->end = buffer + bufsize;
+
   q->buffer = buffer;
   q->capacity = newsize;
 
@@ -83,9 +86,11 @@ void queue_push(queue *q, const void *elem) {
   if (queue_full(q) && !queue_resize(q, q->capacity * 2)) {
     return;
   }
+
   if (q->rear == q->end) {
     q->rear = q->buffer;
   }
+
   memcpy(q->rear, elem, q->esize);
   q->rear += q->esize;
   q->num_items++;
@@ -99,6 +104,7 @@ void queue_pop(queue *q) {
   }
 
   q->front += q->esize;
+
   if (q->front == q->end) {
     q->front = q->buffer;
   }
@@ -138,6 +144,11 @@ bool queue_full(queue *q) {
 size_t queue_size(queue *q) {
   assert(q != NULL);
   return q->num_items;
+}
+
+size_t queue_capacity(queue *q) {
+  assert(q != NULL);
+  return q->capacity;
 }
 
 size_t queue_esize(queue *q) {

@@ -259,6 +259,11 @@ size_t htable_size(hash_table *htable) {
   return htable->num_items;
 }
 
+size_t htable_num_buckets(hash_table *htable) {
+  assert(htable != NULL);
+  return htable->num_buckets;
+}
+
 struct hash_entry *htable_first(hash_table *htable) {
   assert(htable != NULL);
   return htable->num_items ? htable_head(htable) : NULL;

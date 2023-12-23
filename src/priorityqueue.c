@@ -165,6 +165,7 @@ void pq_push(priority_queue *pq, const void *elem) {
     YU_BYTE_SWAP(child, parent, pq->esize);
     cur = par;
   }
+
   pq->num_items++;
   pq->last += pq->esize;
 }
@@ -175,6 +176,7 @@ void pq_pop(priority_queue *pq) {
   if (pq_empty(pq)) {
     return;
   }
+
   pq->num_items--;
 
   /* Move last element to the top */
