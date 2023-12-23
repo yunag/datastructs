@@ -15,15 +15,12 @@ set(TEST_COMPILE_OPTS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # Disable secure warnings
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
   list(APPEND TEST_COMPILE_OPTS
     -fno-omit-frame-pointer
     -fno-common
     -Wall
     -Wextra
   )
-else()
-  unset(TEST_COMPILE_OPTS CACHE)
 endif()
 
 if(UNIX OR APPLE)

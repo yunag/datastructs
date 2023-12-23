@@ -7,9 +7,6 @@ set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(COMPILE_OPTS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  # Disable secure warnings
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
-
   list(APPEND COMPILE_OPTS
     -fno-omit-frame-pointer
     -fno-common
@@ -17,8 +14,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
     -Wextra
     -pedantic
   )
-else()
-  # Other Compilers
 endif()
 
 add_subdirectory(src)
