@@ -20,19 +20,18 @@ void *queue_front(queue *queue);
 void *queue_back(queue *queue);
 bool queue_empty(queue *queue);
 bool queue_full(queue *queue);
+
+size_t queue_capacity(queue *queue);
 size_t queue_size(queue *queue);
 size_t queue_esize(queue *queue);
 
-#define QUEUE_PUSH(queue, elem)                                                \
-  do {                                                                         \
-    yu_typeof(elem) __elem = (elem);                                           \
-    queue_push(queue, &__elem);                                                \
-  } while (0)
 #define QUEUE_FRONT(queue, type) (*(type *)queue_front(queue))
+
 #define QUEUE_BACK(queue, type) (*(type *)queue_back(queue))
-#define QUEUE_POP(queue, return_value)                                         \
+
+#define QUEUE_POP(queue, item)                                                 \
   do {                                                                         \
-    return_value = QUEUE_FRONT(Q, yu_typeof(return_value));                    \
+    item = QUEUE_FRONT(Q, yu_typeof(item));                                    \
     queue_pop(queue);                                                          \
   } while (0)
 

@@ -50,6 +50,7 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query);
 void htable_erase(hash_table *htable, struct hash_entry *entry);
 void htable_sort(hash_table *htable, ht_less_fun less);
 size_t htable_size(hash_table *htable);
+size_t htable_num_buckets(hash_table *htable);
 
 struct hash_entry *htable_last(hash_table *htable);
 struct hash_entry *htable_first(hash_table *htable);

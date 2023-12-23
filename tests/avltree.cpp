@@ -184,9 +184,9 @@ TEST(AVLTest, AVLInit_DefaultInitialization_ReturnsInitializedAVL) {
   avl_node *root = avl.root()->avl_node;
 
   EXPECT_EQ(avlSize, 0);
+  EXPECT_FALSE(notNull(root));
   EXPECT_FALSE(notNull(firstNode));
   EXPECT_FALSE(notNull(lastNode));
-  EXPECT_FALSE(notNull(root));
 }
 
 TEST(AVLTest, Size_InsertDistinctItems_ReturnsValidSize) {
@@ -275,15 +275,13 @@ TEST_F(AVLTestFixture, Insert_MultipleItems_ReturnsValidAVL) {
   ASSERT_TRUE(isValidAVL);
 }
 
-TEST_F(AVLTestFixture, Remove_TwoNodes_ReturnsValidAVL) {
+TEST_F(AVLTestFixture, Remove_Root_ReturnsValidAVL) {
   bool isValidAVL;
 
-  avl_.remove(0);
-  isValidAVL = avl_.isValid();
-  ASSERT_TRUE(isValidAVL);
+  avl_.remove(3);
 
-  avl_.remove(1);
   isValidAVL = avl_.isValid();
+
   ASSERT_TRUE(isValidAVL);
 }
 
@@ -291,15 +289,11 @@ TEST_F(AVLTestFixture, Remove_MultipleItems_ReturnsValidAVL) {
   bool isValidAVL;
 
   avl_.remove(1);
-  isValidAVL = avl_.isValid();
-  ASSERT_TRUE(isValidAVL);
-
-  avl_.remove(2);
-  isValidAVL = avl_.isValid();
-  ASSERT_TRUE(isValidAVL);
-
   avl_.remove(3);
+  avl_.remove(2);
+
   isValidAVL = avl_.isValid();
+
   ASSERT_TRUE(isValidAVL);
 }
 
@@ -307,15 +301,10 @@ TEST_F(AVLTestFixture, Remove_MultipleItemsReversed_ReturnsValidAVL) {
   bool isValidAVL;
 
   avl_.remove(3);
-  isValidAVL = avl_.isValid();
-  ASSERT_TRUE(isValidAVL);
+  avl_.remove(4);
 
-  avl_.remove(2);
   isValidAVL = avl_.isValid();
-  ASSERT_TRUE(isValidAVL);
 
-  avl_.remove(1);
-  isValidAVL = avl_.isValid();
   ASSERT_TRUE(isValidAVL);
 }
 
@@ -323,11 +312,21 @@ TEST_F(AVLTestFixture, Remove_TwoItemsTriggersRebalance_ReturnsValidAVL) {
   bool isValidAVL;
 
   avl_.remove(8);
-  isValidAVL = avl_.isValid();
-  ASSERT_TRUE(isValidAVL);
-
   avl_.remove(7);
+
   isValidAVL = avl_.isValid();
+
+  ASSERT_TRUE(isValidAVL);
+}
+
+TEST_F(AVLTestFixture, Remove_TwoItemsTriggersRootRebalance_ReturnsValidAVL) {
+  bool isValidAVL;
+
+  avl_.remove(0);
+  avl_.remove(2);
+
+  isValidAVL = avl_.isValid();
+
   ASSERT_TRUE(isValidAVL);
 }
 

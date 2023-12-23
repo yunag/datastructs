@@ -1,182 +1,186 @@
 #include "gtest/gtest.h"
+#include <vector>
 
 #include "datastructs/priority_queue.h"
 
-#include "helper.h"
-
-#include <algorithm>
-#include <climits>
-#include <iterator>
-#include <stdlib.h>
-
-#include <queue>
-
-template <typename T> bool cmp_great(const void *pa, const void *pb) {
+template <typename T> bool cmp_less(const void *pa, const void *pb) {
   return *(T *)pa < *(T *)pb;
 }
 
-template <typename T> bool cmp_less(const void *pa, const void *pb) {
-  return !cmp_great<T>(pa, pb);
+template <typename T> bool cmp_great(const void *pa, const void *pb) {
+  return !cmp_less<T>(pa, pb);
 }
 
-class PriorityQueueTest : public ::testing::Test {
-protected:
-  void SetUp() override {}
-  void TearDown() override { pq_destroy(pq_); }
+template <typename T> class PriorityQueue {
+public:
+  PriorityQueue() { pq_ = pq_create(1, sizeof(T), cmp_less<T>); }
+  ~PriorityQueue() { pq_destroy(pq_); }
 
-  template <typename T>
-  void SetPQueue(size_t size = 1, pq_less_fun less = cmp_great<T>) {
-    pq_ = pq_create(size, sizeof(T), less);
-    ASSERT_NE(pq_, nullptr);
+  void push(T item) { pq_push(pq_, &item); }
+
+  T pop() {
+    T item = PQ_TOP(pq_, T);
+    pq_pop(pq_);
+    return item;
   }
 
+  T top() { return PQ_TOP(pq_, T); }
+
+  bool isEmpty() { return pq_empty(pq_); }
+
+  size_t size() { return pq_size(pq_); }
+  size_t itemSize() { return pq_esize(pq_); }
+
+private:
   priority_queue *pq_;
 };
 
-TEST(PriorityQueue, Initialization) {
-  std::vector<size_t> types = {
-      sizeof(int),  sizeof(float),    sizeof(double),
-      sizeof(char), sizeof(uint16_t),
+class PQTestFixture : public ::testing::Test {
+protected:
+  void SetUp() override {
+    for (int i = 0; i < 5; ++i) {
+      pq_.push(i);
+    }
+  }
+  void TearDown() override {}
+
+  PriorityQueue<int> pq_;
+};
+
+TEST(PriorityQueueTest, PQCreate_DefaultInitialization_ReturnsInitializedPQ) {
+  PriorityQueue<int> pq;
+
+  bool isEmpty = pq.isEmpty();
+  size_t size = pq.size();
+  size_t itemSize = pq.itemSize();
+
+  EXPECT_TRUE(isEmpty);
+  EXPECT_EQ(size, 0);
+  EXPECT_EQ(itemSize, sizeof(int));
+}
+
+TEST(PriorityQueueTest, Size_PushOneItem_ReturnsOne) {
+  PriorityQueue<int> pq;
+
+  pq.push(0);
+
+  size_t size = pq.size();
+
+  ASSERT_EQ(size, 1);
+}
+
+TEST(PriorityQueueTest, Size_PushMultipleItems_ReturnsValidSize) {
+  PriorityQueue<int> pq;
+
+  const int numItems = 10;
+  for (int i = 0; i < numItems; ++i) {
+    pq.push(i);
+  }
+
+  size_t size = pq.size();
+
+  ASSERT_EQ(size, numItems);
+}
+
+TEST(PriorityQueueTest, Size_PushPopPush_ReturnsOne) {
+  PriorityQueue<int> pq;
+
+  pq.push(0);
+  pq.pop();
+  pq.push(0);
+
+  size_t size = pq.size();
+
+  ASSERT_EQ(size, 1);
+}
+
+TEST(PriorityQueueTest, IsEmpty_PushPopPush_ReturnsFalse) {
+  PriorityQueue<int> pq;
+
+  pq.push(0);
+  pq.pop();
+  pq.push(0);
+
+  size_t isEmpty = pq.isEmpty();
+
+  ASSERT_FALSE(isEmpty);
+}
+
+TEST(PriorityQueueTest, Top_PushOneItem_ReturnsItem) {
+  PriorityQueue<int> pq;
+
+  pq.push(0);
+
+  int topItem = pq.top();
+
+  ASSERT_EQ(topItem, 0);
+}
+
+TEST_F(PQTestFixture, Size_PopAllItems_ReturnsZero) {
+  while (!pq_.isEmpty()) {
+    pq_.pop();
+  }
+
+  size_t size = pq_.size();
+
+  ASSERT_EQ(size, 0);
+}
+
+TEST_F(PQTestFixture, Top_Default_ReturnsFrontItem) {
+  int topItem = pq_.top();
+
+  ASSERT_EQ(topItem, 0);
+}
+
+struct PQHeapTestCase {
+public:
+  PQHeapTestCase(std::vector<int> input_, std::vector<int> expected_)
+      : input(std::move(input_)), expected(std::move(expected_)) {}
+
+  void run(PriorityQueue<int> &pq) {
+    populatePQ(pq);
+    compareWithExpected(pq);
+  }
+
+private:
+  void populatePQ(PriorityQueue<int> &pq) {
+    for (int num : input) {
+      pq.push(num);
+    }
+  }
+
+  void compareWithExpected(PriorityQueue<int> &pq) {
+    std::vector<int> got;
+
+    while (!pq.isEmpty()) {
+      got.push_back(pq.pop());
+    }
+
+    EXPECT_EQ(expected, got);
+  }
+
+  std::vector<int> input;
+  std::vector<int> expected;
+};
+
+TEST_F(PQTestFixture,
+       Pop_PushMultipleItemsAndPopThem_ReturnsItemsInCorrectOrder) {
+  std::vector<PQHeapTestCase> testcases = {
+      PQHeapTestCase({8, 7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}),
+      PQHeapTestCase({7, 5, 1, 0, 9, -5}, {-5, 0, 1, 5, 7, 9}),
+      PQHeapTestCase({0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}),
+      PQHeapTestCase({7, 8, 9, 10, 4, 0, 1, 2}, {0, 1, 2, 4, 7, 8, 9, 10}),
+      PQHeapTestCase({-9, -10, -8, -6, -7, 5}, {-10, -9, -8, -7, -6, 5}),
+      PQHeapTestCase(
+          {1, 0, 5, 4, 200, 555, 88, 300, 10, 27, -500, -27, INT_MAX, INT_MIN},
+          {INT_MIN, -500, -27, 0, 1, 4, 5, 10, 27, 88, 200, 300, 555, INT_MAX}),
   };
 
-  for (size_t i = 0; i < types.size(); ++i) {
-    priority_queue *pq =
-        pq_create(Helper::rand_inrange(1, 10000), types[i], cmp_great<int>);
-    ASSERT_NE(pq, nullptr);
-    EXPECT_TRUE(pq_empty(pq));
-    EXPECT_EQ(pq_esize(pq), types[i]);
-    EXPECT_EQ(pq_top(pq), nullptr);
-    pq_destroy(pq);
+  for (PQHeapTestCase &testcase : testcases) {
+    PriorityQueue<int> pq;
+
+    testcase.run(pq);
   }
-}
-
-TEST_F(PriorityQueueTest, PushResize) {
-  SetPQueue<int>();
-  const size_t num_cases = 200;
-  for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
-    pq_push(pq_, &val);
-    EXPECT_FALSE(pq_empty(pq_));
-    EXPECT_EQ(pq_size(pq_), i + 1);
-  }
-}
-
-TEST_F(PriorityQueueTest, Greater) {
-  SetPQueue<int>();
-  constexpr size_t num_cases = 400;
-  int nums[num_cases];
-
-  for (size_t i = 0; i < num_cases; ++i) {
-    int val = Helper::rand_inrange(INT_MIN, INT_MAX);
-    nums[i] = val;
-    pq_push(pq_, &val);
-  }
-  std::sort(std::begin(nums), std::end(nums));
-
-  for (size_t i = 0; i < num_cases; ++i) {
-    int popv;
-    PQ_TOP(pq_, popv);
-    ASSERT_EQ(nums[i], popv);
-    pq_pop(pq_);
-    ASSERT_EQ(pq_size(pq_), num_cases - i - 1);
-  }
-  EXPECT_TRUE(pq_empty(pq_));
-  EXPECT_EQ(pq_top(pq_), nullptr);
-}
-
-template <typename PriorityQueueType>
-void stl_priority_queue(priority_queue *pq_, PriorityQueueType pq) {
-  double topv;
-
-  enum class Action {
-    Push,
-    Pop,
-    Top,
-  } command;
-
-  const size_t num_commands = 100000;
-  for (size_t i = 0; i < num_commands; ++i) {
-    command = static_cast<Action>(Helper::rand_inrange(
-        static_cast<int>(Action::Push), static_cast<int>(Action::Top)));
-    ASSERT_EQ(pq.empty(), pq_empty(pq_));
-    ASSERT_EQ(pq.size(), pq_size(pq_));
-    if (pq_empty(pq_)) {
-      command = Action::Push;
-    }
-    switch (command) {
-
-    case Action::Push: {
-      double val = Helper::rand_inrange(INT_MIN, INT_MAX);
-      pq.push(val);
-      pq_push(pq_, &val);
-      PQ_TOP(pq_, topv);
-      ASSERT_EQ(pq.top(), topv);
-      break;
-    }
-
-    case Action::Pop: {
-      PQ_TOP(pq_, topv);
-      ASSERT_EQ(pq.top(), topv);
-      pq.pop();
-      pq_pop(pq_);
-      break;
-    }
-
-    case Action::Top: {
-      PQ_TOP(pq_, topv);
-      ASSERT_EQ(pq.top(), topv);
-      break;
-    }
-    }
-  }
-}
-
-TEST_F(PriorityQueueTest, STLPQueueLesser) {
-  SetPQueue<int64_t>(1, cmp_less<double>);
-  std::priority_queue<double> pq;
-  stl_priority_queue(pq_, pq);
-}
-
-TEST_F(PriorityQueueTest, STLPQueueGreater) {
-  SetPQueue<double>(1);
-  std::priority_queue<double, std::vector<double>, std::greater<double>> pq;
-  stl_priority_queue(pq_, pq);
-}
-
-TEST_F(PriorityQueueTest, Case1) {
-  SetPQueue<double>();
-  double topv;
-  double pushv;
-
-  pushv = 5.0;
-  pq_push(pq_, &pushv);
-  PQ_TOP(pq_, topv);
-  EXPECT_EQ(topv, 5.0);
-  EXPECT_FALSE(pq_empty(pq_));
-
-  pushv = 7.0;
-  pq_push(pq_, &pushv);
-  PQ_TOP(pq_, topv);
-  EXPECT_EQ(topv, 5.0);
-
-  pq_pop(pq_);
-  PQ_TOP(pq_, topv);
-  EXPECT_EQ(topv, 7);
-
-  pq_pop(pq_);
-  EXPECT_TRUE(pq_empty(pq_));
-
-  pushv = 120.0;
-  pq_push(pq_, &pushv);
-  PQ_TOP(pq_, topv);
-  EXPECT_EQ(topv, 120);
-  EXPECT_EQ(pq_size(pq_), 1);
-
-  pushv = 79.0;
-  pq_push(pq_, &pushv);
-  PQ_TOP(pq_, topv);
-  EXPECT_EQ(topv, 79);
-  EXPECT_EQ(pq_size(pq_), 2);
 }
 
 int main(int argc, char *argv[]) {

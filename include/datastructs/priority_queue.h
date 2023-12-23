@@ -32,13 +32,12 @@ const void *pq_heap(priority_queue *pq);
 
 void pq_heapify(void *base, size_t count, size_t elemsize, pq_less_fun less);
 
-#define PQ_TOP(priority_queue, elem)                                           \
-  (elem = *(yu_typeof(&elem))pq_top(priority_queue))
+#define PQ_TOP(pq, type) (*(type *)pq_top(pq))
 
-#define PQ_POP(priority_queue, elem)                                           \
+#define PQ_POP(pq, item)                                                       \
   do {                                                                         \
-    PQ_TOP(priority_queue, elem);                                              \
-    pq_pop(priority_queue);                                                    \
+    item = PQ_TOP(pq, yu_typeof(item));                                        \
+    pq_pop(pq);                                                                \
   } while (0)
 
 #ifdef __cplusplus
