@@ -79,12 +79,12 @@ static bool queue_resize(queue *q, size_t newsize) {
   return true;
 }
 
-void queue_push(queue *q, const void *elem) {
+bool queue_push(queue *q, const void *elem) {
   assert(q != NULL);
   assert(elem != NULL);
 
   if (queue_full(q) && !queue_resize(q, q->capacity * 2)) {
-    return;
+    return false;
   }
 
   if (q->rear == q->end) {
@@ -94,6 +94,8 @@ void queue_push(queue *q, const void *elem) {
   memcpy(q->rear, elem, q->esize);
   q->rear += q->esize;
   q->num_items++;
+
+  return true;
 }
 
 void queue_pop(queue *q) {

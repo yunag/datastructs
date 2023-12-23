@@ -22,7 +22,7 @@ struct priority_queue {
 
   size_t num_items; /* Size of the Priority Queue */
   size_t capacity;  /* Capacity of the Priority Queue */
-  size_t esize;     /* Size of a single element in the Priority Queue*/
+  size_t esize;     /* Size of a single item in the Priority Queue*/
 };
 
 static bool pq_resize(priority_queue *pq, size_t newsize) {
@@ -64,30 +64,30 @@ static priority_queue *pq_init(size_t size, size_t capacity, size_t esize,
   return pq;
 }
 
-priority_queue *pq_create(size_t capacity, size_t elemsize, pq_less_fun less) {
-  return pq_init(0, capacity, elemsize, less);
+priority_queue *pq_create(size_t capacity, size_t item_size, pq_less_fun less) {
+  return pq_init(0, capacity, item_size, less);
 }
 
 priority_queue *pq_create_from_heap(const void *heap, size_t count,
-                                    size_t elemsize, pq_less_fun less) {
+                                    size_t item_size, pq_less_fun less) {
   assert(heap != NULL);
 
-  priority_queue *pq = pq_init(count, count, elemsize, less);
+  priority_queue *pq = pq_init(count, count, item_size, less);
   if (pq) {
-    memcpy(pq->heap, heap, count * elemsize);
+    memcpy(pq->heap, heap, count * item_size);
   }
 
   return pq;
 }
 
 priority_queue *pq_create_from_arr(const void *base, size_t count,
-                                   size_t elemsize, pq_less_fun less) {
+                                   size_t item_size, pq_less_fun less) {
   assert(base != NULL);
 
-  priority_queue *pq = pq_init(count, count, elemsize, less);
+  priority_queue *pq = pq_init(count, count, item_size, less);
   if (pq) {
-    memcpy(pq->heap, base, count * elemsize);
-    pq_heapify(pq->heap, count, elemsize, less);
+    memcpy(pq->heap, base, count * item_size);
+    pq_heapify(pq->heap, count, item_size, less);
   }
 
   return pq;
@@ -132,17 +132,17 @@ void pq_heapify(void *base, size_t count, size_t size, pq_less_fun less) {
   }
 }
 
-void pq_pushpop(priority_queue *pq, const void *elem) {
+void pq_pushpop(priority_queue *pq, const void *item) {
   assert(pq != NULL);
-  assert(elem != NULL);
+  assert(item != NULL);
 
-  memcpy(pq->heap, elem, pq->esize);
+  memcpy(pq->heap, item, pq->esize);
   heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->less);
 }
 
-void pq_push(priority_queue *pq, const void *elem) {
+void pq_push(priority_queue *pq, const void *item) {
   assert(pq != NULL);
-  assert(elem != NULL);
+  assert(item != NULL);
 
   if (pq->num_items == pq->capacity && !pq_resize(pq, pq->capacity * 2)) {
     return;
@@ -151,7 +151,7 @@ void pq_push(priority_queue *pq, const void *elem) {
   size_t cur = pq->num_items;
   size_t par;
 
-  memcpy(pq->last, elem, pq->esize);
+  memcpy(pq->last, item, pq->esize);
   while (HAS_PARENT(cur)) {
     par = PARENT(cur);
 
@@ -179,7 +179,7 @@ void pq_pop(priority_queue *pq) {
 
   pq->num_items--;
 
-  /* Move last element to the top */
+  /* Move last item to the top */
   memcpy(pq->heap, pq->last -= pq->esize, pq->esize);
   heapify_down(pq->heap, pq->last, pq->heap, pq->esize, pq->less);
 }
