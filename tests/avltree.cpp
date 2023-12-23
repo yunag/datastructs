@@ -29,7 +29,7 @@ class AVLTree {
 public:
   AVLTree() {
     avl_.avl_node = nullptr;
-    num_items = 0;
+    num_items_ = 0;
   }
 
   ~AVLTree() {
@@ -47,7 +47,7 @@ public:
       keyValue = avl_entry(node, KeyValue, ah);
       keyValue->val = val;
     } else {
-      num_items++;
+      num_items_++;
     }
   }
 
@@ -63,7 +63,7 @@ public:
     KeyValue *node = find(key);
 
     if (node) {
-      num_items--;
+      num_items_--;
       avl_erase(&node->ah, &avl_);
       delete node;
     }
@@ -80,7 +80,7 @@ public:
   avl_node *first() { return avl_first(&avl_); }
   avl_node *last() { return avl_last(&avl_); }
 
-  size_t size() { return num_items; }
+  size_t size() { return num_items_; }
   avl_root *root() { return &avl_; }
 
 private:
@@ -90,7 +90,7 @@ private:
 
 private:
   avl_root avl_;
-  size_t num_items;
+  size_t num_items_;
 };
 
 void printAVL_impl(std::ostream &os, const std::string &prefix,

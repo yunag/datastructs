@@ -10,7 +10,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-set(TEST_LIBS gtest_main datastructs)
+set(TEST_LIBS gtest_main gmock_main datastructs)
 set(TEST_COMPILE_OPTS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -31,8 +31,8 @@ if(UNIX OR APPLE)
   list(APPEND TEST_COMPILE_OPTS -fsanitize=leak,address,undefined)
 endif()
 
-list(APPEND Targets queue priorityqueue hashtable avltree)
-list(APPEND Sources queue.cpp priorityqueue.cpp hashtable.cpp avltree.cpp)
+list(APPEND Targets queue priorityqueue hashtable avltree hashtablemock)
+list(APPEND Sources queue.cpp priorityqueue.cpp hashtable.cpp avltree.cpp hashtablemock.cpp)
 foreach(target source IN ZIP_LISTS Targets Sources)
   add_executable(${target} ${source})
   target_link_libraries(${target}
