@@ -8,11 +8,8 @@
 /* Should be arranged from 0.5 to 0.8 */
 #define IDEAL_LOAD_FACTOR 0.7
 
-#define HT_HEAD(htable) ((htable)->dummy_head.ht_next)
-#define HT_TAIL(htable) ((htable)->dummy_head.ht_prev)
-
-#define HT_SET_HEAD(htable, entry) (HT_HEAD(htable) = (entry))
-#define HT_SET_TAIL(htable, entry) (HT_TAIL(htable) = (entry))
+#define htable_head(htable) (htable->dummy_head.ht_next)
+#define htable_tail(htable) (htable->dummy_head.ht_prev)
 
 /* Pointer to an invalid memory address used for determining dummy head */
 static unsigned char dummy_ptr__;
@@ -135,10 +132,10 @@ void htable_destroy(hash_table *htable, ht_destroy_fun destroy_table) {
   yu_free(htable);
 }
 
-bool htable_rehash(hash_table *htable, size_t newsize) {
+bool htable_rehash(hash_table *htable, size_t new_num_buckets) {
   assert(htable != NULL);
 
-  struct hash_bucket *nbuckets = yu_calloc(newsize, sizeof(*nbuckets));
+  struct hash_bucket *nbuckets = yu_calloc(new_num_buckets, sizeof(*nbuckets));
   if (!nbuckets) {
     return false;
   }
@@ -146,10 +143,10 @@ bool htable_rehash(hash_table *htable, size_t newsize) {
   yu_free(htable->buckets);
 
   htable->buckets = nbuckets;
-  htable->num_buckets = newsize;
-  htable->ideal_num_items = newsize * IDEAL_LOAD_FACTOR + 1;
+  htable->num_buckets = new_num_buckets;
+  htable->ideal_num_items = new_num_buckets * IDEAL_LOAD_FACTOR + 1;
 
-  struct hash_entry *entry = HT_HEAD(htable);
+  struct hash_entry *entry = htable_head(htable);
   while (entry != &htable->dummy_head) {
     struct hash_bucket *bucket = htable_bucket_by_hashv(htable, entry->hashv);
 
@@ -171,7 +168,7 @@ bool htable_insert(hash_table *htable, struct hash_entry *entry) {
   }
 
   struct hash_bucket *bucket = htable_bucket(htable, entry);
-  struct hash_entry *tail = HT_TAIL(htable);
+  struct hash_entry *tail = htable_tail(htable);
 
   htable_link_entry(tail, entry, bucket);
   htable->num_items++;
@@ -193,7 +190,7 @@ bool htable_replace(hash_table *htable, struct hash_entry *entry,
 
   struct hash_bucket *bucket = htable_bucket(htable, entry);
   struct hash_entry **link = htable_lookup_in_bucket(htable, bucket, entry);
-  struct hash_entry *tail = HT_TAIL(htable);
+  struct hash_entry *tail = htable_tail(htable);
 
   if (*link) {
     *replaced = *link;
@@ -264,12 +261,12 @@ size_t htable_size(hash_table *htable) {
 
 struct hash_entry *htable_first(hash_table *htable) {
   assert(htable != NULL);
-  return htable->num_items ? HT_HEAD(htable) : NULL;
+  return htable->num_items ? htable_head(htable) : NULL;
 }
 
 struct hash_entry *htable_last(hash_table *htable) {
   assert(htable != NULL);
-  return htable->num_items ? HT_TAIL(htable) : NULL;
+  return htable->num_items ? htable_tail(htable) : NULL;
 }
 
 struct hash_entry *htable_next(const struct hash_entry *entry) {
@@ -298,8 +295,8 @@ void htable_sort(hash_table *htable, ht_less_fun less) {
   assert(less != NULL);
 
   struct hash_entry *p, *q, *e;
-  struct hash_entry *head = HT_HEAD(htable);
-  struct hash_entry *tail = HT_TAIL(htable);
+  struct hash_entry *head = htable_head(htable);
+  struct hash_entry *tail = htable_tail(htable);
 
   size_t insize = 1;
   size_t psize, qsize;
@@ -353,6 +350,6 @@ void htable_sort(hash_table *htable, ht_less_fun less) {
   }
 
   tail->ht_next = head->ht_prev = &htable->dummy_head;
-  HT_SET_HEAD(htable, head);
-  HT_SET_TAIL(htable, tail);
+  htable_head(htable) = head;
+  htable_tail(htable) = tail;
 }

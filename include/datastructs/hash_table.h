@@ -41,7 +41,7 @@ typedef size_t (*ht_hash_fun)(const struct hash_entry *);
 hash_table *htable_create(size_t initial_num_buckets, ht_hash_fun hash,
                           ht_equal_fun equal);
 void htable_destroy(hash_table *htable, ht_destroy_fun destroy);
-bool htable_rehash(hash_table *htable, size_t newsize);
+bool htable_rehash(hash_table *htable, size_t new_num_buckets);
 bool htable_insert(hash_table *htable, struct hash_entry *entry);
 bool htable_replace(hash_table *htable, struct hash_entry *entry,
                     struct hash_entry **replaced);
