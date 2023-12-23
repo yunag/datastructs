@@ -61,7 +61,7 @@ void pq_destroy(priority_queue *pq);
  */
 void pq_push(priority_queue *pq, const void *item);
 /**
- * @brief Pop item from Priority Queue
+ * @brief Pop item from the Priority Queue
  *
  * @param pq Priority Queue
  * @return Nothing

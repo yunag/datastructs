@@ -45,7 +45,7 @@ void avl_restore_properties(struct avl_node *rebalance, struct avl_root *root);
  *
  * @param node Node to insert
  * @param root Root of AVL tree
- * @param cmp Function to compare two noods
+ * @param cmp Function to compare two nodes
  */
 struct avl_node *avl_insert(struct avl_node *node, struct avl_root *root,
                             avl_compare_fun cmp);
