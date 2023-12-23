@@ -122,33 +122,32 @@ static struct avl_node *avl_erase_node(struct avl_node *node,
                                        struct avl_root *root) {
   struct avl_node *victim = node;
   struct avl_node *parent = node->parent;
-  struct avl_node **link;
+  struct avl_node **link, *new;
 
   if (!node->left) {
-    link = &node->right;
-    avl_change_child(parent, victim, *link, root);
+    new = node->right;
+    avl_change_child(parent, victim, new, root);
 
   } else if (!node->right) {
-    link = &node->left;
-    avl_change_child(parent, victim, *link, root);
+    new = node->left;
+    avl_change_child(parent, victim, new, root);
 
   } else {
-
     link = &node->right;
     while ((*link)->left) {
       link = &(*link)->left;
     }
 
     node = *link;
-    *link = node->right;
+    *link = new = node->right;
 
     parent = node->parent != victim ? node->parent : node;
 
     avl_replace_node(victim, node, root);
   }
 
-  if (*link) {
-    (*link)->parent = parent;
+  if (new) {
+    new->parent = parent;
   }
 
   return parent;
