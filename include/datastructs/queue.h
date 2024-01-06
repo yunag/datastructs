@@ -112,4 +112,4 @@ size_t queue_esize(queue *queue);
 }
 #endif
 
-#endif // !YU_QUEUE_H
+#endif  // !YU_QUEUE_H

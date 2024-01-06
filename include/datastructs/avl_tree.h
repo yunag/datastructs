@@ -129,7 +129,7 @@ struct avl_node *avl_prev(const struct avl_node *node);
 
 #define avl_postorder_for_each(root, cur, n, field)                            \
   for (cur =                                                                   \
-           avl_entry_safe(avl_first_postorder(root), yu_typeof(*cur), field);  \
+         avl_entry_safe(avl_first_postorder(root), yu_typeof(*cur), field);    \
        cur && ((n = avl_entry_safe(avl_next_postorder(&cur->field),            \
                                    yu_typeof(*cur), field)) ||                 \
                1);                                                             \

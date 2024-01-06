@@ -197,4 +197,4 @@ struct hash_entry *htable_prev(const struct hash_entry *entry);
 }
 #endif
 
-#endif // !YU_HASH_TABLE_H
+#endif  // !YU_HASH_TABLE_H

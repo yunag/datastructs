@@ -6,10 +6,10 @@
 #include <string.h>
 
 static struct yu_allocator g_allocator = {
-    .allocate = yu_default_allocate,
-    .reallocate = yu_default_reallocate,
-    .deallocate = yu_default_deallocate,
-    .user_data = NULL,
+  .allocate = yu_default_allocate,
+  .reallocate = yu_default_reallocate,
+  .deallocate = yu_default_deallocate,
+  .user_data = NULL,
 };
 
 void *yu_default_allocate(size_t size, void *user_data) {

@@ -7,7 +7,7 @@
   #include <type_traits>
   #define yu_typeof(x) std::remove_reference<decltype(x)>::type
 #elif defined(__MCST__) || defined(__GNUC__) || defined(__clang__) ||          \
-    defined(__chibicc__)
+  defined(__chibicc__)
   /* chibicc supports __typeof__ but not __typeof */
   #define yu_typeof(x) __typeof__(x)
 #endif
@@ -35,4 +35,4 @@ static inline void *yu_container_of_safe(void *ptr, size_t offset) {
 #define YU_CONTAINER_OF_SAFE(ptr, type, member)                                \
   (type *)yu_container_of_safe(ptr, offsetof(type, member))
 
-#endif // !YU_UTILS_H
+#endif  // !YU_UTILS_H

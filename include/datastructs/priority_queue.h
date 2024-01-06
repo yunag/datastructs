@@ -142,4 +142,4 @@ void pq_heapify(void *base, size_t count, size_t item_size, pq_less_fun less);
 }
 #endif
 
-#endif // !YU_PRIORITY_QUEUE_H
+#endif  // !YU_PRIORITY_QUEUE_H
