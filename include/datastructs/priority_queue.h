@@ -23,6 +23,7 @@ typedef bool (*pq_less_fun)(const void *, const void *);
  */
 priority_queue *pq_create(size_t initial_capacity, size_t item_size,
                           pq_less_fun less);
+
 /**
  * @brief Create Priority Queue from heap
  *
@@ -46,6 +47,7 @@ priority_queue *pq_create_from_heap(const void *heap, size_t count,
  */
 priority_queue *pq_create_from_arr(const void *base, size_t count,
                                    size_t item_size, pq_less_fun less);
+
 /**
  * @brief Destroy Priority Queue
  *
@@ -60,6 +62,7 @@ void pq_destroy(priority_queue *pq);
  * @param item Item to push
  */
 void pq_push(priority_queue *pq, const void *item);
+
 /**
  * @brief Pop item from the Priority Queue
  *
@@ -67,6 +70,7 @@ void pq_push(priority_queue *pq, const void *item);
  * @return Nothing
  */
 void pq_pop(priority_queue *pq);
+
 /**
  * @brief Push and pop at the same time
  *
@@ -77,6 +81,7 @@ void pq_pop(priority_queue *pq);
  * @param item Item to push
  */
 void pq_pushpop(priority_queue *pq, const void *item);
+
 /**
  * @brief Checks if Priority Queue is empty
  *
@@ -84,6 +89,7 @@ void pq_pushpop(priority_queue *pq, const void *item);
  * @return True if empty, false otherwise
  */
 bool pq_empty(priority_queue *pq);
+
 /**
  * @brief Top item of Priority Queue
  *
@@ -98,6 +104,7 @@ const void *pq_top(priority_queue *pq);
  * @return Number of items in Priority Queue
  */
 size_t pq_size(priority_queue *pq);
+
 /**
  * @brief Size of a single item in the Priority Queue
  *
@@ -105,6 +112,7 @@ size_t pq_size(priority_queue *pq);
  * @return Size of a single item
  */
 size_t pq_esize(priority_queue *pq);
+
 /**
  * @brief Underline heap
  *

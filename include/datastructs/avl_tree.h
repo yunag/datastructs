@@ -49,8 +49,9 @@ void avl_restore_properties(struct avl_node *rebalance, struct avl_root *root);
  */
 struct avl_node *avl_insert(struct avl_node *node, struct avl_root *root,
                             avl_compare_fun cmp);
+
 /**
- * @brief Find node using query
+ * @brief Find node
  *
  * @param query Query
  * @param root Root of AVL tree
@@ -58,6 +59,7 @@ struct avl_node *avl_insert(struct avl_node *node, struct avl_root *root,
  */
 struct avl_node *avl_find(const struct avl_node *query, struct avl_root *root,
                           avl_compare_fun cmp);
+
 /**
  * @brief Link node
  *
@@ -70,6 +72,7 @@ struct avl_node *avl_find(const struct avl_node *query, struct avl_root *root,
  */
 void avl_link_node(struct avl_node *node, struct avl_node *parent,
                    struct avl_node **link);
+
 /**
  * @brief Erase node
  *
@@ -84,6 +87,7 @@ void avl_erase(struct avl_node *node, struct avl_root *root);
  * @param root Root of AVL tree
  */
 struct avl_node *avl_first_postorder(const struct avl_root *root);
+
 /**
  * @brief Next postorder node
  *
@@ -97,18 +101,21 @@ struct avl_node *avl_next_postorder(const struct avl_node *node);
  * @param root Root of AVL tree
  */
 struct avl_node *avl_first(const struct avl_root *root);
+
 /**
  * @brief Last inorder node
  *
  * @param root Root of AVL tree
  */
 struct avl_node *avl_last(const struct avl_root *root);
+
 /**
  * @brief Next inorder node
  *
  * @param node Node
  */
 struct avl_node *avl_next(const struct avl_node *node);
+
 /**
  * @brief Previous inorder node
  *

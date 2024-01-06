@@ -44,10 +44,11 @@ typedef size_t (*ht_hash_fun)(const struct hash_entry *);
  * @param initial_num_buckets Initial number of buckets
  * @param hash Function to hash your entry
  * @param equal Function to compare two entries
- * @return Hash Table on success, 'NULL' otherwise
+ * @return Hash Table on success, 'NULL otherwise
  */
 hash_table *htable_create(size_t initial_num_buckets, ht_hash_fun hash,
                           ht_equal_fun equal);
+
 /**
  * @brief Destroy Hash Table
  *
@@ -55,32 +56,36 @@ hash_table *htable_create(size_t initial_num_buckets, ht_hash_fun hash,
  * @param destroy Function to destroy your entries, could be 'NULL'
  */
 void htable_destroy(hash_table *htable, ht_destroy_fun destroy);
+
 /**
  * @brief Rehash Hash Table
  *
  * @param htable Hash Table
  * @param new_num_buckets New number of buckets
- * @return true on success, false on memory failure
+ * @return True on success, false on memory failure
  */
 bool htable_rehash(hash_table *htable, size_t new_num_buckets);
+
 /**
  * @brief Insert entry into Hash Table
  *
  * @param htable Hash Table
  * @param entry Entry to insert
- * @return true on success, false on memory failure
+ * @return True on success, false on memory failure
  */
 bool htable_insert(hash_table *htable, struct hash_entry *entry);
+
 /**
  * @brief Replace entry in the Hash Table
  *
  * @param htable Hash Table
  * @param entry Entry to replace with
  * @param replaced Replaced entry
- * @return true on success, false on memory failure
+ * @return True on success, false on memory failure
  */
 bool htable_replace(hash_table *htable, struct hash_entry *entry,
                     struct hash_entry **replaced);
+
 /**
  * @brief Lookup entry in the Hash Table
  *
@@ -88,13 +93,15 @@ bool htable_replace(hash_table *htable, struct hash_entry *entry,
  * @param query Query to lookup against
  */
 struct hash_entry *htable_lookup(hash_table *htable, struct hash_entry *query);
+
 /**
- * @brief Lookup entry and then remove it from the Hash Table
+ * @brief Lookup entry and remove it from the Hash Table
  *
  * @param htable Hash Table
  * @param query Query to lookup against
  */
 struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query);
+
 /**
  * @brief Remove entry
  *
@@ -105,6 +112,7 @@ struct hash_entry *htable_remove(hash_table *htable, struct hash_entry *query);
  * @param entry Entry to remove
  */
 void htable_erase(hash_table *htable, struct hash_entry *entry);
+
 /**
  * @brief Sort table
  *
@@ -118,6 +126,7 @@ void htable_erase(hash_table *htable, struct hash_entry *entry);
  * @param less Function to compare two entries
  */
 void htable_sort(hash_table *htable, ht_less_fun less);
+
 /**
  * @brief Number of entries in the Hash Table
  *
@@ -125,6 +134,7 @@ void htable_sort(hash_table *htable, ht_less_fun less);
  * @return Number of entries
  */
 size_t htable_size(hash_table *htable);
+
 /**
  * @brief Number of buckets in the Hash Table
  *
@@ -132,24 +142,28 @@ size_t htable_size(hash_table *htable);
  * @return Number of buckets
  */
 size_t htable_num_buckets(hash_table *htable);
+
 /**
  * @brief First entry in the Hash Table
  *
  * @param htable Hash Table
  */
 struct hash_entry *htable_first(hash_table *htable);
+
 /**
  * @brief Last entry in the Hash Table
  *
  * @param htable Hash Table
  */
 struct hash_entry *htable_last(hash_table *htable);
+
 /**
  * @brief Next entry in the Hash Table
  *
  * @param htable Hash Table
  */
 struct hash_entry *htable_next(const struct hash_entry *entry);
+
 /**
  * @brief Previous entry in the Hash Table
  *

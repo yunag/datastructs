@@ -20,12 +20,14 @@ typedef struct queue queue;
  * @return Queue on success, 'NULL' otherwise
  */
 queue *queue_create(size_t initial_capacity, size_t item_size);
+
 /**
  * @brief Destroy Queue
  *
  * @param queue Queue
  */
 void queue_destroy(queue *queue);
+
 /**
  * @brief Push item into the Queue
  *
@@ -34,24 +36,28 @@ void queue_destroy(queue *queue);
  * @return True on success, false on memory failure
  */
 bool queue_push(queue *queue, const void *item);
+
 /**
  * @brief Pop from the Queue
  *
  * @param queue Queue
  */
 void queue_pop(queue *queue);
+
 /**
  * @brief Front item of the Queue
  *
  * @param queue Queue
  */
 void *queue_front(queue *queue);
+
 /**
  * @brief Back item of the Queue
  *
  * @param queue Queue
  */
 void *queue_back(queue *queue);
+
 /**
  * @brief Checks if Queue is empty
  *
@@ -59,6 +65,7 @@ void *queue_back(queue *queue);
  * @return True if empty, false otherwise
  */
 bool queue_empty(queue *queue);
+
 /**
  * @brief Checks if Queue is full
  *
@@ -66,6 +73,7 @@ bool queue_empty(queue *queue);
  * @return True if full, false otherwise
  */
 bool queue_full(queue *queue);
+
 /**
  * @brief Current Queue capacity
  *
@@ -73,6 +81,7 @@ bool queue_full(queue *queue);
  * @return Capacity of the queue
  */
 size_t queue_capacity(queue *queue);
+
 /**
  * @brief Number of items in the Queue
  *
@@ -80,6 +89,7 @@ size_t queue_capacity(queue *queue);
  * @return Number of items in the Queue
  */
 size_t queue_size(queue *queue);
+
 /**
  * @brief Size of single item in the Queue
  *
