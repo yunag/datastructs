@@ -1,6 +1,7 @@
 #include "datastructs/memory.h"
 #include "datastructs/macros.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +29,10 @@ void yu_default_deallocate(void *block, void *user_data) {
 }
 
 void yu_set_allocator(const yu_allocator *allocator) {
+  assert(allocator->allocate != NULL);
+  assert(allocator->reallocate != NULL);
+  assert(allocator->deallocate != NULL);
+
   g_allocator = *allocator;
 }
 
