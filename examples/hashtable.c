@@ -90,7 +90,7 @@ bool equal_user(const struct hash_entry *a, const struct hash_entry *b) {
   struct user_info *user1 = htable_entry(a, struct user_info, hh);
   struct user_info *user2 = htable_entry(b, struct user_info, hh);
   /* Compare against key */
-  return user1->id = user2->id;
+  return user1->id == user2->id;
 }
 
 int main(int argc, char **argv) {
