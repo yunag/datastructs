@@ -13,6 +13,7 @@ if(build_tests)
   add_subdirectory(tests)
 endif()
 
-if(build_examples)
+# Don't build examples for MSVC
+if(build_examples AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   add_subdirectory(examples)
 endif()

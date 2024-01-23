@@ -13,7 +13,7 @@ FetchContent_MakeAvailable(googletest)
 set(TEST_LIBS gtest_main datastructs)
 set(TEST_COMPILE_OPTS)
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   list(APPEND TEST_COMPILE_OPTS
     -fno-omit-frame-pointer
     -fno-common
