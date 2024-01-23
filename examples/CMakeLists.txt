@@ -1,4 +1,4 @@
-project(datastructs_examples VERSION 0.0.1 LANGUAGES C)
+project(datastructs_examples LANGUAGES C)
 
 macro(add_example target file)
   add_executable(${target} ${file})
