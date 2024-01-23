@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "datastructs/avl_tree.h"
 
@@ -75,7 +75,9 @@ void print_user(struct user_info *user) {
 void print_users(struct avl_root *root) {
   struct user_info *current;
 
-  avl_for_each(root, current, ah) { print_user(current); }
+  avl_for_each(root, current, ah) {
+    print_user(current);
+  }
 }
 
 int main(int argc, char **argv) {

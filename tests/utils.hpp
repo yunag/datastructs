@@ -3,7 +3,8 @@
 
 #include "gtest/gtest.h"
 
-template <typename T> testing::AssertionResult notNull(T *p) {
+template <typename T>
+testing::AssertionResult notNull(T *p) {
   if (p) {
     return testing::AssertionSuccess();
   } else {

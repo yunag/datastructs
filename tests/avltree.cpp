@@ -11,6 +11,7 @@
 
 struct KeyValue {
   KeyValue() {}
+
   KeyValue(int key_, int val_ = 0) : key(key_), val(val_) {}
 
   int key;
@@ -35,7 +36,9 @@ public:
   ~AVLTree() {
     KeyValue *cur, *n;
 
-    avl_postorder_for_each(&avl_, cur, n, ah) { delete cur; }
+    avl_postorder_for_each(&avl_, cur, n, ah) {
+      delete cur;
+    }
   }
 
   void insert(int key, int val = 0) {
@@ -78,9 +81,11 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const AVLTree &avl);
 
   avl_node *first() { return avl_first(&avl_); }
+
   avl_node *last() { return avl_last(&avl_); }
 
   size_t size() { return num_items_; }
+
   avl_root *root() { return &avl_; }
 
 private:
@@ -132,7 +137,7 @@ int AVLTree::isValidAVL_rec(avl_node *node, bool &isValid, int left,
 
   bool heightBalanced = abs(leftHeight - rightHeight) <= 1;
   EXPECT_TRUE(heightBalanced)
-      << "Violated AVL height property: abs(leftHeight - rightHeight) <= 1";
+    << "Violated AVL height property: abs(leftHeight - rightHeight) <= 1";
 
   size_t height = 1 + std::max(leftHeight, rightHeight);
   EXPECT_EQ(height, node->height) << "Height mismatch";
@@ -336,7 +341,9 @@ TEST_F(AVLTestFixture, ForEach_Default_ReturnsValidNumberOfIterations) {
 
   size_t numIters = 0;
 
-  avl_for_each(root, keyValue, ah) { numIters++; }
+  avl_for_each(root, keyValue, ah) {
+    numIters++;
+  }
 
   size_t avlSize = avl_.size();
 
@@ -354,7 +361,9 @@ TEST_F(AVLTestFixture,
 
   size_t numIters = 0;
 
-  avl_for_each(root, keyValue, ah) { numIters++; }
+  avl_for_each(root, keyValue, ah) {
+    numIters++;
+  }
 
   size_t avlSize = avl_.size();
 
@@ -368,7 +377,9 @@ TEST_F(AVLTestFixture,
 
   size_t numIters = 0;
 
-  avl_postorder_for_each(root, keyValue, next, ah) { numIters++; }
+  avl_postorder_for_each(root, keyValue, next, ah) {
+    numIters++;
+  }
 
   size_t avlSize = avl_.size();
 
@@ -396,7 +407,9 @@ TEST_F(AVLTestFixture, ForEach_Default_ReturnsInorderTraversal) {
   std::vector<int> expected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<int> got;
 
-  avl_for_each(root, keyValue, ah) { got.push_back(keyValue->key); }
+  avl_for_each(root, keyValue, ah) {
+    got.push_back(keyValue->key);
+  }
 
   ASSERT_EQ(expected, got);
 }

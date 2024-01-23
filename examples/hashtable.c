@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
@@ -55,7 +55,9 @@ void print_user(struct user_info *user) {
 void print_users(hash_table *htable) {
   struct user_info *current;
 
-  htable_for_each(htable, current, hh) { print_user(current); }
+  htable_for_each(htable, current, hh) {
+    print_user(current);
+  }
 }
 
 bool compare_by_id(const struct hash_entry *a, const struct hash_entry *b) {

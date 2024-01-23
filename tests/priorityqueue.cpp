@@ -1,21 +1,25 @@
 #include "gtest/gtest.h"
 
-#include <vector>
 #include <climits>
+#include <vector>
 
 #include "datastructs/priority_queue.h"
 
-template <typename T> bool cmp_less(const void *pa, const void *pb) {
+template <typename T>
+bool cmp_less(const void *pa, const void *pb) {
   return *(T *)pa < *(T *)pb;
 }
 
-template <typename T> bool cmp_great(const void *pa, const void *pb) {
+template <typename T>
+bool cmp_great(const void *pa, const void *pb) {
   return !cmp_less<T>(pa, pb);
 }
 
-template <typename T> class PriorityQueue {
+template <typename T>
+class PriorityQueue {
 public:
   PriorityQueue() { pq_ = pq_create(1, sizeof(T), cmp_less<T>); }
+
   ~PriorityQueue() { pq_destroy(pq_); }
 
   void push(T item) { pq_push(pq_, &item); }
@@ -31,6 +35,7 @@ public:
   bool isEmpty() { return pq_empty(pq_); }
 
   size_t size() { return pq_size(pq_); }
+
   size_t itemSize() { return pq_esize(pq_); }
 
 private:
@@ -44,6 +49,7 @@ protected:
       pq_.push(i);
     }
   }
+
   void TearDown() override {}
 
   PriorityQueue<int> pq_;
@@ -168,14 +174,14 @@ private:
 TEST_F(PQTestFixture,
        Pop_PushMultipleItemsAndPopThem_ReturnsItemsInCorrectOrder) {
   std::vector<PQHeapTestCase> testcases = {
-      PQHeapTestCase({8, 7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}),
-      PQHeapTestCase({7, 5, 1, 0, 9, -5}, {-5, 0, 1, 5, 7, 9}),
-      PQHeapTestCase({0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}),
-      PQHeapTestCase({7, 8, 9, 10, 4, 0, 1, 2}, {0, 1, 2, 4, 7, 8, 9, 10}),
-      PQHeapTestCase({-9, -10, -8, -6, -7, 5}, {-10, -9, -8, -7, -6, 5}),
-      PQHeapTestCase(
-          {1, 0, 5, 4, 200, 555, 88, 300, 10, 27, -500, -27, INT_MAX, INT_MIN},
-          {INT_MIN, -500, -27, 0, 1, 4, 5, 10, 27, 88, 200, 300, 555, INT_MAX}),
+    PQHeapTestCase({8, 7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}),
+    PQHeapTestCase({7, 5, 1, 0, 9, -5}, {-5, 0, 1, 5, 7, 9}),
+    PQHeapTestCase({0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}),
+    PQHeapTestCase({7, 8, 9, 10, 4, 0, 1, 2}, {0, 1, 2, 4, 7, 8, 9, 10}),
+    PQHeapTestCase({-9, -10, -8, -6, -7, 5}, {-10, -9, -8, -7, -6, 5}),
+    PQHeapTestCase(
+      {1, 0, 5, 4, 200, 555, 88, 300, 10, 27, -500, -27, INT_MAX, INT_MIN},
+      {INT_MIN, -500, -27, 0, 1, 4, 5, 10, 27, 88, 200, 300, 555, INT_MAX}),
   };
 
   for (PQHeapTestCase &testcase : testcases) {

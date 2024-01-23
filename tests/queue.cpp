@@ -2,9 +2,11 @@
 
 #include "datastructs/queue.h"
 
-template <typename T> class Queue {
+template <typename T>
+class Queue {
 public:
   Queue() { q_ = queue_create(1, sizeof(T)); }
+
   ~Queue() { queue_destroy(q_); }
 
   void push(T item) { queue_push(q_, &item); }
@@ -16,13 +18,17 @@ public:
   }
 
   T front() { return QUEUE_FRONT(q_, T); }
+
   T back() { return QUEUE_BACK(q_, T); }
 
   bool isEmpty() { return queue_empty(q_); }
+
   bool full() { return queue_full(q_); }
 
   size_t size() { return queue_size(q_); }
+
   size_t capacity() { return queue_capacity(q_); }
+
   size_t itemSize() { return queue_esize(q_); }
 
 private:

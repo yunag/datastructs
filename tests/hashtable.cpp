@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
-#include <vector>
 #include <climits>
+#include <vector>
 
 #include "datastructs/functions.h"
 #include "datastructs/hash_table.h"
@@ -10,6 +10,7 @@
 
 struct KeyValue {
   KeyValue() {}
+
   KeyValue(int key_, int val_ = 0) : key(key_), val(val_) {}
 
   int key;
@@ -43,7 +44,9 @@ public:
   ~HashTable() {
     KeyValue *cur, *n;
 
-    htable_for_each_temp(ht_, cur, n, hh) { delete cur; }
+    htable_for_each_temp(ht_, cur, n, hh) {
+      delete cur;
+    }
     htable_destroy(ht_, nullptr);
   }
 
@@ -93,9 +96,11 @@ public:
   void sort() { htable_sort(ht_, lessKeyValue); }
 
   hash_entry *first() { return htable_first(ht_); }
+
   hash_entry *last() { return htable_last(ht_); }
 
   size_t size() { return htable_size(ht_); }
+
   size_t num_buckets() { return htable_num_buckets(ht_); }
 
   hash_table *container() { return ht_; }
@@ -245,7 +250,9 @@ TEST_F(HashTableTestFixture, ForEach_Default_ReturnsValidNumberOfIterations) {
 
   size_t numIters = 0;
 
-  htable_for_each(hashTable, keyValue, hh) { numIters++; }
+  htable_for_each(hashTable, keyValue, hh) {
+    numIters++;
+  }
 
   size_t hashTableSize = ht_.size();
 
@@ -263,7 +270,9 @@ TEST_F(HashTableTestFixture,
 
   size_t numIters = 0;
 
-  htable_for_each(hashTable, keyValue, hh) { numIters++; }
+  htable_for_each(hashTable, keyValue, hh) {
+    numIters++;
+  }
 
   size_t hashTableSize = ht_.size();
 
@@ -294,7 +303,9 @@ private:
 
     std::vector<int> got;
 
-    htable_for_each(htable, keyValue, hh) { got.push_back(keyValue->key); }
+    htable_for_each(htable, keyValue, hh) {
+      got.push_back(keyValue->key);
+    }
 
     EXPECT_EQ(expected, got);
   }
@@ -305,14 +316,14 @@ private:
 
 TEST(HashTableTest, Sort_TestCases_ReturnsAscendingTable) {
   std::vector<SortTestCase> testcases = {
-      SortTestCase({8, 7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}),
-      SortTestCase({7, 5, 1, 0, 9, -5}, {-5, 0, 1, 5, 7, 9}),
-      SortTestCase({0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}),
-      SortTestCase({7, 8, 9, 10, 4, 0, 1, 2}, {0, 1, 2, 4, 7, 8, 9, 10}),
-      SortTestCase({-9, -10, -8, -6, -7, 5}, {-10, -9, -8, -7, -6, 5}),
-      SortTestCase(
-          {1, 0, 5, 4, 200, 555, 88, 300, 10, 27, -500, -27, INT_MAX, INT_MIN},
-          {INT_MIN, -500, -27, 0, 1, 4, 5, 10, 27, 88, 200, 300, 555, INT_MAX}),
+    SortTestCase({8, 7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}),
+    SortTestCase({7, 5, 1, 0, 9, -5}, {-5, 0, 1, 5, 7, 9}),
+    SortTestCase({0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}),
+    SortTestCase({7, 8, 9, 10, 4, 0, 1, 2}, {0, 1, 2, 4, 7, 8, 9, 10}),
+    SortTestCase({-9, -10, -8, -6, -7, 5}, {-10, -9, -8, -7, -6, 5}),
+    SortTestCase(
+      {1, 0, 5, 4, 200, 555, 88, 300, 10, 27, -500, -27, INT_MAX, INT_MIN},
+      {INT_MIN, -500, -27, 0, 1, 4, 5, 10, 27, 88, 200, 300, 555, INT_MAX}),
   };
 
   for (SortTestCase &testcase : testcases) {
