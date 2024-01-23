@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Priority Queue
+ */
+
 #ifndef YU_PRIORITY_QUEUE_H
 #define YU_PRIORITY_QUEUE_H
 
@@ -19,7 +24,7 @@ typedef bool (*pq_less_fun)(const void *, const void *);
  * @param initial_capacity Initial capacity
  * @param item_size Size of a single item
  * @param less Function to compare two items
- * @return Priority Queue on success, 'NULL' otherwise
+ * @return Priority Queue on success, `NULL` otherwise
  */
 priority_queue *pq_create(size_t initial_capacity, size_t item_size,
                           pq_less_fun less);
@@ -31,7 +36,7 @@ priority_queue *pq_create(size_t initial_capacity, size_t item_size,
  * @param count Number of items in the heap
  * @param item_size Size of single item in the heap
  * @param less Function to compare two items
- * @return Priority Queue on success, 'NULL' otherwise
+ * @return Priority Queue on success, `NULL` otherwise
  */
 priority_queue *pq_create_from_heap(const void *heap, size_t count,
                                     size_t item_size, pq_less_fun less);
@@ -43,7 +48,7 @@ priority_queue *pq_create_from_heap(const void *heap, size_t count,
  * @param count Number of items in the array
  * @param item_size Size of single item in the array
  * @param less Function to compare two items
- * @return Priority Queue on success, 'NULL' otherwise
+ * @return Priority Queue on success, `NULL` otherwise
  */
 priority_queue *pq_create_from_arr(const void *base, size_t count,
                                    size_t item_size, pq_less_fun less);

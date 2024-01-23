@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Queue
+ */
+
 #ifndef YU_QUEUE_H
 #define YU_QUEUE_H
 
@@ -17,7 +22,7 @@ typedef struct queue queue;
  *
  * @param initial_capacity Initial capacity of the Queue
  * @param item_size Size of a single item in the Queue
- * @return Queue on success, 'NULL' otherwise
+ * @return Queue on success, `NULL` otherwise
  */
 queue *queue_create(size_t initial_capacity, size_t item_size);
 

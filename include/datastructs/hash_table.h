@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Hash Table
+ */
+
 #ifndef YU_HASH_TABLE_H
 #define YU_HASH_TABLE_H
 
@@ -44,7 +49,7 @@ typedef size_t (*ht_hash_fun)(const struct hash_entry *);
  * @param initial_num_buckets Initial number of buckets
  * @param hash Function to hash your entry
  * @param equal Function to compare two entries
- * @return Hash Table on success, 'NULL otherwise
+ * @return Hash Table on success, `NULL` otherwise
  */
 hash_table *htable_create(size_t initial_num_buckets, ht_hash_fun hash,
                           ht_equal_fun equal);
@@ -53,7 +58,7 @@ hash_table *htable_create(size_t initial_num_buckets, ht_hash_fun hash,
  * @brief Destroy Hash Table
  *
  * @param htable Hash Table
- * @param destroy Function to destroy your entries, could be 'NULL'
+ * @param destroy Function to destroy your entries, could be `NULL`
  */
 void htable_destroy(hash_table *htable, ht_destroy_fun destroy);
 
@@ -116,7 +121,7 @@ void htable_erase(hash_table *htable, struct hash_entry *entry);
 /**
  * @brief Sort table
  *
- * Time Complexity: O(n * log(n))
+ * Time Complexity: O(n * log(n)).
  * Space Complexity: O(1)
  *
  * After sorting the table you will be able to iterate over it

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief AVL tree
+ */
+
 #ifndef YU_AVL_TREE_H
 #define YU_AVL_TREE_H
 
