@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 
+#include <algorithm>
 #include <climits>
 #include <vector>
 
@@ -279,58 +280,39 @@ TEST_F(HashTableTestFixture,
   ASSERT_EQ(hashTableSize, numIters);
 }
 
-struct SortTestCase {
-public:
-  SortTestCase(std::vector<int> input_, std::vector<int> expected_)
-      : input(std::move(input_)), expected(std::move(expected_)) {}
+class HashTableSortTest : public ::testing::TestWithParam<std::vector<int>> {};
 
-  void run(HashTable &hashTable) {
-    populateTable(hashTable);
-    hashTable.sort();
-    compareWithExpected(hashTable);
+INSTANTIATE_TEST_SUITE_P(
+  Instantiation, HashTableSortTest,
+  ::testing::Values(std::vector<int>{8, 7, 6, 5, 4, 3, 2, 1, 0},
+                    std::vector<int>{7, 5, 1, 0, 9, -5},
+
+                    std::vector<int>{0, 1, 2, 3, 4},
+                    std::vector<int>{7, 8, 9, 10, 4, 0, 1, 2},
+                    std::vector<int>{-9, -10, -8, -6, -7, 5},
+                    std::vector<int>{1, 0, 5, 4, 200, 555, 88, 300, 10, 27,
+                                     -500, -27, INT_MAX, INT_MIN}
+
+                    ));
+
+TEST_P(HashTableSortTest, Sort_TestCases_ReturnsAscendingTable) {
+  HashTable ht;
+  std::vector<int> input = GetParam();
+  std::vector<int> iterationSequence;
+
+  for (int num : input) {
+    ht.insert(num);
   }
 
-private:
-  void populateTable(HashTable &hashTable) {
-    for (int num : input) {
-      hashTable.insert(num);
-    }
+  ht.sort();
+
+  KeyValue *keyValue;
+  htable_for_each(ht.container(), keyValue, hh) {
+    iterationSequence.push_back(keyValue->key);
   }
 
-  void compareWithExpected(HashTable &hashTable) {
-    hash_table *htable = hashTable.container();
-    KeyValue *keyValue;
-
-    std::vector<int> got;
-
-    htable_for_each(htable, keyValue, hh) {
-      got.push_back(keyValue->key);
-    }
-
-    EXPECT_EQ(expected, got);
-  }
-
-  std::vector<int> input;
-  std::vector<int> expected;
-};
-
-TEST(HashTableTest, Sort_TestCases_ReturnsAscendingTable) {
-  std::vector<SortTestCase> testcases = {
-    SortTestCase({8, 7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}),
-    SortTestCase({7, 5, 1, 0, 9, -5}, {-5, 0, 1, 5, 7, 9}),
-    SortTestCase({0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}),
-    SortTestCase({7, 8, 9, 10, 4, 0, 1, 2}, {0, 1, 2, 4, 7, 8, 9, 10}),
-    SortTestCase({-9, -10, -8, -6, -7, 5}, {-10, -9, -8, -7, -6, 5}),
-    SortTestCase(
-      {1, 0, 5, 4, 200, 555, 88, 300, 10, 27, -500, -27, INT_MAX, INT_MIN},
-      {INT_MIN, -500, -27, 0, 1, 4, 5, 10, 27, 88, 200, 300, 555, INT_MAX}),
-  };
-
-  for (SortTestCase &testcase : testcases) {
-    HashTable hashTable;
-
-    testcase.run(hashTable);
-  }
+  EXPECT_TRUE(
+    std::is_sorted(iterationSequence.begin(), iterationSequence.end()));
 }
 
 int main(int argc, char *argv[]) {
