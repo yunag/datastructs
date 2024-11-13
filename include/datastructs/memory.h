@@ -9,7 +9,6 @@ extern "C" {
 
 typedef struct yu_allocator {
   void *(*allocate)(size_t, void *);
-  void *(*calloc)(size_t, size_t, void *);
   void *(*reallocate)(void *, size_t, void *);
   void (*deallocate)(void *, void *);
 
