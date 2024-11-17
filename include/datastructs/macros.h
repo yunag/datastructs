@@ -30,7 +30,7 @@ static inline void *yu_container_of_safe(void *ptr, size_t offset) {
 }
 
 #define YU_CONTAINER_OF(ptr, type, member)                                     \
-  (type *)((char *)ptr - offsetof(type, member))
+  ((type *)(void *)(((char *)(ptr)) - offsetof(type, member)))
 
 #define YU_CONTAINER_OF_SAFE(ptr, type, member)                                \
   (type *)yu_container_of_safe(ptr, offsetof(type, member))

@@ -11,7 +11,6 @@ set(DATASTRUCTS_COMPILE_OPTS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND COMPILE_OPTS
-    -O2
     -fno-omit-frame-pointer
     -fno-common
     -Wall
