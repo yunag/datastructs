@@ -4,7 +4,7 @@ Library with variety of datastructures.
 
 Currently following datastructures are implemented:
 
-**avl tree**, **hash table**, **priority queue**, **queue**
+**`avl tree`** **`hash table`** **`priority queue`** **`queue`**
 
 ### Building
 
